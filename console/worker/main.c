@@ -172,7 +172,7 @@ int main(void){
     if(geteuid()!=0||sceUserServiceInitialize(NULL)||sceUserServiceGetForegroundUser(&selected)||selected==UINT32_MAX||pthread_mutex_init(&lock,NULL))return 1;
     memset(&published,0,sizeof(published));published.close_with_shell=true;
     snprintf(published.profile,sizeof(published.profile),"Local profile %08X",selected);
-    snprintf(published.public_origin,sizeof(published.public_origin),"https://%s:%u",PROBE_IP,PROBE_PORT);
+    snprintf(published.public_origin,sizeof(published.public_origin),"%s",PROBE_ORIGIN);
     snprintf(published.error,sizeof(published.error),"Starting the console sync worker...");
     snprintf(published.sync_status,sizeof(published.sync_status),"Sync: waiting for the foreground app");
     int listener=socket(AF_INET,SOCK_STREAM,0);if(listener<0)return 2;

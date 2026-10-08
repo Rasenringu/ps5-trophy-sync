@@ -8,7 +8,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #ifdef PS5_WORKER_STATE
+#ifdef PS5_ENDPOINT_STATE
+#include "probe_config.h"
+#endif
+#ifdef PROBE_STATE_DIRECTORY
+#define PRIVATE_STATE_BASE PROBE_STATE_DIRECTORY
+#else
 #define PRIVATE_STATE_BASE "/data/trophy-sync-worker"
+#endif
 #define PRIVATE_STATE_PARENT "/data"
 #define PRIVATE_STATE_LIMIT 16384
 #else

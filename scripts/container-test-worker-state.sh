@@ -7,3 +7,5 @@ cc -std=c11 -Wall -Wextra -Werror -O1 -g -fsanitize=address,undefined -DPS5_ABSO
 
 cc -std=c11 -Wall -Wextra -Werror -O1 -g -fsanitize=address,undefined -DPS5_ABSOLUTE_STATE -DPS5_WORKER_STATE -DPS5_ZERO_LINK_STATE console/tests/test_reserved_state.c -o .local/console-build/probe-build/test-worker-zero-state
 .local/console-build/probe-build/test-worker-zero-state
+cc -std=c11 -Wall -Wextra -Werror -O1 -g -fsanitize=address,undefined -DPS5_ABSOLUTE_STATE -DPS5_WORKER_STATE -DPS5_ZERO_LINK_STATE -DPS5_ENDPOINT_STATE -I.local/console-build/probe-config console/tests/test_reserved_state.c -o .local/console-build/probe-build/test-endpoint-state
+.local/console-build/probe-build/test-endpoint-state

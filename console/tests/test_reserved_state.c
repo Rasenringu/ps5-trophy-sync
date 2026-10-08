@@ -16,7 +16,12 @@ static char child[128];
 static int deny_identity;
 #ifdef PS5_WORKER_STATE
 #define TEST_PARENT "/data"
+#ifdef PS5_ENDPOINT_STATE
+#include "probe_config.h"
+#define TEST_DIRECTORY PROBE_STATE_DIRECTORY
+#else
 #define TEST_DIRECTORY "/data/trophy-sync-worker"
+#endif
 #define TEST_UID 0
 #else
 #define TEST_PARENT "/download0"

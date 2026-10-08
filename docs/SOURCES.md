@@ -51,9 +51,18 @@ Resolved versions/integrity: `api/requirements.lock`, `web/package-lock.json`.
 Application/ingress/tunnel images: digest pins in deployment Compose/Dockerfiles.
 [cloudflared 2026.10.0](https://github.com/cloudflare/cloudflared/releases/tag/2026.10.0)
 and [token-file run parameters](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/run-parameters/)
-were inspected for the optional tunnel. No Cloudflare connection/public route
-has been created. [nginx HTTPS module](https://nginx.org/en/docs/http/ngx_http_ssl_module.html)
+were inspected for the optional tunnel. The user now hosts trophy-sync.party
+through Cloudflare on another host; this session did not create that route.
+[nginx HTTPS module](https://nginx.org/en/docs/http/ngx_http_ssl_module.html)
 informs the local TLS gateway.
 
 See [license obligations](THIRD_PARTY.md). Updating a dependency requires reviewing
 its API/license, changing the pin/hash, compiling and running relevant regressions.
+
+Public console trust uses the official [ISRG Root X1/X2 certificates](https://letsencrypt.org/certificates/),
+compared byte-for-byte with `https://letsencrypt.org/certs/isrgrootx1.pem` and
+`https://letsencrypt.org/certs/isrg-root-x2.pem` on 2026-10-08. Bundle hash is pinned
+in `config/public-service.json`. The hosted leaf issuer observed was Let's Encrypt
+YE2. SDK v0.43's `target/include/netdb.h` declares getaddrinfo/freeaddrinfo and
+pthread APIs; the PS5 worker links successfully with those APIs. Console resolver
+runtime behavior remains unverified. No SDK/dependency version was changed.

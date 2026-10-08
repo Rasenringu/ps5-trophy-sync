@@ -1,10 +1,10 @@
 [CmdletBinding()]
-param()
+param([ValidateSet('public','lan')][string]$Endpoint = 'public')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 & "$PSScriptRoot\Doctor.ps1"
 if ($root.Contains(',')) { throw 'Docker mount paths must not contain commas.' }
-& "$PSScriptRoot\Build-Console.ps1"
+& "$PSScriptRoot\Build-Console.ps1" -Endpoint $Endpoint
 $mount = 'type=bind,source=' + $root + ',target=/workspace'
 & docker build -f "$root\console\Dockerfile.ui-test" -t ps5-trophy-ui-test:local "$root\console"
 if ($LASTEXITCODE -ne 0) { throw 'Font/QR host image build failed.' }

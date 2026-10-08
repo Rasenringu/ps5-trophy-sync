@@ -43,17 +43,28 @@ title_files = [title / p for p in ['eboot.bin', 'sce_module/libc.prx', 'sce_sys/
 title_files += [licenses / p for p in [*notices, 'PROVENANCE.txt']]
 sources = [p for p in (root / 'console').rglob('*') if p.is_file() and 'build' not in p.parts and '__pycache__' not in p.parts]
 sources += [p for p in (root / 'scripts').iterdir() if p.is_file() and ('build' in p.name.lower() or 'prepare' in p.name or 'generate-console' in p.name or p.name == 'package-final-ui.py')]
-sources += [root / 'toolchain.lock.json', root / 'docs/upstream.lock.json']
+sources += [root / 'toolchain.lock.json', root / 'docs/upstream.lock.json', root / 'config/public-service.json']
 manifest = {'title_id': title.name, 'content_version': metadata['contentVersion'], 'console_verified': False,
+    'endpoint': json.loads((root / '.local/console-build/probe-config/endpoint.json').read_text()),
     'worker_filename': worker.name, 'worker_sha256': sha(worker), 'passive_sync': False,
     'files': {p.relative_to(title).as_posix(): sha(p) for p in sorted(title_files)},
     'source_sha256': {p.relative_to(root).as_posix(): sha(p) for p in sorted(sources)},
     'font': json.loads((root / 'console/vendor/noto-sans-display/source.json').read_text())}
 (base / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+(base / 'INSTALL.txt').write_text(
+    'TrophySync service: ' + manifest['endpoint']['origin'] + '\n'
+    'Install BOTH TrophySync.elf in Payload Manager and PPSA99889 via ShadowMount.\n'
+    'ELF alone requires foreground title IPC; do not enable standalone autoload.\n'
+    'Register/sign in on the service, open TrophySync, scan QR/enter code at /pair.\n'
+    'Confirm the displayed console/profile. Each installation pairs separately.\n'
+    'Native PS5 trophies/recorded playtime only. PS4/passive sync unsupported.\n'
+    'FW 8.00 baseline; other firmware/loader configurations unverified.\n'
+    'This public-service build has not been validated on a PS5.\n'
+    'GPL distribution requires corresponding source; retain licenses.\n', encoding='utf-8')
 with zipfile.ZipFile(base / 'TrophySync-PS5.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
     for p in sorted(title_files):
         archive.write(p, p.relative_to(base).as_posix())
-    for p in [worker, base / 'manifest.json']: archive.write(p, p.name)
+    for p in [worker, base / 'manifest.json', base / 'INSTALL.txt']: archive.write(p, p.name)
 print('Packaged current TrophySync sources; no historical release input.')
 print('Worker SHA256:', manifest['worker_sha256'])
 print('Foreground SHA256:', manifest['files']['eboot.bin'])

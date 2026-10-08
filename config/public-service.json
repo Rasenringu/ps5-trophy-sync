@@ -1,0 +1,7 @@
+{
+  "origin": "https://trophy-sync.party",
+  "host": "trophy-sync.party",
+  "port": 443,
+  "ca_file": "console/vendor/public-service-ca.pem",
+  "ca_sha256": "0cd98d2dd7a71afe5e2e93673933f15254c5a41a9be4682f27ec582e72c52ce0"
+}

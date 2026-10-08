@@ -1,8 +1,9 @@
 # Self-host TrophySync
 
-The production configuration is prepared and tested locally. No domain, tunnel
-or external deployment has been created. The current PC service remains at
-http://localhost:3000; the PS5 still uses its existing LAN HTTPS endpoint.
+The user hosts **https://trophy-sync.party** through Cloudflare on a separate host.
+The default console build now targets that domain. Host transport checks pass;
+console pairing/sync against the public host still needs hardware validation.
+See [public service setup](PUBLIC_SERVICE.md) for current endpoint details.
 
 ## Prepare the host
 
@@ -25,7 +26,7 @@ $randomGenerator.Dispose()
 ```
 
 Set `PUBLIC_ORIGIN` to your exact HTTPS origin, such as
-`https://trophysync.example.com`, without a trailing slash or path. Use the same
+`https://trophy-sync.party`, without a trailing slash or path. Use the same
 hostname in the browser and pairing links. Set `LOCAL_WEB_PORT=3001` if the
 existing development service still occupies port3000. Keep `.local` private;
 it contains credentials, backups and potentially personal data.
@@ -48,7 +49,7 @@ docker compose --env-file .local/production/app.env -f deployment/compose.produc
 docker compose --env-file .local/production/app.env -f deployment/compose.production.yaml up -d --build db migrate api web gateway
 ```
 
-## Connect your future Cloudflare domain
+## Cloudflare routing
 
 Create a remotely managed Cloudflare Tunnel and add your chosen public hostname
 with origin service **`http://gateway:8080`**. The optional connector runs in the
@@ -68,10 +69,9 @@ using Cloudflare's [token-file parameter](https://developers.cloudflare.com/clou
 
 The pinned optional connector is cloudflared2026.10.0; updates require an explicit
 image-pin change. See [sources](SOURCES.md). Verify the public HTTPS site, login,
-friend/public sharing and pairing before connecting consoles. The current PS5
-binary pins the LAN endpoint and CA. A build configured for your real public
-URL and trust chain, followed by console validation, is still required; simply
-starting a tunnel does not update the installed binary.
+friend/public sharing and pairing before connecting consoles. The default PS5 package now uses the public URL and public root trust. Rebuild
+both worker and foreground title and validate them on the console; configuring a
+tunnel does not update installed binaries.
 
 ## Back up and move existing data
 

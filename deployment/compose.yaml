@@ -24,7 +24,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://sync:${POSTGRES_PASSWORD}@db/sync
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
-      COOKIE_SECURE: "false"
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
       ENABLE_DEVELOPMENT_TOOLS: "${ENABLE_DEVELOPMENT_TOOLS:-false}"
     ports:
       - "127.0.0.1:8000:8000"
@@ -32,9 +32,13 @@ services:
       migrate:
         condition: service_completed_successfully
   web:
-    build: ../web
+    build:
+      context: ../web
+      args:
+        PUBLIC_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
     environment:
       API_INTERNAL_URL: http://api:8000
+      PUBLIC_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
       NEXT_TELEMETRY_DISABLED: "1"
       ENABLE_LOCAL_TESTS: "${ENABLE_DEVELOPMENT_TOOLS:-false}"
     ports:

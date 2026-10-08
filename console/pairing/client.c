@@ -7,9 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#ifndef PAIR_STATE_DIRECTORY
-#define PAIR_STATE_DIRECTORY "/data/trophy-sync-live"
-#endif
 
 typedef struct {char id[37],secret[129],origin[192];} Installation;
 typedef struct {unsigned profile;char uuid[37],token[129];} Profile;
@@ -79,9 +76,9 @@ static int request(UiModel *ui,const char *path,const char *token,const char *in
 }
 int pair_start(PairClient *c,UiModel *ui,unsigned profile,unsigned long long now) {
     memset(c,0,sizeof(*c));c->directory=-1;c->profile=profile;
-    snprintf(c->origin,sizeof(c->origin),"https://%s:%u",PROBE_IP,PROBE_PORT);
+    snprintf(c->origin,sizeof(c->origin),"%s",PROBE_ORIGIN);
     snprintf(ui->profile,sizeof(ui->profile),"Local profile %08X",profile);
-    progress(1);c->directory=state_open(PAIR_STATE_DIRECTORY);
+    progress(1);c->directory=state_open(PROBE_STATE_DIRECTORY);
     if(c->directory<0){storage_error(ui,"Storage");return 0;}
     progress(2);Installation installation={0};int load=state_read(c->directory,"installation.bin",&installation,sizeof(installation));
     char body[16384];sqlite3 *db=NULL;

@@ -23,6 +23,7 @@ captures/
 *.dump
 *.key
 *.pem
+!console/vendor/public-service-ca.pem
 *.crt
 *.log
 *.elf

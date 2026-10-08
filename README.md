@@ -33,7 +33,10 @@ From the repository root in native PowerShell:
 .\scripts\Start-Local.ps1 -Build
 ```
 
-Open **http://localhost:3000**, register and sign in. API documentation is at
+On a fresh loopback development setup, open **http://localhost:3000**, register
+and sign in. This workspace's local env now uses the public HTTPS origin and
+secure cookies; login/pair writes require `https://trophy-sync.party` through
+your HTTPS ingress. API documentation is at
 http://localhost:8000/docs. Use this exact browser origin; session writes reject
 other origins. Development samples and `/test` are disabled by default.
 
@@ -49,19 +52,14 @@ docker compose --env-file .local/app.env -f deployment/compose.yaml down
 Builds run in Docker, without moving the workspace to WSL. They compile locally
 and never upload or execute anything on the console.
 
-1. Configure the console address with `.\scripts\Configure-PS5.ps1`.
-   The resulting `config/local.json` stays private.
-2. Prepare a reachable development HTTPS endpoint. Replace the example IP with
-   the **server PC's** LAN address:
-
-```powershell
-.\scripts\Start-LanHttps.ps1 -ServerIp 192.168.1.10
-```
-
-This writes the service URL and local certificate identity. The PS5 cannot reach
-this PC through `localhost`. The build verifies that `config/local.json` matches
-`.local/tls/identity.json` and embeds only the public CA certificate. Private keys
-are excluded from all console packages.
+1. The default build targets **https://trophy-sync.party**. Its checked-in public
+   endpoint and checksum-pinned Let's Encrypt roots live in
+   `config/public-service.json` and `console/vendor/public-service-ca.pem`.
+   No console IP, local CA or shared account/device token is embedded.
+2. Each console resolves the hostname using its existing network resolver and
+   validates the certificate chain, hostname and validity dates. DNS must resolve
+   this domain correctly; a nanoDNS rule that redirects it will prevent HTTPS.
+   Keep the console clock correct. No DNS setting is changed by TrophySync.
 
 3. Prepare the pinned SDK image (first build or after changing its inputs), then
    compile the current worker:
@@ -126,10 +124,12 @@ API tests use isolated `sync_test`. Browser endpoint tests create labeled test
 accounts in the development database; they do not import into your real account
 or contact a console. See [testing](docs/TESTING_LOCAL.md).
 
-For a later host/domain and optional Cloudflare Tunnel, follow
-[self-hosting](docs/SELF_HOSTING.md). The installed console build trusts its
-configured LAN endpoint; a public host needs a separately configured and
-validated console transport build. No external deployment has been performed.
+The hosted service is **https://trophy-sync.party**, on a separate host configured
+by the user. This repository's local stack has also been configured with that
+browser origin and secure cookies; plain localhost login writes will be rejected.
+The public build has host DNS/TLS checks, but still needs a PS5 pairing/sync result.
+See [public service setup](docs/PUBLIC_SERVICE.md) for installation, host settings,
+TLS limits and the optional LAN development build.
 
 ## Repository
 

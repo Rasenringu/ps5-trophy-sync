@@ -3,3 +3,5 @@
 *.py text eol=lf
 *.md text eol=lf
 *.ps1 text eol=crlf
+console/vendor/noto-sans-display/OFL.txt text eol=lf
+console/vendor/public-service-ca.pem text eol=lf

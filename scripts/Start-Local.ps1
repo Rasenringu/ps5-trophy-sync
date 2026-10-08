@@ -33,4 +33,11 @@ for ($attempt = 0; $attempt -lt 30; $attempt++) {
     Start-Sleep -Seconds 1
 }
 if (-not $ready) { throw 'Containers started but web/API health did not become ready. Inspect docker compose logs; do not treat this as a working start.' }
-Write-Host 'Local dashboard: http://localhost:3000. Guided sample test: http://localhost:3000/test (HTTP loopback development only). No console contacted.'
+$origin = 'http://localhost:3000'
+foreach ($line in Get-Content -LiteralPath $envPath) {
+    if ($line.StartsWith('WEB_ORIGIN=')) { $origin = $line.Substring(11) }
+}
+Write-Host "Configured browser origin: $origin. Listener: http://localhost:3000. No console contacted."
+if ($origin.StartsWith('https://')) {
+    Write-Host 'Login/register/pair writes require the configured HTTPS origin and secure cookies. A tunnel/reverse proxy must provide that origin.'
+}

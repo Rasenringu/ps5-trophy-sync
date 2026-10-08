@@ -10,8 +10,10 @@ friends/comparisons and local/production Compose. See STATUS for exact evidence.
    live revocation and source-change handling on hardware.
 3. Repeat rest/wake without restarting the jailbreak/worker to establish
    uninterrupted native session semantics. Preserve incomplete/uncertain values.
-4. Configure the real public HTTPS domain, certificate trust and console hostname
-   resolution; validate the hosted transport before distributing that build.
+4. Apply the prepared trophy-sync.party origin/secure-cookie configuration on
+   the remote host (registration currently returns origin-rejection 403).
+   Public ELF/title DNS/trust builds and host Mbed TLS checks pass; validate
+   registration, console pairing and real hosted imports before distribution.
 5. Add a separately researched PS4 backward-compatible adapter and its own tests.
 6. Implement passive resident mode only after lifecycle, duplicate-start, game,
    profile-change, rest/wake and CPU/memory/network measurements under kstuff.

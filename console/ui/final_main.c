@@ -99,7 +99,7 @@ static void bridge_error(UiModel *model,const char *action) {
 static void *network_worker(void *unused) {
     (void)unused;UiModel model={.mock=false,.close_with_shell=true};WorkerStatus status;
     snprintf(model.profile,sizeof(model.profile),"Local profile %08X",selected_profile);
-    char origin[192];snprintf(origin,sizeof(origin),"https://%s:%u",PROBE_IP,PROBE_PORT);
+    char origin[192];snprintf(origin,sizeof(origin),"%s",PROBE_ORIGIN);
     snprintf(model.public_origin,sizeof(model.public_origin),"%s",origin);
     int available=!worker_status_fetch(selected_profile,&status);
     if(!available){

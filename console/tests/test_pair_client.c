@@ -8,12 +8,10 @@
 #include <unistd.h>
 #include "../pairing/state.h"
 #include "../transport/https_json.h"
+#include "probe_config.h"
 static char root[]="/tmp/MOCK-pair-XXXXXX";
 static time_t fake_time(time_t *out){if(out)*out=1000;return 1000;}
-#ifndef PAIR_STATE_DIRECTORY
-#define PAIR_STATE_DIRECTORY "/data/trophy-sync-live"
-#endif
-static int local_open(const char *path){assert(!strcmp(path,PAIR_STATE_DIRECTORY));return state_open(root);}
+static int local_open(const char *path){assert(!strcmp(path,PROBE_STATE_DIRECTORY));return state_open(root);}
 #define state_open local_open
 #define time fake_time
 #include "../pairing/client.c"
@@ -28,7 +26,7 @@ JsonResponse https_json(const char *ip,unsigned short port,const char *name,cons
         snprintf(body,capacity,"{\"installation_id\":\"12345678-1234-1234-1234-123456789abc\",\"installation_secret\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}");
     }else if(!strcmp(path,"/api/device/pairings")){
         pairings++;assert(token&&safe_secret(token));
-        snprintf(body,capacity,"{\"device_code\":\"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\",\"user_code\":\"ABCD-2345\",\"verification_uri\":\"https://%s:%u/pair\",\"expires_at\":1600,\"interval\":5}",ip,(unsigned)port);
+        snprintf(body,capacity,"{\"device_code\":\"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\",\"user_code\":\"ABCD-2345\",\"verification_uri\":\"%s/pair\",\"expires_at\":1600,\"interval\":5}",PROBE_ORIGIN);
     }else if(!strcmp(path,"/api/device/pairings/poll")){
         polls++;
         snprintf(body,capacity,paired_response?"{\"status\":\"paired\",\"device_token\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"profile_uuid\":\"abcdef12-1234-1234-1234-123456789abc\"}":"{\"status\":\"pending\",\"interval\":5}");

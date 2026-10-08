@@ -1,5 +1,62 @@
 # Current status
 
+## Public-service build milestone — 2026-10-08
+
+User reports trophy-sync.party is hosted through Cloudflare on another host.
+Default worker/title builds now target `https://trophy-sync.party:443` with
+canonical origin `https://trophy-sync.party`, runtime IPv4 DNS, bounded resolver
+waiting and two-address TCP fallback. Pinned official ISRG Root X1/X2 trust
+validates chain/hostname/dates through Mbed TLS TLS 1.2; no insecure fallback.
+Public pairing/queue uses `/data/trophy-sync-party`, preserving LAN state.
+Every installation/profile obtains its own credentials; none are embedded.
+Both ELF and foreground title must be installed, with no standalone autoload.
+
+Local `.local/app.env` and running API/web now use the public origin and secure
+cookies, as requested. Production env example also uses this domain. Existing
+database volume/settings and separate LAN services were preserved. The remote
+host was not modified. Plain localhost login writes no longer match this local
+stack's configured origin. Optional `-Endpoint lan` retains previous LAN builds.
+
+Commands/results:
+
+- `Build-Console.ps1 -HostTest` preparation/worker compilation succeeded; first
+  regression attempt exposed missing config includes in mocked storage tests.
+  Fixed build/test endpoint selection, then final `container-build.sh` and full
+  `container-test-console.sh` exited 0. Native readers/activity, storage including
+  public path, pairing, queue/idempotency, IPC, SQLite and TLS fixtures passed.
+  Added localhost DNS/TLS and ASan/UBSan stalled-resolver deadline tests.
+- `Build-ConsoleUI.ps1` exited 0 after restoring checksum-pinned OFL license LF
+  bytes (Windows checkout had changed its line endings). Git attributes now
+  preserve those bytes. Eight renderer states, QR checks and native integrity
+  inspection passed. Recompiled current worker and re-packaged after final tests.
+- `Start-Local.ps1 -Build` exited 0; API environment inspection confirms
+  `WEB_ORIGIN=https://trophy-sync.party`, `COOKIE_SECURE=true`.
+- `Test-Local.ps1`: 53 passed, one existing Starlette/httpx deprecation warning.
+- `test_public_transport.py`: host Mbed TLS JSON/binary DNS/TLS checks passed;
+  no-token status/artwork returned 401, wrong-host certificates rejected.
+  No server accounts/installations/imports or console actions were created.
+- `Test-PublicService.ps1`: health 200, then **fails remote registration origin
+  check with 403**. Direct invalid registration response: `Same-origin request
+  required`. Same invalid body/public Origin on updated local stack returns 422
+  missing fields, as expected. Remote config is a real remaining blocker.
+
+Current public build worker SHA256:
+`95b10cd844be0c6ca50804018f75574221c4f138a64f3b3fae9b84916f670889`.
+Current public foreground SHA256:
+`9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda`.
+Outputs: `artifacts/console/final-ui/TrophySync.elf`, `PPSA99889/`,
+`TrophySync-PS5.zip` (both components, INSTALL.txt, licenses and manifest).
+Manifest records endpoint/trust/source hashes and `console_verified=false`.
+No new binaries were transferred or run; installed hashes below are historical.
+
+Next action: apply this origin/secure-cookie configuration on the separate host,
+rerun `Test-PublicService.ps1`, then obtain authorization for the public build's
+read-only console pairing/native trophy/playtime/artwork sync test. Test console
+DNS under its actual nanoDNS setup and certificate clock validation. No claim of
+public-console sync, other firmware support or universal compatibility is made.
+See [public service instructions](PUBLIC_SERVICE.md). Earlier cleanup evidence
+below remains historical; its default LAN transport statements are superseded.
+
 Updated 2026-10-08 after source/build/documentation cleanup. This file separates
 console observations, local verification and pending gates. Historical prototype
 sources and per-version instructions are retired; the supported source tree is
