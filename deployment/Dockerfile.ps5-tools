@@ -1,0 +1,12 @@
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends bash clang-18 lld-18 llvm-18 llvm-18-dev llvm-18-tools make cmake meson pkg-config python3 python3-pyelftools unzip ca-certificates build-essential socat && rm -rf /var/lib/apt/lists/*
+COPY .local/sdk/ps5-payload-sdk.zip /tmp/sdk.zip
+COPY toolchain.lock.json /tmp/toolchain.lock.json
+COPY scripts/unpack-sdk.py /tmp/unpack-sdk.py
+RUN python3 /tmp/unpack-sdk.py && rm /tmp/sdk.zip
+ENV PS5_PAYLOAD_SDK=/opt/ps5-payload-sdk
+ENV LLVM_CONFIG=/usr/bin/llvm-config-18
+RUN test -x "$LLVM_CONFIG" && test -x "$(llvm-config-18 --bindir)/clang" && /opt/ps5-payload-sdk/bin/prospero-clang --version && make -C /opt/ps5-payload-sdk/samples/hello_world clean all
+WORKDIR /workspace
+CMD ["bash"]

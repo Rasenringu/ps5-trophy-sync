@@ -1,0 +1,29 @@
+{
+  "ageLevel": {
+    "default": 0
+  },
+  "applicationCategoryType": 65536,
+  "applicationDrmType": "free",
+  "attribute": 0,
+  "attribute2": 0,
+  "attribute3": 0,
+  "conceptId": "99889",
+  "contentBadgeType": 2,
+  "contentId": "UP9000-PPSA99889_00-TROPHYARTWORK001",
+  "contentVersion": "01.001.000",
+  "downloadDataSize": 0,
+  "localizedParameters": {
+    "defaultLanguage": "en-US",
+    "en-US": {
+      "titleName": "TrophySync"
+    },
+    "fr-FR": {
+      "titleName": "TrophySync"
+    }
+  },
+  "masterVersion": "01.00",
+  "requiredSystemSoftwareVersion": "0x0000000000000000",
+  "sdkVersion": "0x0000000000000000",
+  "titleId": "PPSA99889",
+  "versionFileUri": ""
+}

@@ -1,0 +1,9 @@
+**
+!deployment/
+!deployment/Dockerfile.ps5-tools
+!scripts/
+!scripts/unpack-sdk.py
+!.local/
+!.local/sdk/
+!.local/sdk/ps5-payload-sdk.zip
+!toolchain.lock.json

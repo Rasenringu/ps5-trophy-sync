@@ -1,0 +1,22 @@
+# Optional LAN development HTTPS ingress; merge with compose.yaml.
+services:
+  lan-api:
+    build: ../api
+    environment:
+      DATABASE_URL: postgresql+psycopg://sync:${POSTGRES_PASSWORD}@db/sync
+      WEB_ORIGIN: ${LAN_HTTPS_ORIGIN:?Run scripts/Start-LanHttps.ps1}
+      COOKIE_SECURE: "true"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  lan-https:
+    image: nginx:1.30.5-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    ports:
+      - "${LAN_SERVICE_IP:?}:${LAN_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ../.local/tls/server.crt:/etc/nginx/tls/server.crt:ro
+      - ../.local/tls/server.key:/etc/nginx/tls/server.key:ro
+      - ../.local/tls/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - lan-api
+      - web

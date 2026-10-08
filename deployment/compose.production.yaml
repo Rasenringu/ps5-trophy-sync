@@ -1,0 +1,103 @@
+name: trophysync
+services:
+  db:
+    image: postgres:17.9-bookworm@sha256:47f917f7409eacd22fc5dfb1dee634e1b55cf0c01d1a7eb701be2227a03e0641
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sync
+      POSTGRES_DB: sync
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a production database password}
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks: [database]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sync -d sync"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  migrate:
+    build: ../api
+    environment:
+      DATABASE_URL: postgresql+psycopg://sync:${POSTGRES_PASSWORD}@db/sync
+    command: ["alembic", "upgrade", "head"]
+    networks: [database]
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    build: ../api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://sync:${POSTGRES_PASSWORD}@db/sync
+      WEB_ORIGIN: ${PUBLIC_ORIGIN:?Set the HTTPS public origin}
+      COOKIE_SECURE: "true"
+      ENVIRONMENT: production
+      ENABLE_DEVELOPMENT_TOOLS: "false"
+    networks: [database, application]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    security_opt: ["no-new-privileges:true"]
+  web:
+    build:
+      context: ../web
+      args:
+        PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set the HTTPS public origin}
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+      ENABLE_LOCAL_TESTS: "false"
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set the HTTPS public origin}
+    networks: [application]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      api:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+  gateway:
+    image: nginx:1.30.5-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${LOCAL_WEB_PORT:-3000}:8080"
+    volumes:
+      - ./nginx.production.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [application]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      web:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+  tunnel:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run", "--token-file", "/run/secrets/tunnel_token"]
+    secrets: [tunnel_token]
+    networks: [application]
+    depends_on:
+      gateway:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+secrets:
+  tunnel_token:
+    file: ${TUNNEL_TOKEN_FILE:-../.local/production/tunnel-token}
+volumes:
+  database:
+networks:
+  database:
+    internal: true
+  application:

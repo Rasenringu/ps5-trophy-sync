@@ -1,0 +1,9 @@
+{
+  "ps5_sdk": {
+    "upstream_digest": "sha256:a9cc9929f21b2b2c5d5b309f3bab4997067c45281c0622cf4838b1aecba66fcb",
+    "url": "https://github.com/ps5-payload-dev/sdk/releases/download/v0.43/ps5-payload-sdk.zip",
+    "sha256": "a9cc9929f21b2b2c5d5b309f3bab4997067c45281c0622cf4838b1aecba66fcb",
+    "tag": "v0.43",
+    "source_commit": "d9c9519116944a7f1c22d262012c53b80b3520b7"
+  }
+}

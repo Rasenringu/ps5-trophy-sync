@@ -1,0 +1,1845 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PS5 Trophy Sync",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register",
+        "operationId": "register_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "operationId": "logout_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/me": {
+      "get": {
+        "summary": "Me",
+        "operationId": "me_account_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/installations": {
+      "post": {
+        "summary": "Installation",
+        "operationId": "installation_device_installations_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/pairings": {
+      "post": {
+        "summary": "Start Pairing",
+        "operationId": "start_pairing_device_pairings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/pairings/inspect": {
+      "post": {
+        "summary": "Inspect Code",
+        "operationId": "inspect_code_account_pairings_inspect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Code"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/pairings/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_account_pairings_approve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Approval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/pairings/poll": {
+      "post": {
+        "summary": "Poll",
+        "operationId": "poll_device_pairings_poll_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Poll"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/status": {
+      "post": {
+        "summary": "Device Status",
+        "operationId": "device_status_device_status_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/devices": {
+      "get": {
+        "summary": "Devices",
+        "operationId": "devices_account_devices_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/devices/{profile_id}/revoke": {
+      "post": {
+        "summary": "Revoke",
+        "operationId": "revoke_account_devices__profile_id__revoke_post",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/sync": {
+      "post": {
+        "summary": "Sync",
+        "operationId": "sync_device_sync_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Snapshot"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NativeSnapshot"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NativeActivitySnapshot"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/library": {
+      "get": {
+        "summary": "Library",
+        "operationId": "library_account_library_get",
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/artwork/{artwork_id}": {
+      "get": {
+        "summary": "Artwork",
+        "operationId": "artwork_account_artwork__artwork_id__get",
+        "parameters": [
+          {
+            "name": "artwork_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Artwork Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/artwork/check": {
+      "post": {
+        "summary": "Artwork Check",
+        "operationId": "artwork_check_device_artwork_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtworkCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/artwork": {
+      "post": {
+        "summary": "Device Artwork",
+        "operationId": "device_artwork_device_artwork_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/device-artwork/{identity}": {
+      "get": {
+        "summary": "Device Image",
+        "operationId": "device_image_account_device_artwork__identity__get",
+        "parameters": [
+          {
+            "name": "identity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/profile": {
+      "get": {
+        "summary": "Own Profile",
+        "operationId": "own_profile_account_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Edit Profile",
+        "operationId": "edit_profile_account_profile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players": {
+      "get": {
+        "summary": "Search Players",
+        "operationId": "search_players_players_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{handle}": {
+      "get": {
+        "summary": "Public Profile",
+        "operationId": "public_profile_players__handle__get",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Handle"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{handle}/library": {
+      "get": {
+        "summary": "Shared Library",
+        "operationId": "shared_library_players__handle__library_get",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Handle"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{handle}/artwork/{image_id}": {
+      "get": {
+        "summary": "Shared Image",
+        "operationId": "shared_image_players__handle__artwork__image_id__get",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Handle"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/friends": {
+      "get": {
+        "summary": "Friends",
+        "operationId": "friends_account_friends_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/friends/request": {
+      "post": {
+        "summary": "Request Friend",
+        "operationId": "request_friend_account_friends_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FriendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/friends/{request_id}": {
+      "post": {
+        "summary": "Act Friend",
+        "operationId": "act_friend_account_friends__request_id__post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FriendAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/friends/{handle}/compare": {
+      "get": {
+        "summary": "Compare",
+        "operationId": "compare_account_friends__handle__compare_get",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Handle"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "title": "Language"
+            }
+          },
+          {
+            "name": "title_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Title Id"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ps5_native",
+                    "ps4_bc"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/friends/{handle}/artwork/{image_id}": {
+      "get": {
+        "summary": "Friend Image",
+        "operationId": "friend_image_account_friends__handle__artwork__image_id__get",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Handle"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Activity": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Event Id"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Title Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "clock": {
+            "type": "string",
+            "enum": [
+              "trusted",
+              "uncertain",
+              "unknown"
+            ],
+            "title": "Clock"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "title_id",
+          "title",
+          "complete",
+          "clock"
+        ],
+        "title": "Activity"
+      },
+      "Approval": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z2-9]{4}-[A-Z2-9]{4}$",
+            "title": "Code"
+          },
+          "pairing_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Pairing Id"
+          },
+          "physical_possession": {
+            "type": "boolean",
+            "const": true,
+            "title": "Physical Possession"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "pairing_id",
+          "physical_possession"
+        ],
+        "title": "Approval"
+      },
+      "ArtworkCheck": {
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "pattern": "^NPWR[0-9]{5}_00$",
+            "title": "Title Id"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title_id",
+          "sha256"
+        ],
+        "title": "ArtworkCheck"
+      },
+      "Code": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z2-9]{4}-[A-Z2-9]{4}$",
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "Code"
+      },
+      "Credentials": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 3,
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Credentials"
+      },
+      "FriendAction": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "deny",
+              "cancel",
+              "remove"
+            ],
+            "title": "Action"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "FriendAction"
+      },
+      "FriendRequest": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{2,31}$",
+            "title": "Handle"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "handle"
+        ],
+        "title": "FriendRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NativeActivity": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "pattern": "^native-session:[0-9a-f]{64}$",
+            "title": "Event Id"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Title Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "clock": {
+            "type": "string",
+            "enum": [
+              "uncertain",
+              "unknown"
+            ],
+            "title": "Clock"
+          },
+          "duration_basis": {
+            "type": "string",
+            "const": "native_foreground_seconds",
+            "title": "Duration Basis"
+          },
+          "native_observation": {
+            "$ref": "#/components/schemas/NativeActivityObservation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "title_id",
+          "title",
+          "complete",
+          "clock",
+          "duration_basis",
+          "native_observation"
+        ],
+        "title": "NativeActivity"
+      },
+      "NativeActivityObservation": {
+        "properties": {
+          "application_title_id": {
+            "type": "string",
+            "pattern": "^PPSA[0-9]{5}$",
+            "title": "Application Title Id"
+          },
+          "session_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Session Digest"
+          },
+          "foreground_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foreground Seconds"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "ApplicationSessionEnd",
+              "ApplicationSessionStart",
+              "ApplicationSessionCrash"
+            ],
+            "title": "Event"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "application_title_id",
+          "session_digest",
+          "event"
+        ],
+        "title": "NativeActivityObservation"
+      },
+      "NativeActivitySnapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 3,
+            "title": "Schema Version"
+          },
+          "batch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Batch Id"
+          },
+          "source": {
+            "type": "string",
+            "const": "ps5_native",
+            "title": "Source"
+          },
+          "mock": {
+            "type": "boolean",
+            "const": false,
+            "title": "Mock"
+          },
+          "trophies": {
+            "items": {
+              "$ref": "#/components/schemas/Trophy"
+            },
+            "type": "array",
+            "maxItems": 0,
+            "title": "Trophies"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/NativeActivity"
+            },
+            "type": "array",
+            "maxItems": 128,
+            "title": "Activities"
+          },
+          "consistency": {
+            "type": "string",
+            "const": "sqlite_read_transaction",
+            "title": "Consistency"
+          },
+          "profile_binding": {
+            "type": "string",
+            "const": "activity_header_single_local_user",
+            "title": "Profile Binding"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "batch_id",
+          "source",
+          "mock",
+          "consistency",
+          "profile_binding"
+        ],
+        "title": "NativeActivitySnapshot"
+      },
+      "NativeObservation": {
+        "properties": {
+          "raw_flags": {
+            "type": "integer",
+            "maximum": 4294967295.0,
+            "minimum": 0.0,
+            "title": "Raw Flags"
+          },
+          "first_raw": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,19})$",
+            "title": "First Raw"
+          },
+          "second_raw": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,19})$",
+            "title": "Second Raw"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw_flags",
+          "first_raw",
+          "second_raw"
+        ],
+        "title": "NativeObservation"
+      },
+      "NativeSnapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Schema Version"
+          },
+          "batch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Batch Id"
+          },
+          "source": {
+            "type": "string",
+            "const": "ps5_native",
+            "title": "Source"
+          },
+          "mock": {
+            "type": "boolean",
+            "title": "Mock"
+          },
+          "trophies": {
+            "items": {
+              "$ref": "#/components/schemas/NativeTrophy"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Trophies"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            },
+            "type": "array",
+            "maxItems": 0,
+            "title": "Activities"
+          },
+          "consistency": {
+            "type": "string",
+            "const": "stable_read_not_atomic",
+            "title": "Consistency"
+          },
+          "profile_binding": {
+            "type": "string",
+            "const": "foreground_user_path_scoped",
+            "title": "Profile Binding"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "batch_id",
+          "source",
+          "mock",
+          "consistency",
+          "profile_binding"
+        ],
+        "title": "NativeSnapshot"
+      },
+      "NativeTrophy": {
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Title Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "trophy_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Trophy Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "bronze",
+              "silver",
+              "gold",
+              "platinum",
+              "unknown"
+            ],
+            "title": "Grade"
+          },
+          "unlocked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked"
+          },
+          "unlocked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At"
+          },
+          "clock": {
+            "type": "string",
+            "enum": [
+              "uncertain",
+              "unknown"
+            ],
+            "title": "Clock"
+          },
+          "native_observation": {
+            "$ref": "#/components/schemas/NativeObservation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title_id",
+          "title",
+          "trophy_id",
+          "name",
+          "grade",
+          "unlocked",
+          "clock",
+          "native_observation"
+        ],
+        "title": "NativeTrophy"
+      },
+      "PairRequest": {
+        "properties": {
+          "installation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Installation Id"
+          },
+          "profile_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Profile Id"
+          },
+          "profile_label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Profile Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "installation_id",
+          "profile_id",
+          "profile_label"
+        ],
+        "title": "PairRequest"
+      },
+      "Poll": {
+        "properties": {
+          "device_code": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 32,
+            "title": "Device Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "device_code"
+        ],
+        "title": "Poll"
+      },
+      "ProfileEdit": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{2,31}$",
+            "title": "Handle"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "public",
+                  "friends"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visibility"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "handle",
+          "display_name"
+        ],
+        "title": "ProfileEdit"
+      },
+      "Snapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version"
+          },
+          "batch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Batch Id"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "mock": {
+            "type": "boolean",
+            "title": "Mock"
+          },
+          "trophies": {
+            "items": {
+              "$ref": "#/components/schemas/Trophy"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Trophies"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Activities"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "batch_id",
+          "source",
+          "mock"
+        ],
+        "title": "Snapshot"
+      },
+      "Trophy": {
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Title Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "trophy_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Trophy Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "bronze",
+              "silver",
+              "gold",
+              "platinum",
+              "unknown"
+            ],
+            "title": "Grade"
+          },
+          "unlocked": {
+            "type": "boolean",
+            "title": "Unlocked"
+          },
+          "unlocked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title_id",
+          "title",
+          "trophy_id",
+          "name",
+          "grade",
+          "unlocked"
+        ],
+        "title": "Trophy"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

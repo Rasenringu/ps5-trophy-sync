@@ -1,0 +1,85 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "PS5: Configure",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/Configure-PS5.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "PS5: Doctor",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/Doctor.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "PS5: Check loader connection",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/Doctor.ps1",
+        "-Network"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "PS5: Build tools",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/Build-Tools.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "PS5: SDK compile smoke",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/Build-Console.ps1",
+        "-SmokeTest"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "PS5: Build console",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/Build-Console.ps1"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

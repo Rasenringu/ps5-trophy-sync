@@ -1,0 +1,595 @@
+{
+  "python": [
+    {
+      "name": "alembic",
+      "version": "1.18.4",
+      "license_metadata": "MIT",
+      "license_files": [
+        "alembic-1.18.4.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "license_metadata": "MIT",
+      "license_files": [
+        "annotated_doc-0.0.5.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "license_metadata": "MIT",
+      "license_files": [
+        "annotated_types-0.8.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "license_metadata": "MIT",
+      "license_files": [
+        "anyio-4.15.1.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "argon2-cffi",
+      "version": "25.1.0",
+      "license_metadata": "MIT",
+      "license_files": [
+        "argon2_cffi-25.1.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "argon2-cffi-bindings",
+      "version": "26.1.0",
+      "license_metadata": "MIT",
+      "license_files": [
+        "argon2_cffi_bindings-26.1.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22",
+      "license_metadata": "MPL-2.0",
+      "license_files": [
+        "certifi-2026.7.22.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "license_metadata": "MIT-0",
+      "license_files": [
+        "cffi-2.1.1.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "click-8.5.0.dist-info/licenses/LICENSE.txt"
+      ]
+    },
+    {
+      "name": "fastapi",
+      "version": "0.135.1",
+      "license_metadata": "MIT",
+      "license_files": [
+        "fastapi-0.135.1.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "greenlet",
+      "version": "3.5.6",
+      "license_metadata": "MIT AND PSF-2.0",
+      "license_files": [
+        "greenlet-3.5.6.dist-info/licenses/LICENSE",
+        "greenlet-3.5.6.dist-info/licenses/LICENSE.PSF"
+      ]
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "license_metadata": "MIT",
+      "license_files": [
+        "h11-0.16.0.dist-info/licenses/LICENSE.txt"
+      ]
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "httpcore-1.0.9.dist-info/licenses/LICENSE.md"
+      ]
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "httpx-0.28.1.dist-info/licenses/LICENSE.md"
+      ]
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "idna-3.20.dist-info/licenses/LICENSE.md"
+      ]
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "license_metadata": "MIT",
+      "license_files": [
+        "iniconfig-2.3.1.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "Mako",
+      "version": "1.4.3",
+      "license_metadata": "MIT",
+      "license_files": [
+        "mako-1.4.3.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.4",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "markupsafe-3.0.4.dist-info/licenses/LICENSE.txt"
+      ]
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "license_metadata": "Apache-2.0 OR BSD-2-Clause",
+      "license_files": [
+        "packaging-26.3.dist-info/licenses/LICENSE",
+        "packaging-26.3.dist-info/licenses/LICENSE.APACHE",
+        "packaging-26.3.dist-info/licenses/LICENSE.BSD",
+        "packaging/licenses/__init__.py",
+        "packaging/licenses/__pycache__/__init__.cpython-312.pyc",
+        "packaging/licenses/__pycache__/_spdx.cpython-312.pyc",
+        "packaging/licenses/_spdx.py"
+      ]
+    },
+    {
+      "name": "pip",
+      "version": "25.0.1",
+      "license_metadata": "MIT",
+      "license_files": [
+        "pip-25.0.1.dist-info/LICENSE.txt",
+        "pip/_vendor/packaging/licenses/__init__.py",
+        "pip/_vendor/packaging/licenses/_spdx.py"
+      ]
+    },
+    {
+      "name": "pluggy",
+      "version": "1.6.0",
+      "license_metadata": "MIT",
+      "license_files": [
+        "pluggy-1.6.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "psycopg",
+      "version": "3.3.3",
+      "license_metadata": "LGPL-3.0-only",
+      "license_files": [
+        "psycopg-3.3.3.dist-info/licenses/LICENSE.txt"
+      ]
+    },
+    {
+      "name": "psycopg-binary",
+      "version": "3.3.3",
+      "license_metadata": "LGPL-3.0-only",
+      "license_files": [
+        "psycopg_binary-3.3.3.dist-info/licenses/LICENSE.txt"
+      ]
+    },
+    {
+      "name": "pycparser",
+      "version": "3.0",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "pycparser-3.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "pydantic",
+      "version": "2.12.5",
+      "license_metadata": "MIT",
+      "license_files": [
+        "pydantic-2.12.5.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.41.5",
+      "license_metadata": "MIT",
+      "license_files": [
+        "pydantic_core-2.41.5.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0",
+      "license_metadata": "BSD-2-Clause",
+      "license_files": [
+        "pygments-2.21.0.dist-info/licenses/AUTHORS",
+        "pygments-2.21.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "pytest",
+      "version": "9.0.2",
+      "license_metadata": "MIT",
+      "license_files": [
+        "pytest-9.0.2.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "SQLAlchemy",
+      "version": "2.0.48",
+      "license_metadata": "MIT",
+      "license_files": [
+        "sqlalchemy-2.0.48.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "starlette",
+      "version": "1.7.0",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "starlette-1.7.0.dist-info/licenses/LICENSE.md"
+      ]
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "license_metadata": "MIT",
+      "license_files": [
+        "typing_inspection-0.4.4.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "license_metadata": "PSF-2.0",
+      "license_files": [
+        "typing_extensions-4.16.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.42.0",
+      "license_metadata": "BSD-3-Clause",
+      "license_files": [
+        "uvicorn-0.42.0.dist-info/licenses/LICENSE.md"
+      ]
+    }
+  ],
+  "npm": [
+    {
+      "package": "node_modules/@emnapi/runtime",
+      "version": "1.11.3",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@img/colour",
+      "version": "1.1.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@img/sharp-darwin-arm64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-darwin-x64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-freebsd-wasm32",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-darwin-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linux-arm",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linux-arm64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linux-s390x",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-linux-arm",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linux-arm64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linux-ppc64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linux-riscv64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linux-s390x",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linuxmusl-arm64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-wasm32",
+      "version": "0.35.5",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT"
+    },
+    {
+      "package": "node_modules/@img/sharp-webcontainers-wasm32",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@img/sharp-win32-arm64",
+      "version": "0.35.5",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-win32-ia32",
+      "version": "0.35.5",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@img/sharp-win32-x64",
+      "version": "0.35.5",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later"
+    },
+    {
+      "package": "node_modules/@next/env",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-darwin-arm64",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-darwin-x64",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-linux-arm64-gnu",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-linux-arm64-musl",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-linux-x64-gnu",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-linux-x64-musl",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-win32-arm64-msvc",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@next/swc-win32-x64-msvc",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@playwright/test",
+      "version": "1.63.0",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@swc/helpers",
+      "version": "0.5.23",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/@types/node",
+      "version": "24.10.1",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@types/react",
+      "version": "19.2.7",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/@types/react-dom",
+      "version": "19.2.3",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/baseline-browser-mapping",
+      "version": "2.11.27",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/caniuse-lite",
+      "version": "1.0.30001815",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "package": "node_modules/client-only",
+      "version": "0.0.1",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/csstype",
+      "version": "3.2.3",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/detect-libc",
+      "version": "2.1.2",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/nanoid",
+      "version": "3.3.20",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/next",
+      "version": "16.4.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/picocolors",
+      "version": "1.1.1",
+      "license": "ISC"
+    },
+    {
+      "package": "node_modules/playwright",
+      "version": "1.63.0",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/playwright-core",
+      "version": "1.63.0",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/postcss",
+      "version": "8.5.23",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/react",
+      "version": "19.2.4",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/react-dom",
+      "version": "19.2.4",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/scheduler",
+      "version": "0.27.0",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/semver",
+      "version": "7.8.5",
+      "license": "ISC"
+    },
+    {
+      "package": "node_modules/sharp",
+      "version": "0.35.5",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/source-map-js",
+      "version": "1.2.2",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "package": "node_modules/styled-jsx",
+      "version": "5.1.6",
+      "license": "MIT"
+    },
+    {
+      "package": "node_modules/tslib",
+      "version": "2.8.1",
+      "license": "0BSD"
+    },
+    {
+      "package": "node_modules/typescript",
+      "version": "5.9.3",
+      "license": "Apache-2.0"
+    },
+    {
+      "package": "node_modules/undici-types",
+      "version": "7.16.0",
+      "license": "MIT"
+    }
+  ]
+}

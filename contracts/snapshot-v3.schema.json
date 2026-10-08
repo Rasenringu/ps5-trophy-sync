@@ -1,0 +1,268 @@
+{
+  "$defs": {
+    "NativeActivity": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "pattern": "^native-session:[0-9a-f]{64}$",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "title_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Title Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ended At"
+        },
+        "duration_seconds": {
+          "anyOf": [
+            {
+              "maximum": 604800,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration Seconds"
+        },
+        "complete": {
+          "title": "Complete",
+          "type": "boolean"
+        },
+        "clock": {
+          "enum": [
+            "uncertain",
+            "unknown"
+          ],
+          "title": "Clock",
+          "type": "string"
+        },
+        "duration_basis": {
+          "const": "native_foreground_seconds",
+          "title": "Duration Basis",
+          "type": "string"
+        },
+        "native_observation": {
+          "$ref": "#/$defs/NativeActivityObservation"
+        }
+      },
+      "required": [
+        "event_id",
+        "title_id",
+        "title",
+        "complete",
+        "clock",
+        "duration_basis",
+        "native_observation"
+      ],
+      "title": "NativeActivity",
+      "type": "object"
+    },
+    "NativeActivityObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "application_title_id": {
+          "pattern": "^PPSA[0-9]{5}$",
+          "title": "Application Title Id",
+          "type": "string"
+        },
+        "session_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Session Digest",
+          "type": "string"
+        },
+        "foreground_seconds": {
+          "anyOf": [
+            {
+              "maximum": 604800,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Foreground Seconds"
+        },
+        "event": {
+          "enum": [
+            "ApplicationSessionEnd",
+            "ApplicationSessionStart",
+            "ApplicationSessionCrash"
+          ],
+          "title": "Event",
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_title_id",
+        "session_digest",
+        "event"
+      ],
+      "title": "NativeActivityObservation",
+      "type": "object"
+    },
+    "Trophy": {
+      "additionalProperties": false,
+      "properties": {
+        "title_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Title Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "trophy_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Trophy Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "grade": {
+          "enum": [
+            "bronze",
+            "silver",
+            "gold",
+            "platinum",
+            "unknown"
+          ],
+          "title": "Grade",
+          "type": "string"
+        },
+        "unlocked": {
+          "title": "Unlocked",
+          "type": "boolean"
+        },
+        "unlocked_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unlocked At"
+        }
+      },
+      "required": [
+        "title_id",
+        "title",
+        "trophy_id",
+        "name",
+        "grade",
+        "unlocked"
+      ],
+      "title": "Trophy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 3,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "batch_id": {
+      "format": "uuid",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "source": {
+      "const": "ps5_native",
+      "title": "Source",
+      "type": "string"
+    },
+    "mock": {
+      "const": false,
+      "title": "Mock",
+      "type": "boolean"
+    },
+    "trophies": {
+      "items": {
+        "$ref": "#/$defs/Trophy"
+      },
+      "maxItems": 0,
+      "title": "Trophies",
+      "type": "array"
+    },
+    "activities": {
+      "items": {
+        "$ref": "#/$defs/NativeActivity"
+      },
+      "maxItems": 128,
+      "title": "Activities",
+      "type": "array"
+    },
+    "consistency": {
+      "const": "sqlite_read_transaction",
+      "title": "Consistency",
+      "type": "string"
+    },
+    "profile_binding": {
+      "const": "activity_header_single_local_user",
+      "title": "Profile Binding",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "batch_id",
+    "source",
+    "mock",
+    "consistency",
+    "profile_binding"
+  ],
+  "title": "NativeActivitySnapshot",
+  "type": "object"
+}

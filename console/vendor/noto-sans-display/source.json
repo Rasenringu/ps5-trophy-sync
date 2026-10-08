@@ -1,0 +1,9 @@
+{
+  "project": "Google Fonts / Noto Sans Display",
+  "commit": "8d7e485e53e169e95e6f50f11d0cf1be04795b82",
+  "license": "OFL-1.1",
+  "files": {
+    "NotoSansDisplay.ttf": "deaa68141fa5ad21bd17d7c11fa79183ceda19b32e40ff5c33874d42f3636dde",
+    "OFL.txt": "5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6"
+  }
+}

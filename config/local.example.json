@@ -1,0 +1,10 @@
+{
+  "ps5_ip": "",
+  "elf_loader_port": 9021,
+  "firmware": "8.00",
+  "kstuff_file": "kstuff-1.13-fpkg-dr-test4.elf",
+  "nanodns_project": "unknown",
+  "nanodns_version": "unknown",
+  "service_url": "",
+  "notes": "User supplied configuration, not detected capability. Configure HTTPS service during implementation."
+}
