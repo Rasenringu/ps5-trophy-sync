@@ -10,8 +10,9 @@ friends/comparisons and local/production Compose. See STATUS for exact evidence.
    live revocation and source-change handling on hardware.
 3. Repeat rest/wake without restarting the jailbreak/worker to establish
    uninterrupted native session semantics. Preserve incomplete/uncertain values.
-4. Apply the prepared trophy-sync.party origin/secure-cookie configuration on
-   the remote host (registration currently returns origin-rejection 403).
+4. Apply the prepared Next.js 64 MiB artwork proxy fix on the Mini-PC; verify
+   a real hosted PS5 upload after the local 10 MiB truncation reproduction/fix.
+   Phone login issue resolved by using HTTPS; current public API probes work.
    Public ELF/title DNS/trust builds and host Mbed TLS checks pass; validate
    registration, console pairing and real hosted imports before distribution.
 5. Add a separately researched PS4 backward-compatible adapter and its own tests.

@@ -111,6 +111,19 @@ def test_auth_csrf_logout_and_private():
         assert db.get(Login,digest(session))
         assert not db.get(Login,session)
 
+def test_origin_rejection_is_json_and_never_creates_account():
+    from app.models import Account
+    c=TestClient(app)
+    body={'email':'origin-check@example.test','password':'test-password-123'}
+    for headers in ({}, {'origin':'null'}, {'origin':'https://evil.test'}, {'origin':'https://['}):
+        response=c.post('/auth/register',json=body,headers=headers)
+        assert response.status_code==403
+        assert response.json()=={'detail':'Same-origin request required','code':'origin_mismatch',
+                                 'website_url':'http://localhost:3000'}
+        assert response.headers['cache-control']=='no-store'
+    with Session() as db:
+        assert db.scalar(select(Account).where(Account.email==body['email'])) is None
+
 def test_device_status_requires_own_scoped_unrevoked_credential():
     c=browser();i,p,t=paired(c,local='MOCK_STATUS')
     assert c.post('/device/status',json={}).status_code==401
@@ -369,6 +382,38 @@ def test_secret_trophies_are_redacted_until_earned_and_locked_icons_denied():
     assert row['data']['name']=='SYNTHETIC secret name' and row['data']['description']=='SYNTHETIC secret description'
     assert row['icon_url'] is not None and c.get('/account/artwork/'+'a'*64).status_code==200
 
+
+def test_artwork_incomplete_upload_never_changes_cache():
+    from app.models import DevicePackage,DeviceArtwork
+    c=browser();_,_,t=paired(c)
+    response=c.post('/device/artwork',headers={'authorization':'Bearer '+t['device_token'],
+                    'content-type':'application/octet-stream','content-length':'4096'},content=b'MOCK-partial')
+    assert response.status_code==400
+    assert response.json()['detail']=='Artwork upload incomplete; retry sync'
+    with Session() as db:
+        assert db.scalar(select(DevicePackage)) is None
+        assert db.scalar(select(DeviceArtwork)) is None
+
+def test_artwork_disconnect_is_handled_before_cache_changes():
+    import asyncio
+    from fastapi import HTTPException,Request
+    from app.main import device_artwork
+    from app.models import DevicePackage,DeviceArtwork
+    c=browser();_,_,t=paired(c)
+    messages=iter([{'type':'http.request','body':b'MOCK-partial','more_body':True},
+                   {'type':'http.disconnect'}])
+    async def receive():return next(messages)
+    scope={'type':'http','method':'POST','path':'/device/artwork','headers':[
+        (b'content-type',b'application/octet-stream'),(b'content-length',b'4096'),
+        (b'authorization',('Bearer '+t['device_token']).encode())]}
+    with Session() as db:
+        profile=db.get(Profile,t['profile_uuid'])
+        with pytest.raises(HTTPException) as failure:
+            asyncio.run(device_artwork(Request(scope,receive),profile,db))
+        assert failure.value.status_code==400
+        assert failure.value.detail=='Artwork upload interrupted; retry sync'
+        assert db.scalar(select(DevicePackage)) is None
+        assert db.scalar(select(DeviceArtwork)) is None
 
 def test_device_artwork_automatic_cache_is_private_localized_and_idempotent():
     import hashlib,json

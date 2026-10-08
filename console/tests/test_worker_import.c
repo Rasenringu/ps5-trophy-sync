@@ -45,5 +45,15 @@ int main(void){
         assert(!unlinkat(directory,"queue-00000009-00.bin",0));
     }
     close(directory);assert(!rmdir(child));assert(!rmdir(parent));
+    UiModel error_model={.phase=UI_CONNECTED};
+    JsonResponse error_response={.status=413,.tls={.verified_handshake=1}};
+    assert(fail_response(&error_model,"Artwork upload",&error_response)==-1);
+    assert(strstr(error_model.error,"Artwork upload HTTP (413)"));
+    char saved_error[sizeof(error_model.error)];memcpy(saved_error,error_model.error,sizeof(saved_error));
+    fail_collection(&error_model,-3);assert(!memcmp(saved_error,error_model.error,sizeof(saved_error)));
+    error_model.phase=UI_CONNECTED;error_response.tls.rc=-123;error_response.tls.connect_stage=7;error_response.tls.posix_errno=60;
+    assert(fail_response(&error_model,"Artwork check",&error_response)==-1);
+    assert(strstr(error_model.error,"Artwork check HTTPS: stage 7 errno 60"));
+    fail_collection(&error_model,-3);assert(strstr(error_model.error,"Artwork check HTTPS"));
     puts("PASS MOCK import: same saved UUID/body on retries, exact duplicate ACK required, 5-attempt transport bound, revocation/invalid ACK retain pending data.");return 0;
 }

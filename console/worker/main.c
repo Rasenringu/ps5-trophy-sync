@@ -40,6 +40,20 @@ static int fail(UiModel *model,const char *action,int rc){
     snprintf(model->error,sizeof(model->error),"%s (%d). Close App; pending batches retained.",action,rc);
     snprintf(model->sync_status,sizeof(model->sync_status),"Sync failed: %s",action);publish(model);return -1;
 }
+static int fail_response(UiModel *model,const char *action,const JsonResponse *response){
+    char detail[100];
+    if(response->tls.rc||!response->tls.verified_handshake||response->tls.verify_flags){
+        snprintf(detail,sizeof(detail),"%s HTTPS: stage %d errno %d verify %x",action,
+                 response->tls.connect_stage,response->tls.posix_errno,response->tls.verify_flags);
+        return fail(model,detail,response->tls.rc?response->tls.rc:-1);
+    }
+    snprintf(detail,sizeof(detail),"%s HTTP",action);return fail(model,detail,response->status);
+}
+static void fail_collection(UiModel *model,int rc){
+    /* A visitor may already have published a precise queue/HTTP/TLS error. */
+    if(model->phase!=UI_ERROR)
+        fail(model,rc==-2?"Profile changed during read":rc<=-100?"Enable FTP2121 v0.21.1 for trophy discovery":"Native trophy collection failed",rc);
+}
 static int acknowledged(const char *input,const char *reply){
     sqlite3 *db=NULL;sqlite3_stmt *statement=NULL;int ok=0;
     if(sqlite3_open(":memory:",&db))goto done;
@@ -112,27 +126,30 @@ static int queue_activity_collection(sqlite3 *db,unsigned records,void *opaque){
 }
 static int queue_assets(sqlite3 *memory,unsigned count,const unsigned char *package,size_t size,const char *title,void *opaque){
     QueueContext *context=opaque;
-    if(queue_collection(memory,count,opaque)||flush_queue(context->client,context->model)||!same_user())return -1;
+    if(queue_collection(memory,count,opaque))return fail(context->model,"Trophy queue failed",-1);
+    if(flush_queue(context->client,context->model))return -1;
+    if(!same_user())return fail(context->model,"Profile changed before artwork",-2);
     unsigned char hash[32];char digest[65],json[256],body[512];
-    if(mbedtls_sha256(package,size,hash,0))return -1;
+    if(mbedtls_sha256(package,size,hash,0))return fail(context->model,"Artwork digest failed",-1);
     for(unsigned i=0;i<32;i++)snprintf(digest+i*2,3,"%02x",hash[i]);
     snprintf(json,sizeof(json),"{\"title_id\":\"%s\",\"sha256\":\"%s\"}",title,digest);
     JsonResponse response=https_json(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,"/api/device/artwork/check",context->client->device_token,json,body,sizeof(body));
-    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200)return -1;
+    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200)return fail_response(context->model,"Artwork check",&response);
     sqlite3_stmt *check=NULL;int needed=-1;
     if(!sqlite3_prepare_v2(memory,"SELECT json_extract(?1,'$.needed') WHERE json_valid(?1) AND json_type(?1,'$.needed') IN ('true','false')",-1,&check,NULL)){
         sqlite3_bind_text(check,1,body,-1,SQLITE_STATIC);if(sqlite3_step(check)==SQLITE_ROW)needed=sqlite3_column_int(check,0);
     }
-    sqlite3_finalize(check);if(needed<0)return -1;if(!needed)return 0;
+    sqlite3_finalize(check);if(needed<0)return fail(context->model,"Artwork check response invalid",200);if(!needed)return 0;
     snprintf(context->model->error,sizeof(context->model->error),"Uploading game artwork and translations: %s",title);publish(context->model);
     response=https_binary(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,"/api/device/artwork",context->client->device_token,package,size,body,sizeof(body));
-    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200||!same_user())return -1;
+    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200)return fail_response(context->model,"Artwork upload",&response);
+    if(!same_user())return fail(context->model,"Profile changed after artwork",-2);
     check=NULL;int valid=0;
     if(!sqlite3_prepare_v2(memory,"SELECT json_extract(?1,'$.status')='stored' AND json_extract(?1,'$.title_id')=?2 AND json_extract(?1,'$.sha256')=?3 WHERE json_valid(?1)",-1,&check,NULL)){
         sqlite3_bind_text(check,1,body,-1,SQLITE_STATIC);sqlite3_bind_text(check,2,title,-1,SQLITE_STATIC);sqlite3_bind_text(check,3,digest,-1,SQLITE_STATIC);
         if(sqlite3_step(check)==SQLITE_ROW)valid=sqlite3_column_int(check,0);
     }
-    sqlite3_finalize(check);return valid?0:-1;
+    sqlite3_finalize(check);return valid?0:fail(context->model,"Artwork acknowledgement invalid",200);
 }
 static void *network_worker(void *unused){
     (void)unused;UiModel model;pthread_mutex_lock(&lock);model=published;pthread_mutex_unlock(&lock);
@@ -149,7 +166,7 @@ static void *network_worker(void *unused){
     NativeCollected counts;QueueContext context={&client,&model,&rng,0};
     int rc=native_collect_assets(selected,&counts,queue_assets,&context);
     snprintf(model.reader_status,sizeof(model.reader_status),"Native: %u sets, %u earned, %u locked, %u unknown",counts.sets,counts.earned,counts.locked,counts.unknown);publish(&model);
-    if(rc){fail(&model,rc==-2?"Profile changed during read":rc<=-100?"Enable FTP2121 v0.21.1 for trophy discovery":"Native trophies/artwork sync failed",rc);goto done;}
+    if(rc){fail_collection(&model,rc);goto done;}
     if(!counts.sets){fail(&model,"Native sources unavailable",-1);goto done;}
     if(flush_queue(&client,&model))goto done;
     NativeActivityCounts activity_counts;sqlite3 *activity_memory=NULL;

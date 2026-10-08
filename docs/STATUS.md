@@ -1,5 +1,97 @@
 # Current status
 
+## PS5 artwork upload truncation fix - 2026-10-08
+
+User confirms the phone login problem was use of HTTP rather than HTTPS; Safari
+and desktop work. Focus moved to the PS5's native trophy/artwork failure. Remote
+API trace shows `ClientDisconnect` inside `/device/artwork` while reading the
+stream. No payload or console action was performed by this session.
+
+Reproduced a concrete defect in the built Next.js 16.4.0 rewrite to port 8000:
+an isolated 11 MiB MOCK upload delivered exactly 10,485,760 of 11,534,336 bytes.
+Next logged `Request body exceeded 10MB for /api/device/artwork`. The declared
+full Content-Length survives truncation, consistent with the API disconnect.
+This is a local reproduction, not proof of the user's package size or every
+possible disconnect cause. The old 30-second proxy timeout was also shorter
+than the console binary transport's 60-second request deadline.
+
+Changes:
+
+- `web/next.config.ts`: proxy buffer 64 MiB, matching API/UCP maximum; proxy
+  timeout 70 seconds. API still applies 2 MB limits to non-artwork requests,
+  profile/device authentication, artwork bounds and rate limits.
+- API: interrupted/incomplete artwork streams fail with explicit HTTP 400;
+  partial bytes never reach the cache writer. Logs record byte count only.
+- Worker: specific artwork check/upload HTTP/TLS failures and queue errors
+  survive collection failure handling; generic collection errors no longer
+  overwrite already-published errors. No reader/source/pairing path changed.
+
+Evidence/commands:
+
+- `python scripts/test-web-upload-proxy.py`: failed before the fix with the
+  exact 10 MiB truncation. Fixture runs a built web container and MOCK receiver
+  on a fresh isolated Docker network; no real API/db/token/console contact.
+- `Start-Local.ps1 -Build`: fixed production web compile/local API restart pass.
+- `python scripts/test-web-upload-proxy.py --size-mib 11 --size-mib 64`: both
+  pass complete byte counts and SHA256 after the fix; fixture containers/network
+  removed. No timeout warning/truncation at the 64 MiB boundary.
+- `Test-Local.ps1`: 56 passed, one existing deprecation warning; added interrupted
+  ASGI stream and mismatched Content-Length checks with no artwork cache writes.
+- `container-test-worker-import.sh`: passes queue/idempotency tests plus precise
+  artwork HTTP/TLS errors retained after collection failure. `container-build.sh`
+  compile/no-write startup inspection passes; `package-final-ui.py` refreshed ZIP
+  and source manifest. Foreground binary was unchanged and not recompiled.
+
+Current worker SHA256:
+`a88b0d55fa8f353b2fe07da7f8de7887d538db21a50826bbc72dce2f5f75227b`.
+Foreground SHA256 remains
+`9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda`.
+Outputs remain `artifacts/console/final-ui/TrophySync.elf` and
+`TrophySync-PS5.zip`. Manifest remains `console_verified=false`.
+
+Next action: copy updated host source to the Mini-PC, run
+`scripts/Start-Local.ps1 -Build` with its existing env/database, then observe a
+normal user-authorized PS5 sync. No tunnel/port/domain/env change is needed for
+this fix. The worker update improves diagnostics; the server fix is essential.
+Do not remove volumes or pairing/queue storage. No remote deployment, push or
+new PS5 execution occurred here.
+
+## Registration/API routing audit - 2026-10-08
+
+User reports desktop registration works but Firefox on an iPhone 16 Pro on the
+same Wi-Fi displays the generic French connection error. Earlier supplied API
+logs include browser login/register 403, while diagnostic empty registration
+requests reached 422. The previous client hid plain-text origin rejections as
+connectivity failures. No direct access to the remote host or physical phone.
+
+- `python scripts/test-api-routes.py`: 28/28 safe anonymous route probes pass on
+  trophy-sync.party; two successful writes intentionally skipped. Report in
+  `artifacts/tests/public-api-routes.json`. Health 200, empty register/login 422,
+  private routes 401, nonexistent public player routes 404. Port 3000's Next.js
+  rewrite reaches the API; a separate tunnel to 8000 is not required.
+- Read-only hosted browser probes: desktop Chromium, mobile Android Chromium
+  and iPhone WebKit all load `/login` and receive expected 422 for empty-register
+  fetch. No account created; this does not reproduce/validate physical Firefox.
+- Origin errors now use JSON with a fixed error code/configured URL. API logs
+  only sanitized origin classification/expected origin. Missing/null/malformed/
+  wrong Origin remains rejected. Client displays origin, Cloudflare challenge
+  and unexpected HTTP errors separately; six locale dictionaries updated.
+- `Start-Local.ps1 -Build`: updated local API/web recreated, production Next.js
+  build passes, existing database volume preserved. Remote host unchanged.
+- `Test-Local.ps1`: 54 passed, one existing Starlette/httpx deprecation warning;
+  includes JSON/malformed/missing/null origin refusal with no account creation.
+- Focused `playwright.mobile.config.ts`: 8 passed, WebKit/Chromium mobile error
+  cases (origin JSON/legacy text, proxy HTML, Cloudflare challenge). All API calls
+  intercepted; no account created. Initial test harness failures were corrected:
+  WebKit does not accept Chromium's host-resolver flag; Next's route announcer
+  requires scoping assertions to the form's actual error paragraph.
+
+Next action: compare Safari on the affected iPhone, deploy these diagnostics
+to the Mini-PC, reproduce once and inspect origin-rejection/API/Cloudflare logs.
+The physical Firefox failure remains unconfirmed; no CSRF checks were weakened.
+See [browser troubleshooting](WEB_TROUBLESHOOTING.md). The earlier remote origin
+block below is historical: current probes now accept the public origin.
+
 ## Public-service build milestone — 2026-10-08
 
 User reports trophy-sync.party is hosted through Cloudflare on another host.

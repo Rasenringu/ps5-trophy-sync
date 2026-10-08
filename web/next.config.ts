@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 const config: NextConfig = {
   poweredByHeader: false,
+  // Native UCP uploads are bounded to 64 MiB by the API. The default 10 MiB
+  // rewrite buffer truncates larger bodies while forwarding their full length.
+  experimental: {proxyClientMaxBodySize: 64 * 1024 * 1024, proxyTimeout: 70000},
   async headers() {
     const headers=[
       {key:'X-Content-Type-Options',value:'nosniff'},

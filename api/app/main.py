@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import os
 import secrets
 import time
@@ -8,6 +9,8 @@ from urllib.parse import urlencode, urlsplit
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, InvalidHashError
 from fastapi import FastAPI, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
+from starlette.requests import ClientDisconnect
 from sqlalchemy import select, delete, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
@@ -38,7 +41,19 @@ async def guard(request: Request, call_next):
     # Browser writes require a same-origin request even in local HTTP development.
     if request.method not in ('GET', 'HEAD', 'OPTIONS') and request.url.path.startswith(('/auth/', '/account/')):
         if request.headers.get('origin') != origin:
-            return Response('Same-origin request required', status_code=403)
+            # Log only the origin classification, never credentials or bodies.
+            received = request.headers.get('origin', '')
+            safe_origin = 'null' if received=='null' else 'missing-or-invalid'
+            try:
+                parsed = urlsplit(received)
+                if parsed.scheme in ('http','https') and not parsed.username:
+                    safe_origin = parsed.scheme+'://'+parsed.netloc
+            except ValueError:
+                pass
+            logging.getLogger('uvicorn.error').warning('Browser origin rejected: received=%r expected=%r', safe_origin[:192], origin)
+            return JSONResponse({'detail':'Same-origin request required', 'code':'origin_mismatch',
+                                 'website_url':origin}, status_code=403,
+                                headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'})
     try:
         length = int(request.headers.get('content-length', '0'))
     except ValueError:
@@ -428,10 +443,17 @@ async def device_artwork(request: Request, profile: Profile=Depends(device), db:
     rate(db,'artwork-upload:'+profile.id,32,600)
     if request.headers.get('content-type')!='application/octet-stream':fail(415,'Native UCP package required')
     parts=[];size=0
-    async for chunk in request.stream():
-        size+=len(chunk)
-        if size>64*1024*1024:fail(413,'Artwork package exceeds bounds')
-        parts.append(chunk)
+    try:
+        async for chunk in request.stream():
+            size+=len(chunk)
+            if size>64*1024*1024:fail(413,'Artwork package exceeds bounds')
+            parts.append(chunk)
+    except ClientDisconnect:
+        logging.getLogger('uvicorn.error').warning('Artwork upload interrupted after %d bytes',size)
+        fail(400,'Artwork upload interrupted; retry sync')
+    declared=request.headers.get('content-length')
+    if declared is not None and size!=int(declared):
+        fail(400,'Artwork upload incomplete; retry sync')
     current=db.scalar(select(Profile).where(Profile.id==profile.id).with_for_update().execution_options(populate_existing=True))
     if not current or current.revoked or current.token!=bearer(request) or not current.owner:fail(401,'Pair this profile again; credential missing or revoked')
     from .device_artwork import store_package

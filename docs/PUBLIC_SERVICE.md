@@ -46,6 +46,10 @@ After updating the remote host, run `scripts/Test-PublicService.ps1`. On
 request required**, while this updated PC returned the expected **422** missing
 fields response. Remote registration/pair approval remains blocked until its API
 origin is corrected. Neither probe created an account.
+Later route/browser checks on the same date now accept the public origin (422
+for empty registration), and desktop registration works according to the user.
+The outstanding physical iPhone/Firefox issue is tracked in
+[browser troubleshooting](WEB_TROUBLESHOOTING.md).
 
 Route Cloudflare to the production gateway as described in
 [self-hosting](SELF_HOSTING.md). Keep `/api/device/*` reachable without browser
@@ -53,6 +57,12 @@ challenges/Cloudflare Access, while retaining API device authentication and rate
 limits. The gateway allows up to 64 MiB specifically on `/api/device/artwork`;
 other requests retain their tighter limits. Do not cache authorization or sync
 responses. A health response alone does not validate registration or pairing.
+For the user's `Start-Local.ps1` stack with Cloudflare forwarding to port 3000,
+Next.js now buffers up to 64 MiB and permits a 70-second upstream request. Its
+former 10 MiB default truncated large artwork uploads. Copy the updated
+`web/next.config.ts` and API source to the host and run `Start-Local.ps1 -Build`;
+existing environment values and database volume are retained. The production
+gateway routes artwork directly to the API and also retains its 64 MiB limit.
 
 ## Transport policy and evidence
 

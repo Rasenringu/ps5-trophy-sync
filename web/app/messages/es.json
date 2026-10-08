@@ -266,5 +266,9 @@
   "Unable to connect. Please try again.": "No se pudo conectar. Inténtalo de nuevo.",
   "This library is shared with friends only": "Esta colección se comparte solo con amigos",
   "Disconnect console": "Desconectar consola",
-  "Finish pairing on your console": "Completa la vinculación en tu consola"
+  "Finish pairing on your console": "Completa la vinculación en tu consola",
+  "Open the public website URL to sign in or register.": "Abre la dirección pública del sitio para iniciar sesión o registrarte.",
+  "Cloudflare requires a browser security check. Reload the website and try again.": "Cloudflare requiere una comprobación de seguridad del navegador. Recarga el sitio e inténtalo de nuevo.",
+  "The server returned an unexpected response (HTTP {status}). Please try again.": "El servidor devolvió una respuesta inesperada (HTTP {status}). Inténtalo de nuevo.",
+  "The website origin check rejected this request. Open {url} and try again.": "La comprobación del origen del sitio rechazó esta solicitud. Abre {url} e inténtalo de nuevo."
 }

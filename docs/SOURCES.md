@@ -66,3 +66,10 @@ in `config/public-service.json`. The hosted leaf issuer observed was Let's Encry
 YE2. SDK v0.43's `target/include/netdb.h` declares getaddrinfo/freeaddrinfo and
 pthread APIs; the PS5 worker links successfully with those APIs. Console resolver
 runtime behavior remains unverified. No SDK/dependency version was changed.
+
+The installed pinned Next.js 16.4.0 source (`dist/server/body-streams.js` and
+`lib/router-utils/resolve-routes.js`) confirms the 10 MiB default clone limit and
+truncated rewrite body behavior. Official [proxyClientMaxBodySize documentation](https://nextjs.org/docs/app/api-reference/config/next-config-js/proxyClientMaxBodySize)
+describes the same limit. `config-shared.d.ts`/`router-server.js` confirm the
+experimental `proxyTimeout` API used for a 70-second upstream timeout. Both config
+options compile in the pinned version. No dependency/image version changed.
