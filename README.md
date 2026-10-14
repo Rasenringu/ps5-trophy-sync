@@ -1,6 +1,6 @@
 # TrophySync
 
-TrophySync imports native PS5 trophies and recorded playtime into a self-hosted
+TrophySync imports native PS5 and PS4 trophies and recorded playtime into a self-hosted
 web library. Pair a local console profile with a short-lived QR/code, then open
 the PS5 application to sync directly over validated HTTPS. No PSN password or
 permanent relay is required.
@@ -17,8 +17,14 @@ incomplete sessions retain unknown duration. Native logger `CUSA` sessions can
 appear as PS4 playtime entries (with the application ID if a name is unavailable).
 Activity-only entries can use their installed application icon, including PS4
 and recomp titles. Update the hosted API before the new worker; this added
-artwork path still needs console validation.
-PS4 trophy extraction is still unimplemented; see [current evidence](docs/STATUS.md).
+artwork path is console-validated on the documented test build.
+The PS4 adapter reads verified disposable copies of the selected profile's encrypted
+images, checks the embedded profile/set, then imports stripped trophy state and
+publisher TRP metadata/images. Original images are never mounted or written.
+The reader and full hosted foreground sync are console-verified for the exact
+build recorded in STATUS. Update the server before installing the schema-v4 worker.
+Only existing per-profile state is imported; missing state is never invented.
+See [current evidence](docs/STATUS.md).
 Native trophy packages are bounded to 128 MiB, including Uncharted's observed
 70.17 MiB package. Update both the console worker and server/web ingress for this fix.
 
@@ -121,7 +127,7 @@ console-local discovery; trophy packages then go directly to the HTTPS service.
 Native trophy/playtime imports, saved pairing, repeat sync and automatic artwork
 have console evidence. The redesigned foreground title is installed and its
 bytes/registration are verified; its new screen and Close App still need a console
-observation. PS4 support and passive resident synchronization are pending.
+observation. PS4 private-copy reading and integrated foreground sync are verified for the documented build. Passive resident synchronization is pending.
 See [current status and limits](docs/STATUS.md) and [passive sync](docs/PASSIVE_SYNC.md).
 
 ## Tests and hosting

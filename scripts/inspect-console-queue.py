@@ -22,6 +22,7 @@ names = [name for name, facts in ftp.mlsd()
          if facts.get('type') == 'file' and re.fullmatch(r'queue-[0-9a-f]{8}-[0-9]{2}\.bin', name)]
 ack = Counter()
 kinds = Counter()
+sources = Counter()
 requested = {}
 unstable = 0
 
@@ -52,24 +53,29 @@ for name in names:
     if hashlib.sha256(sealed).digest() != body[290:322]:
         raise ValueError('Invalid queue digest')
     snapshot = json.loads(body[322:322+length])
-    if snapshot.get('mock') is not False or snapshot.get('source') != 'ps5_native':
-        raise ValueError('Queue evidence is not a real native observation')
+    if snapshot.get('mock') is not False or snapshot.get('source') not in ('ps5_native','ps4_bc'):
+        raise ValueError('Queue evidence is not a real console observation')
+    if snapshot['source']=='ps4_bc' and snapshot.get('schema_version')!=4:
+        raise ValueError('Unsupported PS4 queue evidence')
+    sources[snapshot['source']] += 1
     ack[acknowledged] += 1
     for kind in ('trophies', 'activities'):
         for row in snapshot[kind]:
             kinds[kind] += 1
-            if row['title_id'] not in ('PPSA74207', 'PPSA99902', 'CUSA03804', 'CUSA02344', 'NPWR26589_00'):
+            if row['title_id'] not in ('PPSA74207', 'PPSA99902', 'CUSA03804', 'CUSA02344', 'NPWR26589_00','NPWR09798_00','NPWR10954_00','NPWR29343_00'):
                 continue
             entry = requested.setdefault(row['title_id'], {'title': row['title'], 'trophies': 0,
-                'activities': 0, 'acknowledged_records': 0, 'completed_seconds': 0})
+                'activities': 0, 'acknowledged_records': 0, 'completed_seconds': 0, 'earned': 0, 'locked': 0, 'unknown': 0})
             entry[kind] += 1
             entry['acknowledged_records'] += acknowledged
+            if kind=='trophies':
+                entry['earned' if row.get('unlocked') is True else 'locked' if row.get('unlocked') is False else 'unknown'] += 1
             if kind == 'activities' and row.get('complete') and row.get('duration_seconds') is not None:
                 entry['completed_seconds'] += row['duration_seconds']
 ftp.quit()
 report = {'scope': 'Stable surviving queue slots only; slots are reused after acknowledgement',
     'acknowledged_slots': ack[1], 'pending_slots': ack[0], 'unstable_slots_skipped': unstable,
-    'records': dict(kinds), 'requested_games': requested}
+    'records': dict(kinds), 'source_slots':dict(sources), 'requested_games': requested}
 destination = root / 'captures/library-investigation/queue-summary.json'
 destination.parent.mkdir(parents=True, exist_ok=True)
 destination.write_text(json.dumps(report, indent=2), encoding='utf-8')

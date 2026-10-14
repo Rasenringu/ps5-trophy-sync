@@ -24,10 +24,13 @@ static const char *mapped(const char *path,char out[512]){
 }
 static int test_open(const char *path,int flags,...){
     mode_t mode=0;if(flags&O_CREAT){va_list a;va_start(a,flags);mode=(mode_t)va_arg(a,int);va_end(a);}
-    if(!strncmp(path,"/user/",6))assert((flags&O_ACCMODE)==O_RDONLY&&!(flags&O_CREAT));
+    if(!strncmp(path,"/user/",6)){
+        assert((flags&O_ACCMODE)==O_RDONLY&&!(flags&O_CREAT));
+        assert(auth==0x4800000000000010ULL&&capabilities[0]==255);
+    }
     char p[512];return open(mapped(path,p),flags,mode);
 }
-static DIR *test_opendir(const char *path){char p[512];return opendir(mapped(path,p));}
+static DIR *test_opendir(const char *path){assert(auth==0x4800000000000010ULL&&capabilities[0]==255);char p[512];return opendir(mapped(path,p));}
 static int test_mkdir(const char *path,mode_t mode){assert(!strncmp(path,"/data/trophy-sync-ps4-reader",27));char p[512];return mkdir(mapped(path,p),mode);}
 static int test_rmdir(const char *path){assert(!strncmp(path,"/data/trophy-sync-ps4-reader",27));char p[512];return rmdir(mapped(path,p));}
 static int test_unlink(const char *path){assert(!strcmp(path,"/data/trophy-sync-ps4-reader/image"));char p[512];return unlink(mapped(path,p));}
@@ -48,7 +51,7 @@ static int test_ioctl(int fd,unsigned long request,void *key){(void)fd;assert(re
 uint64_t kernel_get_ucred_authid(pid_t p){assert(p==getpid());return auth;}
 int kernel_set_ucred_authid(pid_t p,uint64_t a){assert(p==getpid());auth=a;return 0;}
 int kernel_get_ucred_caps(pid_t p,uint8_t *c){assert(p==getpid());memcpy(c,capabilities,16);return 0;}
-int kernel_set_ucred_caps(pid_t p,const uint8_t *c){assert(p==getpid());memcpy(capabilities,c,16);return 0;}
+int kernel_set_ucred_caps(pid_t p,const uint8_t *c){assert(p==getpid());if((failure==6&&c[0]==255)||(failure==7&&!c[0]))return -1;memcpy(capabilities,c,16);return 0;}
 uintptr_t kernel_dynlib_dlsym(int p,uint32_t h,const char *n){(void)p;(void)h;(void)n;assert(0);return 0;}
 int sceUserServiceGetForegroundUser(uint32_t *p){*p=failure==4&&mounts?2:1;return 0;}
 static void put(const char *path,const void *b,size_t n){char p[512];mapped(path,p);int fd=open(p,O_WRONLY|O_CREAT|O_EXCL,0600);assert(fd>=0&&write(fd,b,n)==(ssize_t)n);close(fd);}
@@ -85,13 +88,14 @@ int main(void){
     memcpy(package,"\xdc\xa2\x4d\0\0\0\0\3",8);unsigned char sha[20];assert(!mbedtls_sha1(package,96,sha));memcpy(package+28,sha,20);
     put("/user/trophy/conf/NPWR00001_00/TROPHY.TRP",package,96);put("/dev/pfsmgr","",0);
     init_mount=mock_init;mount_copy=mock_mount;init_unmount=mock_init_end;unmount_copy=mock_end;
-    for(failure=0;failure<=5;failure++){
+    for(failure=0;failure<=7;failure++){
         visits=mounts=unmounts=0;Ps4Collected count;int rc=ps4_collect(1,&count,visit,NULL);
-        assert(auth==42);for(unsigned j=0;j<16;j++)assert(!capabilities[j]);
+        assert(auth==42);for(unsigned j=0;j<16;j++)assert(capabilities[j]==(failure==7?255:0));
         assert(visits==(failure==0||failure==5));
         if(!failure)assert(!rc&&count.sets==1);
         else if(failure==3)assert(!rc&&count.rejected==1);
         else assert(rc<0);
+        if(failure==7){assert(count.stage==7);memset(capabilities,0,16);}
         char p[512];int fd=open(mapped("/user/home/00000001/trophy/data/NPWR00001_00/trophy.img",p),O_RDONLY);unsigned char current[1024];assert(fd>=0&&read(fd,current,1024)==1024&&!memcmp(image,current,1024));close(fd);
         if(failure==2){assert(count.stage==6);assert(!access(mapped(STAGE "/image",p),F_OK));Ps4Collected again;assert(ps4_collect(1,&again,visit,NULL)<0&&again.stage==8);assert(!unlink(mapped(STAGE "/mount/TRPTITLE.DAT",p)));assert(!rmdir(mapped(STAGE "/mount",p)));assert(!unlink(mapped(STAGE "/image",p)));assert(!rmdir(mapped(STAGE,p)));}
     }

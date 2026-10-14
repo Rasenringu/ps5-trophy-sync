@@ -50,6 +50,17 @@ manifest = {'title_id': title.name, 'content_version': metadata['contentVersion'
     'files': {p.relative_to(title).as_posix(): sha(p) for p in sorted(title_files)},
     'source_sha256': {p.relative_to(root).as_posix(): sha(p) for p in sorted(sources)},
     'font': json.loads((root / 'console/vendor/noto-sans-display/source.json').read_text())}
+evidence_path = root / 'console/validation/ps4-worker-2026-10-14.json'
+if evidence_path.exists():
+    evidence = json.loads(evidence_path.read_text())
+    if (evidence['worker_sha256'] == manifest['worker_sha256']
+            and evidence['foreground_sha256'] == manifest['files']['eboot.bin']
+            and evidence['origin'] == manifest['endpoint']['origin']
+            and evidence['user_confirmed_hosted_trophies']
+            and evidence['original_image_hashes_unchanged']
+            and evidence['private_reader_staging_removed']):
+        manifest['console_verified'] = True
+        manifest['console_validation'] = evidence
 (base / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
 (base / 'INSTALL.txt').write_text(
     'TrophySync service: ' + manifest['endpoint']['origin'] + '\n'
@@ -61,8 +72,9 @@ manifest = {'title_id': title.name, 'content_version': metadata['contentVersion'
     'PS4 reader mounts only verified disposable copies; never original images.\n'
     'Update the server for snapshot v4 and PS4 artwork before installing this worker.\n'
     'Passive sync remains unsupported. Missing per-profile state is not inferred.\n'
-    'FW 8.00 baseline; other firmware/loader configurations unverified.\n'
-    'This public-service build has not been validated on a PS5.\n'
+    'FW 8.00 baseline; other firmware/loader configurations unverified.\n' +
+    ('This exact worker/foreground has a verified PS4 foreground sync; other lifecycle/configurations unverified.\n'
+     if manifest['console_verified'] else 'This exact public-service build has not been validated on a PS5.\n') +
     'GPL distribution requires corresponding source; retain licenses.\n', encoding='utf-8')
 with zipfile.ZipFile(base / 'TrophySync-PS5.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
     for p in sorted(title_files):

@@ -202,6 +202,14 @@
       ]
     },
     {
+      "name": "pycryptodomex",
+      "version": "3.24.1",
+      "license_metadata": "BSD, Public Domain",
+      "license_files": [
+        "pycryptodomex-3.24.1.dist-info/LICENSE.rst"
+      ]
+    },
+    {
       "name": "pydantic",
       "version": "2.12.5",
       "license_metadata": "MIT",

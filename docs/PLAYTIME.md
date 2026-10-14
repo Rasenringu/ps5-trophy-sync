@@ -23,13 +23,15 @@ stored source-clock evidence.
 
 Metadata uses bounded read-only `param.json` with exact title identity validation.
 Activity title IDs remain stored unchanged. The library joins activity to a trophy
-set only for PPSA activity through an exact, unique title within that profile; ambiguous/missing
+set for PPSA activity through an exact, unique title within that profile. PS4
+activity joins only through an exact, unique CUSA binding embedded in validated
+PS4 state; no name matching or duplicated collection playtime. Ambiguous/missing
 matches stay separate. Games without imported trophies appear as activity-only
 entries with no trophy progress bar. Missing metadata keeps the exact observed
 application ID as its label; invalid existing metadata is still rejected.
 Native PS5 logger sessions accept `PPSA` and `CUSA` identifiers. A `CUSA` entry
 is displayed as PS4 while retaining `ps5_native` provenance for its logger data;
-this does not implement or validate a PS4 trophy reader. Recomp IDs observed over
+logger provenance remains independent of the separate PS4 trophy reader. Recomp IDs observed over
 FTP are `PPSA74207` (The Simpsons Game) and `PPSA99902` (Sonic Unleashed Recompiled).
 The authorized 2026-10-14 diagnostic observed 192 foreground seconds for Simpsons
 and 406 across two completed Sonic sessions. PS4 names optionally use the

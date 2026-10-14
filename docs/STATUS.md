@@ -1,5 +1,103 @@
 # Current status
 
+## PS4 foreground sync working on console and hosted service - 2026-10-14
+
+User specifically authorized one transport-fix worker sync, then confirms:
+?GOT PS4 3 sets and i see the trophies now?. The final reader count is published
+only after all set visitors complete their durable import and validated package
+cache/upload acknowledgement. This verifies the integrated PS4 reader, schema-v4
+API and publisher artwork/metadata flow on the test configuration.
+
+Working installed worker SHA256:
+`4c99e2dfcd5e4556115241c9fe6450b0807f9f943a1e8e31be002e7454afb17f`.
+Foreground unchanged:
+`9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda`.
+Expected source sets: Attack on Titan (43), Drake's Fortune Remastered (54),
+Naruto/Boruto Connections (45, two earned). Queue audit confirms acknowledged
+PS4 records; slots are reused, so surviving queue rows are not a complete library
+count. Final audit: all four original image hashes unchanged against the fresh
+stable pre-test baseline, two complete reads agree, no private reader staging
+remains and installed worker hash matches. Earlier source changes remain recorded
+below rather than being retrospectively called unchanged.
+
+Exact worker/foreground/origin evidence is retained without personal identifiers
+in console/validation/ps4-worker-2026-10-14.json. Packaging marks console_verified
+only when those exact hashes/origin match; changed builds stay unverified.
+ZIP regenerated and manifest/license/source/private-capture exclusion checked.
+Artifacts: artifacts/console/final-ui/TrophySync-PS5.zip and TrophySync.elf.
+No pairing, foreground or Manager autoload metadata changed; previous ELFs saved
+privately. No agent commit/push or host deployment. User rebuilt the host.
+
+Checks: 65 API tests; console suite and new PS4 snapshot/state/export/ACL/queue
+fixtures; PS4 JSON and binary real TLS fixtures; three focused browser playtime
+fixtures; actual captured C-export-to-Pydantic/package integrity interoperability;
+SDK worker/no-write CRT compile. No test claims resident mode, other firmware,
+all missing per-profile sets, or lifecycle/offline recovery validation.
+
+Remaining source limitation: only Drake's Fortune has observed per-profile state;
+Uncharted 2/3 publisher packages alone are not unlock state. Collection CUSA02344
+is not guessed equal to component CUSA03280 or assigned duplicate playtime.
+Next action for this fix: user may commit the remaining console corrections,
+failure tests and documentation. Host is already compatible; no additional API
+rebuild required for the final two console-only corrections. Broader lifecycle
+and absent-state investigation remain in ROADMAP, not blockers for this reader.
+
+
+## Protected PS4 reader imports state; transport-route correction - 2026-10-14
+
+Corrected approved worker 68b12c84... reached PS4 artwork checking, reporting
+HTTPS stage 0 errno 0. Six durable PS4 queue slots are acknowledged: Naruto/Boruto
+45 trophies, two earned / 43 locked. No subsequent PS4 set was processed because
+the first artwork check stopped the visitor. This verifies the protected-read
+correction on hardware and actual schema-v4 imports into the rebuilt hosted API.
+
+Identified a JSON transport bug: its path character filter rejected digit 4 in
+the new exact /api/device/ps4-artwork/check route. Added an exact-route exception;
+real TLS fixture now exercises that route and passes, plus existing certificate,
+response-bound and deadline tests. Worker rebuilt/no-write CRT verified and ZIP
+regenerated: 4c99e2dfcd5e4556115241c9fe6450b0807f9f943a1e8e31be002e7454afb17f.
+No host change required. User authorized one transport-fix sync. Installed and
+verified the exact 4c99e2df... worker hash, preserving previous ELF privately and
+existing pairing/foreground/Manager settings. No manual launch sent; Media app
+starts the worker. User asked to close/wait 40 seconds/reopen and check web results.
+Fresh original baseline uses two equal complete reads of each of four images.
+
+After this run Naruto's processed source hash is unchanged and private staging is
+gone. Aggregate/Drake/Attack originals differ from the baseline preceding the
+first worker run; these sets were not processed in the corrected run. This is
+recorded as unexplained source change, not asserted source preservation. No
+original write/mount/copy-back path exists. User reports no PS4/game-menu activity during the tests and that the PS4 Naruto
+copy was removed for the PS5 version. That explains retained historical PS4 state,
+but is not established as the cause of the other original-image changes.
+Fresh hashes are stable and unchanged across the next audit.
+Next: approved transport-fix sync, all three set/package ACKs and source audit.
+
+
+## First integrated PS4 worker result and protected-read correction - 2026-10-14
+
+User reports more artwork and PS5 9 games / PS4 0 games after the authorized
+280316a... worker run. Queue audit confirms no PS4 records, all 22 surviving
+native slots acknowledged. All four original PS4 image hashes remain unchanged;
+no private reader stage remains. Conf/state source paths still exist through FTP.
+
+Code review found the integration opened/enumerated protected PS4 sources before
+its own credential guard, whereas the successful inspection acquired permissions
+first. Correction now guards source enumeration and each entire read/snapshot,
+then restores before visitors/network; original descriptors remain O_RDONLY and
+only fixed private copies can mount. Host ACL fixtures now assert those reads
+cannot occur without the guard. Missing source and permission/consistency errors
+are distinguished; inaccessible data is no longer silently an empty collection.
+ASan/UBSan collector checks pass including protected-read ordering and denied
+setup/restoration. Corrected worker SHA256:
+68b12c8418a3290bf927c63f01d5e774794bfda40602052af996e017df983211.
+SDK compilation/no-write CRT passes; package regenerated, foreground unchanged.
+User explicitly authorized one corrected sync. Installed and verified this exact
+hash, preserving prior ELF privately and existing pairing/foreground/Manager
+metadata. No manual launch sent; user asked to close/wait 40 seconds/reopen Media.
+User could see only reader counts in the first run, not missing/rejected details.
+Root cause remains an inference until corrected hardware results arrive.
+
+
 ## PS4 private-copy reader verified; worker integration under test - 2026-10-14
 
 The user authorized one v3 private-copy inspection. Executed ELF SHA256
@@ -38,10 +136,37 @@ application joins. `Start-Local.ps1 -Build` built local API/web successfully.
 PyCryptodomex 3.24.1 is pinned; its upstream license is retained in
 api/licenses/PyCryptodomex.txt. Research repositories remain research only.
 
-Next: complete export/collector/transport integration tests, regenerate contracts,
-rebuild/package and update instructions. The new production worker has NOT run on
-the console and the remote host has NOT received these PS4 routes/schema changes.
-A further worker test needs specific authorization after a concrete build exists.
+Additional completed validation: console suite passes, including bounded binary
+TLS PS4 route and >3-second processing pause. New ASan/UBSan collector fixtures
+verify copy-only mount arguments, unchanged originals, credential restoration
+before visitor, unseal/decode/profile/visitor failures, failed-unmount staging
+preservation and denied setup/restoration permissions. Export checks preserve
+uint64 raw times/unknown state and reject range overflow or malformed bindings.
+Worker queue/artwork fixtures cover schema-v4 ACK, cache hit/miss, duplicate
+response keys and wrong title ACK. Three focused playtime browser tests pass,
+including a single PS4 trophy/activity card and unknown state.
+Actual stripped C exports validate in Pydantic and match captured TRP digests,
+all grades and 54/43/45 counts (two earned in the latter).
+OpenAPI and snapshot-v4 contracts regenerated; API/web rebuilt and healthy locally.
+
+Packaged worker SHA256:
+`280316a66384cdb2d9019133243defc4fd73fd9b230122e06b1e0d47ec9abbd8`.
+Foreground unchanged:
+`9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda`.
+ZIP: artifacts/console/final-ui/TrophySync-PS5.zip; console_verified=false.
+User created commit 1986cec (PS4 trophies fixes) during this work; no agent commit
+or push occurred. Remaining documentation/failure-test updates stay reviewable.
+User confirmed the remote host rebuild is live and explicitly authorized one
+worker sync of the exact hash above. Read-only hosted HTTP probes were blocked
+(403 public edge / timeout direct port), so host capability is user-confirmed.
+Installed that exact ELF at the existing TrophySync Manager path, verified
+uploaded SHA256 and saved the prior matching worker privately. Pairing/metadata,
+foreground, queue and Manager autoload settings were preserved. Four original
+PS4 image baseline hashes recorded privately before installation.
+No manual worker launch was sent; the foreground app's existing bridge starts it.
+User was asked to open/reopen Media TrophySync and report the final sync status.
+Next: verify acknowledged PS4 records, UI completion, cleanup and unchanged
+source hashes. Integrated console validation is still pending.
 Earlier diagnostic-preparation entries below are historical, superseded here.
 
 ## PS4 repository research and disposable-copy diagnostic prepared - 2026-10-14

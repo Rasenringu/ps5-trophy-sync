@@ -32,6 +32,7 @@ good=b'HTTP/1.1 200 OK\r\nContent-Length: '+str(len(body)).encode()+b'\r\nConnec
 assert attempt(good)==[0,0,1,200,len(body)]
 assert attempt(good,host="localhost")==[0,0,1,200,len(body)]
 assert attempt(good,path='/api/device/application-artwork/check')==[0,0,1,200,len(body)]
+assert attempt(good,path='/api/device/ps4-artwork/check')==[0,0,1,200,len(body)]
 for invalid in [
     b'HTTP/1.1 200 OK\r\nContent-Length: 8\r\nContent-Length: 8\r\n\r\n{}',
     b'HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n2\r\n{}\r\n0\r\n\r\n',

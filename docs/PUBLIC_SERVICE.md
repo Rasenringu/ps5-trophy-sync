@@ -21,7 +21,9 @@ console/profile. The worker creates a separate server installation identity and
 profile-scoped revocable credential for each console installation. No shared
 device token, PSN password or permanent credential is shipped in the ELF or QR.
 Paired launches import native PS5 trophies and recorded foreground playtime;
-PS4 trophies and passive background sync remain unsupported.
+PS4 private-copy trophy reading is console-verified. Update API/web for snapshot
+v4 and /device/ps4-artwork before replacing the worker. Integrated hosted PS4
+sync is verified for the exact build in STATUS. Passive background sync remains unsupported.
 
 Public-service state/queue lives in private app-owned `/data/trophy-sync-party`.
 The prior LAN state in `/data/trophy-sync-worker` is preserved and never reused

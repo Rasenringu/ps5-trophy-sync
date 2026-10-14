@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-14",
+  "worker_sha256": "4c99e2dfcd5e4556115241c9fe6450b0807f9f943a1e8e31be002e7454afb17f",
+  "foreground_sha256": "9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda",
+  "origin": "https://trophy-sync.party",
+  "firmware": "8.00 (user supplied)",
+  "runtime_kstuff_version": "unknown",
+  "scope": "One expressly authorized foreground sync; not resident/lifecycle or other firmware validation",
+  "user_confirmed_ps4_sets": 3,
+  "user_confirmed_hosted_trophies": true,
+  "original_image_hashes_unchanged": true,
+  "private_reader_staging_removed": true,
+  "evidence": "docs/STATUS.md; raw private captures remain ignored"
+}

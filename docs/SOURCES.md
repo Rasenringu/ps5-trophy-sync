@@ -106,3 +106,17 @@ Follow-up primary references, research only (no third-party code/keys incorporat
 - [pkg_pfs_tool saved-data derivation](https://github.com/flatz/pkg_pfs_tool/blob/4e74afa98b0f57b2b50a2182c1ef89905dc040a7/src/keymgr.c)
   identifies the extra saved-data key schedule. It does not provide usable keys
   in its configuration. No code from this repository was linked or copied.
+
+
+[ps4-trophies TRP/ESFM source](https://github.com/jacopo-degattis/ps4-trophies/tree/15c3cd2a1aa70babb4e76e91f207810ccda77c2e)
+was inspected locally at that commit for the public publisher ESFM format constant
+and AES-CBC derivation; no code was copied. This constant is intentionally used
+by the independent metadata decoder and is not a console/user secret.
+[Initial PS4 language enumeration corroboration](https://github.com/bucanero/apollo-ps4/blob/ef0f8fc321ebc187d5b8ef91b8af0648450dc520/common.c)
+uses the observed PS4 language indices. Six actual TRPs independently validate.
+[PyCryptodomex licensing](https://www.pycryptodome.org/src/license): BSD 2-Clause
+and public-domain components; pinned 3.24.1, source archive SHA256
+09081666ffc599976c0b8b29caf2cf82212c0f05bed233c8f8ed53e4f6e1d356.
+The retained full upstream license is api/licenses/PyCryptodomex.txt.
+The successful authorized v3 private-copy test and actual format bindings are
+recorded in STATUS; this supersedes earlier mount-capability uncertainty.

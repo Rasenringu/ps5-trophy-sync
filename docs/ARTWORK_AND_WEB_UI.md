@@ -20,8 +20,8 @@ PNG structure and requires owned, real native activity before accepting an image
 Missing icons keep the placeholder. This supports recomp and PS4 playtime entries
 without implying that trophy data was imported. No database migration is needed;
 update the hosted API before installing the worker that uses the new
-`/device/application-artwork` endpoints. This path is locally tested; its console
-result is still pending (see STATUS).
+`/device/application-artwork` endpoints. This path is locally tested; the user confirmed additional artwork after the
+authorized worker sync (see STATUS).
 
 Assets and translated metadata are stored in PostgreSQL. Library responses carry
 asset identifiers; images use same-origin authorization. Ownership/visibility
@@ -52,3 +52,17 @@ Search/sort do not change aggregate playtime.
 
 See [social visibility](SOCIAL_AND_COMPARISONS.md), [playtime](PLAYTIME.md) and
 [current verification](STATUS.md).
+
+## PS4 publisher packages
+
+The independent PS4 adapter uses bounded 32 MiB TRP v3 packages, validates SHA1,
+entry bounds/names/overlap, decrypts publisher ESFM text and validates exact NPWR,
+numeric trophy IDs, grades and localized definitions before accepting PNG assets.
+Owned schema-v4 state with a matching package digest/grade is required. Cache and
+upload routes are /device/ps4-artwork/check and /device/ps4-artwork/{NPWR}.
+Secret artwork, ETags, private/shared ownership and revocation use the same access
+rules as PS5 assets. This adds no migration. Decryption uses a public publisher
+format constant, never console/profile sealed keys. Actual captured state and
+packages validate; the authorized worker imported all three observed sets and
+completed their package cache/upload acknowledgements. User confirmed hosted
+trophies are visible; see STATUS for the exact verified build.

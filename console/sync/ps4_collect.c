@@ -53,11 +53,12 @@ static int equal(const struct stat *a,const struct stat *b){return a->st_dev==b-
 static unsigned char *stable_read(const char *path,size_t bound,size_t *size){
     int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK);if(fd<0)return NULL;
     struct stat before,after;unsigned char *bytes=NULL,chunk[65536];
-    if(fstat(fd,&before)||!S_ISREG(before.st_mode)||before.st_size<96||(uint64_t)before.st_size>bound)goto done;
+    if(fstat(fd,&before))goto done;
+    if(!S_ISREG(before.st_mode)||before.st_size<96||(uint64_t)before.st_size>bound){errno=EINVAL;goto done;}
     *size=(size_t)before.st_size;bytes=malloc(*size);if(!bytes||take(fd,bytes,*size,0))goto bad;
     for(size_t at=0;at<*size;){size_t n=*size-at;if(n>sizeof(chunk))n=sizeof(chunk);if(take(fd,chunk,n,(off_t)at)||memcmp(bytes+at,chunk,n))goto bad;at+=n;}
     if(fstat(fd,&after)||!equal(&before,&after))goto bad;goto done;
-bad:free(bytes);bytes=NULL;
+bad:free(bytes);bytes=NULL;errno=EIO;
 done:close(fd);return bytes;
 }
 static int one(uint32_t profile,const char *title,Ps4Collected *counts,Ps4Visitor visitor,void *context){
@@ -65,10 +66,15 @@ static int one(uint32_t profile,const char *title,Ps4Collected *counts,Ps4Visito
     snprintf(original,sizeof(original),"/user/home/%08x/trophy/data/%s/trophy.img",profile,title);
     snprintf(keypath,sizeof(keypath),"/user/home/%08x/trophy/data/%s/sealedkey",profile,title);
     snprintf(packagepath,sizeof(packagepath),"/user/trophy/conf/%s/TROPHY.TRP",title);
-    size_t package_size=0,state_size=0;unsigned char *package=stable_read(packagepath,32*1024*1024,&package_size),*state_bytes=NULL;
+    size_t package_size=0,state_size=0;unsigned char *package=NULL,*state_bytes=NULL;
     Ps4State state={0};CredentialGuard guard={0};int result=-1,mounted=0,handle=-1,have_copy=0,have_mountdir=0,rc=0;
     uint8_t key[132]={0},second[96]={0};
-    if(!package){counts->missing++;return 0;}
+    counts->stage=3;rc=guard_begin(&guard);if(rc)goto done;
+    package=stable_read(packagepath,32*1024*1024,&package_size);
+    if(!package){
+        if(errno==ENOENT){counts->missing++;result=0;}else counts->stage=10;
+        goto done;
+    }
     if(memcmp(package,"\xdc\xa2\x4d\0\0\0\0\3",8)){counts->rejected++;result=0;goto done;}
     unsigned char digest[20],zero[20]={0};mbedtls_sha1_context sha;mbedtls_sha1_init(&sha);
     rc=mbedtls_sha1_starts(&sha);if(!rc)rc=mbedtls_sha1_update(&sha,package,28);if(!rc)rc=mbedtls_sha1_update(&sha,zero,20);
@@ -85,7 +91,7 @@ static int one(uint32_t profile,const char *title,Ps4Collected *counts,Ps4Visito
     int valid=!fstat(keyfd,&key_stat)&&S_ISREG(key_stat.st_mode)&&key_stat.st_size==96&&
         !take(keyfd,key,96,0)&&!take(keyfd,second,96,0)&&!memcmp(key,second,96)&&!memcmp(key,"pfsSKKey",8);
     close(keyfd);if(!valid)goto done;
-    counts->stage=3;rc=guard_begin(&guard);if(rc)goto done;rc=load_fs();if(rc)goto done;
+    counts->stage=3;rc=load_fs();if(rc)goto done;
     int manager=open("/dev/pfsmgr",O_RDWR|O_CLOEXEC);if(manager<0)goto done;
     rc=ioctl(manager,0xc0845302UL,key);close(manager);if(rc)goto done;
     if(!same_user(profile)){result=-2;goto done;}
@@ -114,13 +120,27 @@ done:
 int ps4_collect(uint32_t profile,Ps4Collected *counts,Ps4Visitor visitor,void *context){
     if(!counts||!visitor)return -1;memset(counts,0,sizeof(*counts));
     if(!same_user(profile))return -2;
-    char root[128];snprintf(root,sizeof(root),"/user/home/%08x/trophy/data",profile);DIR *dir=opendir(root);
-    if(!dir){counts->missing++;return 0;}
-    if(mkdir(STAGE,0700)){closedir(dir);counts->stage=8;counts->error=errno;return -1;}
-    struct dirent *entry;unsigned seen=0;int rc=0;
-    while((entry=readdir(dir))){if(!title_ok(entry->d_name))continue;if(++seen>128){rc=-1;counts->stage=9;break;}
-        if(!same_user(profile)){rc=-2;break;}
-        rc=one(profile,entry->d_name,counts,visitor,context);if(rc)break;
+    /* The dedicated FS privilege is also required for protected source reads.
+     * Enumerate under our own guard, restore, then guard each private snapshot.
+     * No visitor/network can execute while this guard is active. */
+    CredentialGuard guard={0};char names[128][13],root[128];unsigned seen=0;int rc=0;
+    counts->stage=3;rc=guard_begin(&guard);
+    DIR *dir=NULL;
+    if(!rc){snprintf(root,sizeof(root),"/user/home/%08x/trophy/data",profile);dir=opendir(root);
+        if(!dir){counts->error=errno;counts->stage=10;if(errno==ENOENT)counts->missing++;else rc=-1;}
     }
-    closedir(dir);rmdir(STAGE);return rc;
+    if(dir){struct dirent *entry;
+        while((entry=readdir(dir))){if(!title_ok(entry->d_name))continue;if(seen==128){rc=-1;counts->stage=9;break;}
+            if(!same_user(profile)){rc=-2;break;}memcpy(names[seen++],entry->d_name,13);
+        }
+        closedir(dir);
+    }
+    if(guard_end(&guard)){counts->stage=7;return -4;}
+    if(rc||!seen)return rc;
+    if(mkdir(STAGE,0700)){counts->stage=8;counts->error=errno;return -1;}
+    for(unsigned i=0;i<seen;i++){
+        if(!same_user(profile)){rc=-2;break;}
+        rc=one(profile,names[i],counts,visitor,context);if(rc)break;
+    }
+    rmdir(STAGE);return rc;
 }
