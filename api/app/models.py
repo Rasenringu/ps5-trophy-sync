@@ -120,6 +120,16 @@ class SocialProfile(Base):
     account: Mapped[str] = mapped_column(ForeignKey('accounts.id'), unique=True)
     display_name: Mapped[str] = mapped_column(String(60))
     visibility: Mapped[str] = mapped_column(String(16), default='friends', server_default='friends')
+    bio: Mapped[str] = mapped_column(String(600), default='', server_default='')
+    theme: Mapped[str] = mapped_column(String(16), default='blue', server_default='blue')
+    avatar: Mapped[str] = mapped_column(String(16), default='trophy', server_default='trophy')
+    favorite: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+class HiddenGame(Base):
+    __tablename__ = 'hidden_games'
+    account: Mapped[str] = mapped_column(ForeignKey('accounts.id'), primary_key=True)
+    source: Mapped[str] = mapped_column(String(16), primary_key=True)
+    title_id: Mapped[str] = mapped_column(String(64), primary_key=True)
 
 class Friendship(Base):
     __tablename__ = 'friendships'

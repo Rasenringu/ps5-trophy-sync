@@ -8,8 +8,8 @@
 typedef struct {unsigned code,offset;int width,height,left,top,advance;} FontGlyph;
 typedef struct {int size;unsigned first,count;} FontSize;
 #include "font.inc"
-enum {BG=0xff101116,PANEL=0xff191a21,BORDER=0xff30313e,WHITE=0xfff3f2f7,
-      MUTED=0xffaaaab9,ACCENT=0xffb6a0ff,GREEN=0xff9cddba,GOLD=0xffdfc593,RED=0xfff0aaaa};
+enum {BG=0xff080e1b,PANEL=0xff101e33,BORDER=0xff304966,WHITE=0xfff4f8ff,
+      MUTED=0xffb1c4df,ACCENT=0xff92c7ff,GREEN=0xff9cddba,GOLD=0xffdfc593,RED=0xfff0aaaa};
 #ifndef TS_UI_FRENCH
 #define TS_UI_FRENCH 1
 #endif
@@ -26,7 +26,7 @@ static void rounded(uint32_t *p,int x,int y,int w,int h,int r,uint32_t c){
         if(dx*dx+dy*dy<=r*r&&x+i>=0&&x+i<SCREEN_WIDTH&&y+j>=0&&y+j<SCREEN_HEIGHT)p[(y+j)*SCREEN_WIDTH+x+i]=c;
     }
 }
-static void panel(uint32_t *p,int x,int y,int w,int h){rounded(p,x,y,w,h,20,BORDER);rounded(p,x+1,y+1,w-2,h-2,19,PANEL);}
+static void panel(uint32_t *p,int x,int y,int w,int h){rounded(p,x,y,w,h,28,BORDER);rounded(p,x+1,y+1,w-2,h-2,27,PANEL);}
 static uint32_t blend(uint32_t base,uint32_t ink,unsigned alpha){
     unsigned r=(((base>>16)&255)*(255-alpha)+((ink>>16)&255)*alpha+127)/255;
     unsigned g=(((base>>8)&255)*(255-alpha)+((ink>>8)&255)*alpha+127)/255;
@@ -85,23 +85,31 @@ static void line(uint32_t *p,int x0,int y0,int x1,int y1,int weight,uint32_t col
     if(!steps)return;
     for(int i=0;i<=steps;i++)box(p,x0+dx*i/steps-weight/2,y0+dy*i/steps-weight/2,weight,weight,color);
 }
-static void trophy(uint32_t *p,int x,int y,int scale,uint32_t color){
-    line(p,x+10*scale,y+4*scale,x+30*scale,y+4*scale,2*scale,color);
-    line(p,x+10*scale,y+4*scale,x+10*scale,y+18*scale,2*scale,color);
-    line(p,x+30*scale,y+4*scale,x+30*scale,y+18*scale,2*scale,color);
-    line(p,x+10*scale,y+18*scale,x+20*scale,y+26*scale,2*scale,color);
-    line(p,x+30*scale,y+18*scale,x+20*scale,y+26*scale,2*scale,color);
-    line(p,x+20*scale,y+26*scale,x+20*scale,y+36*scale,2*scale,color);
-    line(p,x+10*scale,y+36*scale,x+30*scale,y+36*scale,2*scale,color);
-    line(p,x+4*scale,y+10*scale,x+10*scale,y+10*scale,2*scale,color);
-    line(p,x+4*scale,y+10*scale,x+4*scale,y+20*scale,2*scale,color);
-    line(p,x+4*scale,y+20*scale,x+13*scale,y+23*scale,2*scale,color);
-    line(p,x+30*scale,y+10*scale,x+36*scale,y+10*scale,2*scale,color);
-    line(p,x+36*scale,y+10*scale,x+36*scale,y+20*scale,2*scale,color);
-    line(p,x+36*scale,y+20*scale,x+27*scale,y+23*scale,2*scale,color);
+/* Original trophy plus two sync arcs; shared with the website/title icon. */
+static void sync_mark(uint32_t *p,int x,int y,int scale,uint32_t color){
+    static const int upper[][2]={{51,23},{48,16},{42,11},{34,9},{26,9},{19,12},{13,17}};
+    static const int lower[][2]={{13,41},{16,48},{22,53},{30,55},{38,55},{45,52},{51,47}};
+    for(int i=1;i<7;i++){
+        line(p,x+upper[i-1][0]*scale,y+upper[i-1][1]*scale,x+upper[i][0]*scale,y+upper[i][1]*scale,2*scale,color);
+        line(p,x+lower[i-1][0]*scale,y+lower[i-1][1]*scale,x+lower[i][0]*scale,y+lower[i][1]*scale,2*scale,color);
+    }
+    line(p,x+13*scale,y+9*scale,x+13*scale,y+17*scale,2*scale,color);
+    line(p,x+13*scale,y+17*scale,x+21*scale,y+17*scale,2*scale,color);
+    line(p,x+51*scale,y+47*scale,x+51*scale,y+55*scale,2*scale,color);
+    line(p,x+43*scale,y+47*scale,x+51*scale,y+47*scale,2*scale,color);
+    rounded(p,x+24*scale,y+19*scale,16*scale,21*scale,7*scale,color);
+    box(p,x+24*scale,y+19*scale,16*scale,10*scale,color);
+    line(p,x+24*scale,y+23*scale,x+19*scale,y+23*scale,2*scale,color);
+    line(p,x+19*scale,y+23*scale,x+19*scale,y+31*scale,2*scale,color);
+    line(p,x+19*scale,y+31*scale,x+26*scale,y+35*scale,2*scale,color);
+    line(p,x+40*scale,y+23*scale,x+45*scale,y+23*scale,2*scale,color);
+    line(p,x+45*scale,y+23*scale,x+45*scale,y+31*scale,2*scale,color);
+    line(p,x+45*scale,y+31*scale,x+38*scale,y+35*scale,2*scale,color);
+    line(p,x+32*scale,y+40*scale,x+32*scale,y+48*scale,2*scale,color);
+    line(p,x+25*scale,y+48*scale,x+39*scale,y+48*scale,2*scale,color);
 }
 static void badge(uint32_t *p,int x,int y,const char *value,uint32_t color){
-    int w=width(value,22)+50;rounded(p,x,y,w,48,24,0xff242430);rounded(p,x+17,y+20,8,8,4,color);label(p,x+35,y+8,value,22,color,w-45);
+    int w=width(value,22)+50;rounded(p,x,y,w,48,24,0xff19304c);rounded(p,x+17,y+20,8,8,4,color);label(p,x+35,y+8,value,22,color,w-45);
 }
 static int complete(const UiModel *m){return m->phase==UI_CONNECTED&&!strncmp(m->sync_status,"Sync complete:",14);}
 static int partial(const UiModel *m){unsigned batches,missing,rejected;return complete(m)&&sscanf(m->sync_status,"Sync complete: %u batches. %u missing / %u rejected sets",&batches,&missing,&rejected)==3&&(missing||rejected);}
@@ -125,8 +133,15 @@ void ui_render_final(uint32_t *p,const UiModel *input,uint64_t now){
     /* IPC validation is independent; bounded copies also protect direct callers. */
     UiModel model=*input;model.profile[sizeof(model.profile)-1]=0;model.public_origin[sizeof(model.public_origin)-1]=0;model.manual_code[sizeof(model.manual_code)-1]=0;
     model.error[sizeof(model.error)-1]=0;model.reader_status[sizeof(model.reader_status)-1]=0;model.sync_status[sizeof(model.sync_status)-1]=0;const UiModel *m=&model;
-    box(p,0,0,SCREEN_WIDTH,SCREEN_HEIGHT,BG);
-    rounded(p,96,64,72,72,18,0xff2b2634);trophy(p,109,74,1,GOLD);
+    /* Static atmosphere; integer-only, no new graphics/runtime dependency. */
+    for(int y=0;y<SCREEN_HEIGHT;y+=4)for(int x=0;x<SCREEN_WIDTH;x+=4){
+        int dx=x-1490,dy=y-120;
+        unsigned glow=dx*dx+dy*dy<1700000?(unsigned)(1700000-dx*dx-dy*dy)/16000:0;
+        box(p,x,y,4,4,blend(BG,0xff1e5aa0,glow));
+    }
+    line(p,1280,30,1860,610,1,0xff234261);
+    line(p,1370,0,1920,550,1,0xff1e3855);
+    rounded(p,96,64,72,72,18,0xff174c9b);sync_mark(p,100,68,1,WHITE);
     label(p,190,72,"TrophySync",40,WHITE,500);
     label(p,190,122,L("VOS TROPHÉES. VOTRE PROGRESSION.","YOUR TROPHIES. YOUR PROGRESS."),22,MUTED,900);
     badge(p,1410,87,m->phase==UI_CONNECTED?L("Connecté","Connected"):m->phase==UI_PAIRING?L("Association","Pairing"):m->phase==UI_ERROR?L("À vérifier","Needs attention"):L("Connexion…","Connecting…"),m->phase==UI_CONNECTED?GREEN:m->phase==UI_ERROR?RED:ACCENT);
@@ -152,10 +167,10 @@ void ui_render_final(uint32_t *p,const UiModel *input,uint64_t now){
         paragraph(p,140,565,description,26,MUTED,950,3);
         if(m->phase==UI_ERROR){paragraph(p,140,697,m->error,22,RED,950,3);}
         else if(m->public_origin[0])label(p,140,768,m->public_origin,26,ACCENT,950);
-        rounded(p,1392,338,244,244,122,partial(m)?0xff342f22:complete(m)?0xff21352c:m->phase==UI_ERROR||expired?0xff36262a:0xff2c263c);
+        rounded(p,1392,338,244,244,122,partial(m)?0xff342f22:complete(m)?0xff21352c:m->phase==UI_ERROR||expired?0xff36262a:0xff193c64);
         if(complete(m)&&!partial(m)){line(p,1452,458,1498,504,10,GREEN);line(p,1498,504,1581,409,10,GREEN);}
         else if(m->phase==UI_ERROR||expired||partial(m)){uint32_t color=partial(m)?GOLD:RED;line(p,1514,397,1514,476,10,color);rounded(p,1507,503,14,14,7,color);}
-        else {trophy(p,1434,381,4,ACCENT);}
+        else {sync_mark(p,1366,320,4,ACCENT);}
         const char *state=partial(m)?L("À vérifier","Needs attention"):complete(m)?L("À jour","Up to date"):m->phase==UI_ERROR?L("Action nécessaire","Action required"):expired?L("Nouveau code requis","New code required"):L("Veuillez patienter","Please wait");
         label(p,1260,630,state,32,WHITE,525);
         paragraph(p,1260,702,L("Mode actuel : synchronisation à l’ouverture de l’application.","Current mode: sync when the app opens."),26,MUTED,510,3);

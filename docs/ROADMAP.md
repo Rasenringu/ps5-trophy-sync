@@ -2,9 +2,10 @@
 
 Current implementation includes native PS5 trophies, native recorded playtime,
 automatic artwork/translations, pairing, web libraries, optional public profiles,
-friends/comparisons and local/production Compose. See STATUS for exact evidence.
+friends/comparisons, persistent hidden games, profile themes/bios/favorites and
+local/production Compose. See STATUS for exact evidence.
 
-1. Observe the redesigned foreground UI on the test console: pairing/status,
+1. Install/observe the 2026-10-14 foreground redesign on the test console: pairing/status,
    normal sync, Close App and reopen. Installation alone is insufficient.
 2. Validate independent second-console-profile isolation, offline queue recovery,
    live revocation and source-change handling on hardware.

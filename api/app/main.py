@@ -17,7 +17,7 @@ from sqlalchemy import select, delete, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
 from .db import database
-from .models import Account, Login, Installation, Profile, Pairing, Import, Record, Rate, Artwork, TrophyInfo, TrophyText, DevicePackage, DeviceArtwork
+from .models import Account, Login, Installation, Profile, Pairing, Import, Record, Rate, Artwork, TrophyInfo, TrophyText, DevicePackage, DeviceArtwork, HiddenGame
 from .locales import choose_language
 from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
 
@@ -378,6 +378,7 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
     packages={(p.profile,p.title_id):p for p in db.scalars(select(DevicePackage).where(DevicePackage.profile.in_({r.profile for r,_ in rows}),DevicePackage.title_id.in_(titles)))} if titles else {}
     scoped_images={(p,t,trophy):'/api/account/device-artwork/'+identity for p,t,trophy,identity in db.execute(select(DeviceArtwork.profile,DeviceArtwork.title_id,DeviceArtwork.trophy_id,DeviceArtwork.id).where(DeviceArtwork.profile.in_({r.profile for r,_ in rows}),DeviceArtwork.title_id.in_(titles)))} if titles else {}
     result = []
+    hidden_games={(g.source,g.title_id) for g in db.scalars(select(HiddenGame).where(HiddenGame.account==owner))}
     for r, label in rows:
         title=aliases.get(r.id,r.data['title_id'])
         source='ps4_bc' if r.id in ps4_aliases else r.source
@@ -416,9 +417,13 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
                 data['name']=text[data['trophy_id']][0] if earned or not hidden else 'Hidden trophy'
                 data['description']=text[data['trophy_id']][1] if earned or not hidden else None
         result.append({'profile_uuid':r.profile,'profile_label':label,'source':source,'kind':r.kind,
+            'game_hidden':not r.mock and ((source,title) in hidden_games or (r.source,r.data['title_id']) in hidden_games),
             'mock':r.mock,'data':data,'content_language':None if r.mock else package_language or choices.get((r.source,title)),
             'artwork_url':None if r.mock else scoped_images.get((r.profile,title,'')) or scoped_images.get((r.profile,r.data['title_id'],'')) or images.get((source,title,'')),
             'icon_url':None if r.mock or not earned else scoped_images.get((r.profile,title,data.get('trophy_id',''))) or images.get(key)})
+    hidden_titles={(r['source'],r['data']['title_id']) for r in result if r['game_hidden']}
+    for row in result:
+        if not row['mock'] and (row['source'],row['data']['title_id']) in hidden_titles:row['game_hidden']=True
     return result
 
 @app.get('/account/artwork/{artwork_id}')

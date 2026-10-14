@@ -50,6 +50,8 @@ verifies the public short-code URL and absence of a code after expiry/connection
 These are local checks, not hardware evidence. Real extraction/pairing/repeat-sync
 results and remaining hardware gates are in [STATUS](STATUS.md).
 
-The redesigned foreground title is installed with verified bytes and registration.
-Its new screen/Close App still need direct console observation. Tests do not claim
-compatibility with other firmware/loader combinations.
+The 2026-10-14 blue/white foreground redesign and original sync/trophy title icon
+are built and packaged locally. The worker is unchanged. Installation of this
+new foreground build and its screen/Close App require a console observation;
+earlier installed-title evidence does not validate its new bytes. Tests do not
+claim compatibility with other firmware/loader combinations.

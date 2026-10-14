@@ -716,6 +716,58 @@
         }
       }
     },
+    "/account/hidden-games": {
+      "get": {
+        "summary": "Hidden Games",
+        "operationId": "hidden_games_account_hidden_games_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/games/visibility": {
+      "post": {
+        "summary": "Game Visibility",
+        "operationId": "game_visibility_account_games_visibility_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameVisibility"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/account/profile": {
       "get": {
         "summary": "Own Profile",
@@ -1390,6 +1442,63 @@
         ],
         "title": "FriendRequest"
       },
+      "GameKey": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Title Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id"
+        ],
+        "title": "GameKey"
+      },
+      "GameVisibility": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Title Id"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id",
+          "hidden"
+        ],
+        "title": "GameVisibility"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1845,6 +1954,44 @@
               }
             ],
             "title": "Visibility"
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 600,
+            "title": "Bio",
+            "default": ""
+          },
+          "theme": {
+            "type": "string",
+            "enum": [
+              "blue",
+              "violet",
+              "midnight",
+              "sunset"
+            ],
+            "title": "Theme",
+            "default": "blue"
+          },
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "trophy",
+              "orbit",
+              "diamond",
+              "initial"
+            ],
+            "title": "Avatar",
+            "default": "trophy"
+          },
+          "favorite": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,

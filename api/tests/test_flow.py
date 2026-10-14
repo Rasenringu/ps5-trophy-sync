@@ -486,7 +486,7 @@ def test_shared_activity_only_games_export_totals_without_native_or_profile_deta
     assert len(rows)==1 and rows[0]['kind']=='activity'
     assert rows[0]['profile_uuid']=='shared'
     assert rows[0]['data']=={'title_id':'PPSA12345','title':'MOCK GAME','duration_seconds':120,
-        'complete':True,'duration_basis':'shared_total','session_count':1}
+        'complete':True,'duration_basis':'shared_total','session_count':1,'last_played_at':'2026-10-08T10:02:00Z'}
 
 def test_ps4_application_sessions_keep_native_logger_source_and_exact_identity():
     c=browser();_,_,t=paired(c)
@@ -515,7 +515,7 @@ def test_public_profile_identity_and_explicit_friend_permissions():
     ah,bh=social_handle(a),social_handle(b)
     public=TestClient(app).get('/players/'+bh)
     assert public.status_code==200
-    assert set(public.json())=={'handle','display_name','relationship','viewer_authenticated','request_id','library_visible'}
+    assert set(public.json())=={'handle','display_name','relationship','viewer_authenticated','request_id','library_visible','bio','theme','avatar','favorite'}
     assert 'example.test' not in public.text and public.json()['request_id'] is None
     assert b.get('/players?q='+bh).json()[0]['handle']==bh
     assert a.post('/account/profile',json={'handle':bh,'display_name':'Collision'}).status_code==409

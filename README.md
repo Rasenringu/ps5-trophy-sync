@@ -130,6 +130,29 @@ bytes/registration are verified; its new screen and Close App still need a conso
 observation. PS4 private-copy reading and integrated foreground sync are verified for the documented build. Passive resident synchronization is pending.
 See [current status and limits](docs/STATUS.md) and [passive sync](docs/PASSIVE_SYNC.md).
 
+## Your collection and profile
+
+Libraries open with **Most recently played** sorting. Games without a recorded
+activity date appear last; title and trophy progress sorting remain available.
+PS4/PS5 appears once as a platform badge on each game.
+
+Use **Hide game** on a card or in its details to remove it from your collection,
+shared profile, friend comparisons and shared artwork access. **Hidden Games**
+is visible only to you and includes **Unhide game**. Hiding applies across your
+console profiles to the same reader/title identity, retains imports and survives
+future syncs. PS4 and PS5 editions remain separate.
+
+**My profile → Edit profile** provides a plain-text description, four themes,
+four avatar styles and a favorite-game showcase, with a live preview. Favorites
+must come from your visible, non-demo library and follow library visibility.
+Hiding or revoking a favorite removes it from the showcase automatically.
+
+Rebuild API and web together; Alembic migration **008** adds preferences without
+deleting existing records. Local Windows: `scripts/Start-Local.ps1 -Build`.
+For the separate hosted service, use its existing Compose/env workflow including
+the migrate service. Keep the existing database volume, domain, cookies and
+console pairing. No new dependencies or service configuration are required.
+
 ## Tests and hosting
 
 ```powershell

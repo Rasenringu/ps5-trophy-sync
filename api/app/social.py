@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from .db import database
 from .contracts import Strict
-from .models import Account, Login, Profile, Record, Artwork, DeviceArtwork, DevicePackage, SocialProfile, Friendship
+from .models import Account, Login, Profile, Record, Artwork, DeviceArtwork, DevicePackage, SocialProfile, Friendship, HiddenGame
 from .main import browser, digest, now, rate, fail, library
 
 router=APIRouter()
@@ -19,6 +19,15 @@ class ProfileEdit(Strict):
     handle: str=Field(pattern=r'^[a-z][a-z0-9_]{2,31}$')
     display_name: str=Field(min_length=1,max_length=60)
     visibility: Literal['public','friends']|None=None
+    bio: str=Field(default='',max_length=600)
+    theme: Literal['blue','violet','midnight','sunset']='blue'
+    avatar: Literal['trophy','orbit','diamond','initial']='trophy'
+    favorite: 'GameKey | None'=None
+    @field_validator('bio')
+    @classmethod
+    def clean_bio(cls,value):
+        if any((ord(c)<32 and c not in '\n\t') or 127<=ord(c)<160 for c in value):raise ValueError('Invalid description')
+        return value.strip()
     @field_validator('display_name')
     @classmethod
     def clean(cls,value):
@@ -31,6 +40,50 @@ class FriendRequest(Strict):
 
 class FriendAction(Strict):
     action: Literal['accept','deny','cancel','remove']
+
+class GameKey(Strict):
+    source: Literal['ps5_native','ps4_bc']
+    title_id: str=Field(min_length=1,max_length=64,pattern=r'^[A-Za-z0-9_-]+$')
+
+class GameVisibility(GameKey):
+    hidden: bool
+
+ProfileEdit.model_rebuild()
+
+def hidden_keys(db,owner):
+    return {(g.source,g.title_id) for g in db.scalars(select(HiddenGame).where(HiddenGame.account==owner))}
+
+def shared_rows(db,owner,language='en'):
+    rows=library(owner,db,language)
+    hidden={(r['source'],r['data']['title_id']) for r in rows if r.get('game_hidden')}
+    return [r for r in rows if (r['source'],r['data']['title_id']) not in hidden]
+
+def customization(profile):
+    return {'bio':profile.bio,'theme':profile.theme,'avatar':profile.avatar,'favorite':profile.favorite}
+
+@router.get('/account/hidden-games')
+def hidden_games(owner: str=Depends(browser),db: Session=Depends(database)):
+    return [{'source':source,'title_id':title} for source,title in sorted(hidden_keys(db,owner))]
+
+@router.post('/account/games/visibility')
+def game_visibility(body: GameVisibility,owner: str=Depends(browser),db: Session=Depends(database)):
+    rate(db,'game-visibility:'+owner,120,600)
+    db.scalar(select(Account).where(Account.id==owner).with_for_update())
+    rows=[r for r in library(owner,db,'en') if not r['mock'] and r['source']==body.source and r['data']['title_id']==body.title_id]
+    keys={(body.source,body.title_id)}
+    # Existing evidence-backed activity joins can change the displayed identity
+    # after trophy metadata arrives. Retain earlier application preferences.
+    for row in rows:
+        if row['kind']=='activity':
+            application=row['data'].get('native_observation',{}).get('application_title_id')
+            if application:keys.add((row['data'].get('activity_source',row['source']),application))
+    if body.hidden:
+        if not rows:fail(404,'Game not found in your library')
+    for source,title in keys:
+        existing=db.get(HiddenGame,(owner,source,title))
+        if body.hidden and not existing:db.add(HiddenGame(account=owner,source=source,title_id=title))
+        elif not body.hidden and existing:db.delete(existing)
+    db.commit();return {'source':body.source,'title_id':body.title_id,'hidden':body.hidden}
 
 def ensure_social(db,account):
     profile=db.scalar(select(SocialProfile).where(SocialProfile.account==account))
@@ -70,18 +123,23 @@ def require_friend(db,owner,handle):
 @router.get('/account/profile')
 def own_profile(owner: str=Depends(browser),db: Session=Depends(database)):
     profile=ensure_social(db,owner)
-    result={**identity(profile),'visibility':profile.visibility};db.commit();return result
+    result={**identity(profile),'visibility':profile.visibility,**customization(profile)};db.commit();return result
 
 @router.post('/account/profile')
 def edit_profile(body: ProfileEdit,owner: str=Depends(browser),db: Session=Depends(database)):
     rate(db,'social-edit:'+owner,20,600)
     # Lock the account to serialize edits/first identity creation.
     db.scalar(select(Account).where(Account.id==owner).with_for_update())
-    profile=ensure_social(db,owner);profile.handle,profile.display_name=body.handle,body.display_name
+    profile=ensure_social(db,owner)
+    if body.favorite and not any(not r['mock'] and r['source']==body.favorite.source and r['data']['title_id']==body.favorite.title_id for r in shared_rows(db,owner)):fail(422,'Choose a visible game from your library')
+    profile.handle,profile.display_name=body.handle,body.display_name
+    # Older clients omit customization; keep previously saved values.
+    for field in ('bio','theme','avatar','favorite'):
+        if field in body.model_fields_set:setattr(profile,field,body.favorite.model_dump() if field=='favorite' and body.favorite else getattr(body,field))
     if body.visibility is not None:profile.visibility=body.visibility
     try:db.commit()
     except IntegrityError:db.rollback();fail(409,'That profile handle is already taken')
-    return {**identity(profile),'visibility':profile.visibility}
+    return {**identity(profile),'visibility':profile.visibility,**customization(profile)}
 
 @router.get('/players')
 def search_players(q: str,request: Request,db: Session=Depends(database)):
@@ -96,9 +154,15 @@ def public_profile(handle: str,request: Request,db: Session=Depends(database)):
     peer=target(db,handle);viewer=optional_viewer(request,db)
     link=edge(db,viewer,peer.account) if viewer else None
     status=relationship(link,viewer,peer.account)
+    visible=peer.visibility=='public' or status in ('self','friends')
+    favorite=None
+    if visible and peer.favorite:
+        row=next((r for r in shared_rows(db,peer.account) if not r['mock'] and r['source']==peer.favorite['source'] and r['data']['title_id']==peer.favorite['title_id']),None)
+        if row:favorite={**peer.favorite,'title':row['data']['title'],'artwork_url':'/api/players/'+peer.handle+'/artwork/'+row['artwork_url'].rsplit('/',1)[1] if row.get('artwork_url') else None}
     return {**identity(peer),'relationship':status,'viewer_authenticated':viewer is not None,
+        'bio':peer.bio,'theme':peer.theme,'avatar':peer.avatar,'favorite':favorite,
         'request_id':link.id if link and status in ('incoming','outgoing','friends') else None,
-        'library_visible':peer.visibility=='public' or status in ('self','friends')}
+        'library_visible':visible}
 
 def shared_access(db,handle,viewer):
     peer=target(db,handle)
@@ -116,7 +180,7 @@ def counted(data):
 @router.get('/players/{handle}/library')
 def shared_library(handle: str,request: Request,language: str='en',db: Session=Depends(database)):
     viewer=optional_viewer(request,db);peer=shared_access(db,handle,viewer)
-    rows=library(peer.account,db,language);trophies=aggregated(rows)
+    rows=shared_rows(db,peer.account,language);trophies=aggregated(rows)
     mine=aggregated(library(viewer,db,language)) if viewer else {}
     result=[];games={}
     def image_url(url):return '/api/players/'+peer.handle+'/artwork/'+url.rsplit('/',1)[1] if url else None
@@ -143,11 +207,21 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
             'data':{'title_id':key[1],'title':row['data']['title']}})
         total=totals.setdefault(key,{'seconds':0,'sessions':0})
         total['seconds']+=row['data']['duration_seconds'];total['sessions']+=1
-    for key,total in totals.items():
+    latest={}
+    for row in rows:
+        if row['mock'] or row['kind']!='activity':continue
+        key=(row['source'],row['data']['title_id'])
+        stamp=row['data'].get('ended_at') or row['data'].get('started_at')
+        if stamp:
+            from datetime import datetime
+            if key not in latest or datetime.fromisoformat(stamp)>datetime.fromisoformat(latest[key]):latest[key]=stamp
+            games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,'source':key[0],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'data':{'title':row['data']['title']}})
+    for key in totals.keys()|latest.keys():
+        total=totals.get(key,{'seconds':None,'sessions':0})
         game=games[key]
         result.append({**game,'kind':'activity','icon_url':None,'data':{
             'title_id':key[1],'title':game['data']['title'],'duration_seconds':total['seconds'],
-            'complete':True,'duration_basis':'shared_total','session_count':total['sessions']}})
+            'complete':total['seconds'] is not None,'duration_basis':'shared_total','session_count':total['sessions'],'last_played_at':latest.get(key)}})
     return result
 
 @router.get('/players/{handle}/artwork/{image_id}')
@@ -157,6 +231,8 @@ def shared_image(handle: str,image_id: str,request: Request,db: Session=Depends(
     if not image:fail(404,'Artwork unavailable')
     package=db.get(DevicePackage,(image.profile,image.title_id)) if isinstance(image,DeviceArtwork) else None
     source=('ps4_bc' if package and package.metadata_json.get('format')=='ps4_trp_v3' else 'ps5_native') if isinstance(image,DeviceArtwork) else image.source
+    if (source,image.title_id) in hidden_keys(db,peer.account):fail(404,'Artwork unavailable')
+    if not any(not r['mock'] and any(url and url.rsplit('/',1)[1]==image_id for url in (r.get('artwork_url'),r.get('icon_url'))) for r in shared_rows(db,peer.account)):fail(404,'Artwork unavailable')
     records=select(Record).join(Profile,Profile.id==Record.profile).where(
         Profile.owner==peer.account,Profile.revoked==False,Record.mock==False,
         Record.source==source,Record.kind.in_(['trophy','activity']),Record.data['title_id'].as_string()==image.title_id)
@@ -232,10 +308,14 @@ def aggregated(rows):
 def compare(handle: str,language: str='en',title_id: str|None=Query(default=None,max_length=64),source: Literal['ps5_native','ps4_bc']|None=None,
             owner: str=Depends(browser),db: Session=Depends(database)):
     peer=require_friend(db,owner,handle)
-    mine=aggregated(library(owner,db,language));theirs=aggregated(library(peer.account,db,language))
+    mine=aggregated(shared_rows(db,owner,language));theirs=aggregated(shared_rows(db,peer.account,language))
+    concealed=hidden_keys(db,owner)|hidden_keys(db,peer.account)
+    for account in (owner,peer.account):
+        concealed.update((r['source'],r['data']['title_id']) for r in library(account,db,language) if r.get('game_hidden'))
     groups={}
     for key in sorted(mine.keys()|theirs.keys()):
         platform,title,trophy=key
+        if (platform,title) in concealed:continue
         if title_id and title!=title_id or source and platform!=source:continue
         a,b=mine.get(key),theirs.get(key);row=a or b;data=row['data']
         game=groups.setdefault((platform,title),{'source':platform,'title_id':title,'title':data['title'],
@@ -263,6 +343,8 @@ def friend_image(handle: str,image_id: str,request: Request,owner: str=Depends(b
     if not image:fail(404,'Artwork unavailable')
     package=db.get(DevicePackage,(image.profile,image.title_id)) if isinstance(image,DeviceArtwork) else None
     source=('ps4_bc' if package and package.metadata_json.get('format')=='ps4_trp_v3' else 'ps5_native') if isinstance(image,DeviceArtwork) else image.source
+    if (source,image.title_id) in hidden_keys(db,peer.account)|hidden_keys(db,owner):fail(404,'Artwork unavailable')
+    if not any(not r['mock'] and any(url and url.rsplit('/',1)[1]==image_id for url in (r.get('artwork_url'),r.get('icon_url'))) for r in shared_rows(db,peer.account)):fail(404,'Artwork unavailable')
     owned=select(Record.id).join(Profile,Profile.id==Record.profile).where(Profile.owner==peer.account,Profile.revoked==False,
         Record.mock==False,Record.kind=='trophy',Record.source==source,Record.data['title_id'].as_string()==image.title_id)
     if isinstance(image,DeviceArtwork):owned=owned.where(Record.profile==image.profile)

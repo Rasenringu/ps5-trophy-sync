@@ -1,5 +1,69 @@
 # Current status
 
+## Library privacy, profile customization and visual redesign — 2026-10-14
+
+Implemented server-enforced account game hiding, an owner-only Hidden Games
+view with unhide, default most-recently-played sorting and a single platform
+badge per game card. Preferences survive sync and evidence-backed application
+to trophy-set joins; shared libraries, favorite showcases, comparisons and both
+shared image routes filter hidden games before cache/ETag handling. Imports are
+retained; platform/source and account ownership remain separate.
+
+Profile editor now provides a 600-character plain-text bio, four preset themes,
+four avatar styles and one owned visible favorite game, with a live preview.
+Public showcases respect friends/public visibility, hidden games and revocation.
+Legacy profile edits retain customization. No external image URLs or HTML are
+accepted. All six existing translation catalogs include the new interface text.
+
+Original vector sync/trophy branding, a blue/white dark theme, modern controls,
+profile cover, favorite showcase and responsive list/cards are implemented.
+Native software-rendered screen and generated title icon use the same visual
+language. QR/code/profile/expiry/connection/sync/errors and preview labeling are
+preserved. Existing SDK/graphics interfaces and pinned dependencies are retained;
+no third-party source or new API/library was introduced.
+
+Local evidence so far:
+
+- `npm ci --ignore-scripts`: pinned dependencies installed, audit 0 vulnerabilities.
+  `npm --prefix web run check`: pass. Initial check hit existing Next URLPattern
+  declaration incompatibility; explicitly applied the same skipLibCheck setting
+  Next's production build already adds, preserving strict app type checking.
+- `scripts/Start-Local.ps1 -Build`: API/web production build, migration 007→008
+  and local health pass; preserved database volume and existing HTTPS origin.
+- `scripts/Test-Local.ps1`: 69 passed, existing Starlette/httpx warning; includes
+  game ownership, cross-profile/source separation, hidden image/cache access,
+  favorite/privacy/revocation, idempotent toggles and later activity/trophy joins.
+- Docker Playwright focused run: 22 passed (personalization, library layout,
+  public profiles, playtime, navigation, trophy privacy, six locales and browser
+  auth errors). Synthetic previews in artifacts/web/rework; no console evidence.
+- `scripts/Build-ConsoleUI.ps1`: SDK worker/no-write startup/native conversion pass;
+  eight ASan/UBSan screen states and independent QR/expiry checks pass. After a
+  background-rendering optimization, reran container-test-final-ui.sh,
+  verify_final_preview.py and container-build-final-ui.sh successfully.
+  Worker SHA256 remains 4c99e2dfcd5e4556115241c9fe6450b0807f9f943a1e8e31be002e7454afb17f.
+  New foreground SHA256: a7fbcdcf3ec5a4da9ef9cc6d934c588a70c5d3e83f46d8dd30cfe2e9ed68b66c.
+  Package: artifacts/console/final-ui/TrophySync-PS5.zip; console_verified=false.
+
+Read-only FTP verifies the installed worker still matches the unchanged build.
+Known /data homebrew roots did not locate the foreground folder. No console files
+were written and no payload was launched. The hosted URL was inaccessible through
+the browsing tool; local success does not establish a hosted deployment. No Git
+commit/push or remote host deployment performed. User handles Git/host rebuild.
+
+Final visual review completed on synthetic desktop/mobile library/profile
+screens; aligned card footers and retained 320–1920px list layout checks.
+Regenerated contracts/openapi.json with the new requests/routes; all snapshot
+schemas are unchanged. The final focused layout/profile rerun passed six tests,
+including immediate owner showcase removal/restoration after hide/unhide. Final
+TypeScript, production build/local health and git diff --check pass. ZIP integrity,
+file hashes, retained notices and private-data exclusion checked. The last API
+run remains 69 passed and includes favorite+handle-collision rejection (409).
+
+Next: user commit/pull/rebuild API and web together on the hosted service, then
+use the packaged foreground update via the existing ShadowMount workflow and
+observe its screen and Close App/reopen. No new worker is needed for this visual
+update. Implementation decisions are in UI_REWORK_PLAN.md.
+
 ## PS4 foreground sync working on console and hosted service - 2026-10-14
 
 User specifically authorized one transport-fix worker sync, then confirms:
