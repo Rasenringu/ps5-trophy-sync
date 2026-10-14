@@ -1,5 +1,226 @@
 # Current status
 
+## PS4 private-copy reader verified; worker integration under test - 2026-10-14
+
+The user authorized one v3 private-copy inspection. Executed ELF SHA256
+`c197a91bb3f28e67c6a20f6ce712f69faf0f7249d9374f4d4c7e30b66de530bc`.
+Direct filesystem-library loading after temporarily setting only this process's
+authid/capabilities succeeded. All four disposable images mounted and unmounted
+normally; both original credentials were restored. All four original image SHA256
+values were unchanged before/after. Hash-verified diagnostic uploads, exports and
+empty private staging were removed. Captures remain ignored and contain personal
+fields; they must never be published or included in distribution.
+
+Actual per-set TRPTITLE evidence: NPWR09798_00 (Drake's Fortune Remastered),
+54 locked, application CUSA03280; NPWR10954_00 (Attack on Titan), 43 locked,
+CUSA03804; NPWR29343_00 (Naruto/Boruto Connections), 43 locked and two earned,
+CUSA32836. Strict decoding checks embedded foreground profile and NPWR identity.
+Unknown flags/timestamps remain unknown; the year-1-microseconds interpretation
+is a candidate and is explicitly uncertain. Uncharted 2/3 conf packages exist,
+but no matching per-profile image was observed. Absence is never zero trophies.
+Nathan Drake Collection activity CUSA02344 is distinct from CUSA03280 and must
+not receive duplicated playtime through a guessed name-based association.
+
+Six actual PS4 TRP v3 metadata packages passed whole-package SHA1, independent
+ESFM decryption and bounded publisher XML/PNG parsing (54/53/59/43/45/23 trophies).
+The production adapter mounts only verified exclusive disposable copies and
+restores its own credentials before queue/network operations. No original mount,
+copy-back, trophy registration/unlock call or source database edit exists.
+Schema v4 exports only trophy state, package digest and application binding;
+account/local-user identity fields and sealed keys never enter uploads.
+
+Validation so far: `container-test-ps4-state.sh` and
+`container-test-ps4-copy-inspect.sh` pass ASan/UBSan and SDK compile checks;
+`container-build.sh` worker compilation/no-write CRT checks pass;
+`scripts/Test-Local.ps1`: 65 tests pass, including PS4 package ownership,
+proof/digest binding, cache/idempotency, unknown state, privacy and exact
+application joins. `Start-Local.ps1 -Build` built local API/web successfully.
+PyCryptodomex 3.24.1 is pinned; its upstream license is retained in
+api/licenses/PyCryptodomex.txt. Research repositories remain research only.
+
+Next: complete export/collector/transport integration tests, regenerate contracts,
+rebuild/package and update instructions. The new production worker has NOT run on
+the console and the remote host has NOT received these PS4 routes/schema changes.
+A further worker test needs specific authorization after a concrete build exists.
+Earlier diagnostic-preparation entries below are historical, superseded here.
+
+## PS4 repository research and disposable-copy diagnostic prepared - 2026-10-14
+
+User requested continued PS4 work and Git repository research. Inspected primary
+repositories at exact revisions, without running their payloads:
+
+- hzhreal/PS4-vsh-utils `b8edba35450c69b13f2c67e0dfb7e66f5b37a947`:
+  dedicated sceFs*MountTrophyData options/export family, not a verified RO mount.
+- n0llptr/Playstation-5-Save-Mounter
+  `1a0281ea9794afadc2e2da345ca0b66e5db45bc7`: linked FS imports and pfsmgr
+  sealed-key operation; its original mount/copy-back workflow is not reused.
+- maxton/LibOrbisPkg `643477263b2644e0803e0f58b8726ea4e3f3b7d4`:
+  userspace encrypted PFS reader (LGPLv3). Research only; no code incorporated.
+- flatz/pkg_pfs_tool `4e74afa98b0f57b2b50a2182c1ef89905dc040a7`:
+  PFS/saved-data key derivation and signature validation. Saved-data key schedule
+  differs from the generic package reader; configuration has placeholder keys.
+  No code/keys incorporated and no assumption that generic decryption suffices.
+
+Two equal bounded 1024-byte FTP header reads for sce_trop and all three observed
+PS4 trophy images match PFS version=1, magic=20130315, signed/encrypted mode=13,
+blocksize=32768, 1024 inodes and 23 inode blocks. These are header evidence only;
+no live SQLite DB was copied and no earned-state parser is inferred. Headers
+report clean=0; stable reads alone are not atomic snapshots. A mounted disposable
+copy must pass filesystem/DB consistency checks before any eventual import.
+
+Prepared `PS4CopyInspect.elf`, not yet run. No-write CRT, statically linked SDK
+FS exports (nm verifies trophy-specific mount/unmount exports in SDK v0.43).
+It creates a private exclusive /data/trophy-sync-ps4-inspect, reads source images
+through O_RDONLY and a shared record lock, copies with bounds, compares a second
+complete pass and rejects source stat/byte changes. Destination must be private,
+exclusive, empty, owned regular storage; writable source descriptors rejected.
+Only the fixed private copy paths can reach sceFsMountTrophyData; no copy-back
+exists. Kernel may modify disposable copies; originals are never mounted/written.
+
+The diagnostic temporarily changes only its own authid (then restores), uses
+/dev/pfsmgr sealed-key operation with volatile memory erasure and no key output,
+mounts private copies, reports bounded file headers/SQLite schemas through the
+existing deny-write query-only reader, and preserves only bounded non-SQLite
+TRPTITLE/TROPUSR binary state files. It unmounts its own copies normally, with no
+forced unmount, database editing, trophy API calls, uploads, DNS changes or reboot.
+Failure can leave private staging; preserve it for review until unmounted.
+
+`container-test-ps4-copy-inspect.sh`: ASan/UBSan tests pass source preservation,
+no overwrites, descriptor permissions, private destination, bounds, SQLite source
+rejection and mid-verification mutation. PS5 compile/no-write startup check passes.
+SDK compilation initially hid flock under POSIX feature macros; replaced it with
+the declared fcntl shared nonblocking record lock. Build SHA256:
+`084cc0515fba57d64d12d5a936ee105621b387c55f510949f6f3574a803acf59`.
+No experimental payload was sent. A specific authorization request explaining
+the private-copy mounts, in-memory key operation and own authid is pending under
+AGENTS.md. Next: execute once if authorized, establish actual PS4 file/schema
+state, then implement/test a separate adapter and PS4 API/web identity handling.
+
+## Authorized PS4 probe v2 and trophy-menu check - 2026-10-14
+
+User confirms the PS5 trophy menu shows both Attack on Titan and Nathan Drake
+Collection and opened Attack on Titan's trophy list for this check. Read-only FTP
+MLSD still found `/mnt/pfs/trophy/<profile>/data/sce_trop` empty. No mount/unmount
+or source database action was performed. This does not establish that trophies
+are absent; the console menu confirms they exist through another access path.
+
+The user explicitly authorized **one revised PS4Capability.elf run**. Executed
+SHA256 `24f593d3d0a2dc1fc3d770ae192a45eb07eb1b948d817b9a987caa925cd5aadc`;
+verified upload bytes before launching once through observed Manager 0.5.2.
+Manager returned OK. The unbuffered report now contains **278 bytes**:
+
+- Initial probe header was written.
+- `/system/priv/lib/libSceFsInternalForVsh.sprx` returned loaded=0.
+- Final checkpoint is the load attempt for
+  `/system/common/lib/libSceNpTrophy.sprx`; no result/export checkpoint follows.
+
+Report remained unchanged on recheck. The cause of the stopped report is unknown;
+no verified trophy export availability or successful reader result. FTP/Manager
+remained responsive, Manager listed 89 processes with no identifiable 'capab'
+entry; this does not establish that no generically named process remains.
+No process was killed. Only the hash-verified own staging ELF, empty staging
+directory and identified v2 report were removed. FTPSRV returns 226 for DELE/RMD,
+which ftplib.delete rejected after deletion; direct sendcmd finished cleanup
+without further execution. Private attempt/report/mount evidence is under ignored
+captures/library-investigation. No subsequent payload was run or authorized.
+
+Also observed an actual **75-byte JSON** PS4 trpsummary.dat outside the sealed
+image. Two equal FTP reads, non-SQLite header, format=1 and earnedTrophies grade
+totals; no title identifiers or per-trophy state. This is aggregate profile data,
+not a game-level exporter. Retained privately without uploading/importing it.
+Primary MyTrophies-PS4 source independently reads the same aggregate JSON shape;
+no code was copied, dependency added or per-game parser inferred. Additional
+read-only listings found no alternative trophy mount under /mnt or a visible
+/system_data/priv/trophy directory. The exact sealed data path remains unchanged.
+
+**Next PS4 step:** establish a query interface/ABI or another read-only source
+that exposes game identity and earned/timestamp state. SDK headers alone and
+stubbed emulator functions do not establish those interfaces. Do not repeat
+library loading or escalate to mounting/decryption/registration/unlocking based
+on these results. Another experimental payload requires a concrete compiled
+probe and fresh authorization. The application-artwork build/deployment gate
+from the entry below remains unchanged; PS4 trophy support is still incomplete.
+
+## Hosted sync follow-up and independent application artwork - 2026-10-14
+
+This entry supersedes the deployment gates in the earlier investigation below.
+The user installed the previous worker and rebuilt the Docker host at
+192.168.1.100. FTP hash verification matched worker
+`7b03fe5968764e6abd9f8d66c64bd0c1b5b0737374d2251e2cfb02270adf1e8b`.
+Anonymous hosted health/OpenAPI (Mozilla User-Agent) confirmed health and CUSA
+activity acceptance; frontend source confirmed the updated library navigation.
+The user reports a successful retry and native Uncharted now working. Read-only
+queue inspection found 101 acknowledged Uncharted records, Simpsons 192 seconds
+and Sonic 406 seconds. Reusable queue slots are not a complete server audit.
+The screenshot confirms older activity-only entries, PS4 names and some CUSA-ID
+fallbacks. Missing trophy sources are not treated as deletions.
+
+New implementation: activity-only applications get their own available appmeta
+icon, independently of trophy packages. Exact PPSA/CUSA session IDs bound source
+paths; two stable bounded reads, selected-profile checks and authenticated cache
+checks precede uploads. API validates PNGs, real native activity, ownership and
+revocation; private/shared image access enforces visibility before ETags. Existing
+DeviceArtwork storage is reused with no migration. CUSA activity cannot alias a
+same-named native PS5 trophy set. Available console icons were verified over FTP
+for Attack on Titan, Nathan Drake Collection, Simpsons, Sonic, Alan Wake,
+Apsulov and Demon Slayer. No publisher assets are included in Git.
+
+The user's initial error was only 'artwork https stage 12 errno 0', followed by
+success on retry. Its precise return code is unknown. Independently reproduced:
+a 3.5-second TLS response pause incorrectly exhausted a 3-second select slice
+inside a longer request deadline. Fixed slice retries while enforcing the total
+deadline, expanded binary transfer budget to 180 seconds, and added phase/byte
+progress to upload errors. This reproduction is not proof of the earlier
+hardware error's cause.
+
+Validation (local unless stated):
+
+- `Test-Local.ps1`: **62 passed**, one existing Starlette/httpx warning; includes
+  application image ownership, import prerequisites, PNG bounds, cache/replay,
+  private/shared visibility, revocation and CUSA/PS5 identity separation.
+- `container-test-console.sh`: passed native readers, transport/TLS, pairing,
+  queue, IPC and SQLite suites. Added ASan/UBSan application icon reader cases
+  and select-slice/hard-deadline regressions. `container-test-worker-import.sh`
+  passed again after cached/uploaded/malformed/mismatched application ACK cases.
+- Focused Playwright playtime/public-profile/trophy-privacy/library-layout:
+  **6 passed**, including authorized activity-only PS4 artwork.
+- `Start-Local.ps1 -Build`: local production startup/health passed, existing
+  volumes preserved. Contract export in API image with PYTHONPATH=/app passed.
+- Final `container-build.sh` and `python scripts/package-final-ui.py`: passed.
+  New worker SHA256:
+  `f67ea6bbbf9477ebc4f731311e11e56d8f4422e148e0af7bf5e43861e3ae55d4`.
+  Foreground remains
+  `9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda`.
+  Package: artifacts/console/final-ui/TrophySync-PS5.zip;
+  manifest console_verified=false for the added artwork path.
+
+**PS4 capability test:** user authorized one PS4Capability.elf run. Built with
+the no-write startup hook, launched once through observed Payload Manager 0.5.2
+from its own staging directory. It only loaded two libraries and looked up export
+names, with no trophy API invocation, mounting, key decryption, database access
+or uploads. Executed SHA256:
+`e0bc06fbaae999431c0aabb59d14429ea0538aef394ee1375992b16f2d560735`.
+Launch returned OK, but the private report remained **zero bytes** after 30
+seconds; no usable capability result. Runtime cause is unknown. FTP/Manager
+remained responsive. Hash-verified own staging ELF, empty report and empty
+staging directory were removed; no process was killed. Redacted attempt evidence
+is ignored under captures/library-investigation. Do not infer unavailable exports
+or successful PS4 support from this attempt.
+
+Prepared revision v2 adds unbuffered checkpoints flushed before every dynamic
+load/export lookup. Compile/no-write check passed; SHA256
+`24f593d3d0a2dc1fc3d770ae192a45eb07eb1b948d817b9a987caa925cd5aadc`.
+It has NOT been run; fresh specific authorization was requested. Separately,
+asked whether the console trophy menu shows the missing PS4 lists and whether
+opening a list exposes a readable existing mount. PS4 adapter remains gated on
+actual source/interface evidence, not inferred from save-mount or unlock code.
+
+Next: user commit/pull/rebuild the hosted API for the new application-artwork
+routes BEFORE installing the new worker; then verify normal sync/icons/replay.
+This session has not updated that host or the installed worker. Continue the
+PS4 investigation using the trophy-menu result or an authorized revised probe.
+No commits/pushes, source DB changes, mount calls, DNS changes or reboots.
+
 ## Missing games and playtime-only entries - 2026-10-14
 
 Read-only FTP at the configured console IP/2121 observed FTPSRV 0.21.1.

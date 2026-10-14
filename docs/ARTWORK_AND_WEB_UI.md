@@ -11,7 +11,17 @@ UCP parsing bounds package size to 128 MiB/count, checks SHA1, offsets, overlap 
 or unsafe names. PNGs are bounded and validated for signature, dimensions, CRC,
 format and terminal IEND; animated assets are rejected. Metadata joins by exact
 set/revision/trophy identity and rejects duplicate JSON keys or invalid types.
-Game artwork is the trophy-set image supplied by the publisher package.
+Game artwork comes from the trophy-set image or, for activity-only applications,
+the console's `/user/appmeta/<PPSA-or-CUSA-ID>/icon0.png`. The worker enumerates
+exact IDs from the selected profile's collected sessions, reads each available
+icon twice consistently with a 2 MB bound, checks its digest against the server
+cache, then uploads missing images after activity/trophy imports. The API validates
+PNG structure and requires owned, real native activity before accepting an image.
+Missing icons keep the placeholder. This supports recomp and PS4 playtime entries
+without implying that trophy data was imported. No database migration is needed;
+update the hosted API before installing the worker that uses the new
+`/device/application-artwork` endpoints. This path is locally tested; its console
+result is still pending (see STATUS).
 
 Assets and translated metadata are stored in PostgreSQL. Library responses carry
 asset identifiers; images use same-origin authorization. Ownership/visibility

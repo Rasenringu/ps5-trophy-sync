@@ -3,7 +3,7 @@
 set -euo pipefail
 cd /workspace
 deps=/workspace/.local/console-build
-for suite in native-readers native-state native-join native-activity native-discovery worker-state worker-queue worker-import worker-status https-json https-binary; do
+for suite in native-readers native-state native-join native-activity native-discovery ps4-state ps4-copy-inspect ps4-export ps4-collect worker-state worker-queue worker-import worker-status https-json https-binary; do
   bash "scripts/container-test-$suite.sh"
 done
 cc -std=c11 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -I"$deps/sqlite-amalgamation-3530400" console/tests/schema_probe_cli.c console/readers/schema_probe.c "$deps/probe-build/sqlite3-host.o" -o "$deps/probe-build/schema-cli"

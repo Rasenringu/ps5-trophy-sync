@@ -1,15 +1,19 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Console-local read-only source worker. Direct validated HTTPS to service;
- * private credentials/queue, bounded loopback status, no privilege patches. */
+ * private credentials/queue, bounded loopback status. PS4 uses temporary own
+ * process permissions for disposable copies, without changing other processes. */
 #include "status.h"
 #include "../pairing/client.h"
 #include "../sync/native_collect_assets.h"
 #include "../sync/native_export.h"
+#include "../sync/ps4_collect.h"
+#include "../sync/ps4_export.h"
 #include "../readers/native_activity.h"
 #include "../sync/queue.h"
 #include "../transport/https_json.h"
 #include "../transport/https_binary.h"
 #include <mbedtls/sha256.h>
+#include <mbedtls/ssl.h>
 #include "probe_config.h"
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
@@ -43,6 +47,21 @@ static int fail(UiModel *model,const char *action,int rc){
 static int fail_response(UiModel *model,const char *action,const JsonResponse *response){
     char detail[100];
     if(response->tls.rc||!response->tls.verified_handshake||response->tls.verify_flags){
+        if(response->tls.phase){
+            snprintf(model->reader_status,sizeof(model->reader_status),"HTTPS phase %u: HTTP %d; TCP stage %d errno %d; verify %x; sent %llu/%llu bytes",
+                response->tls.phase,response->status,response->tls.connect_stage,response->tls.posix_errno,
+                response->tls.verify_flags,(unsigned long long)response->tls.bytes_sent,
+                (unsigned long long)response->tls.payload_size);
+            const char *phase=response->tls.phase==HTTPS_PHASE_UPLOAD?"sending body":
+                response->tls.phase==HTTPS_PHASE_RESPONSE_HEADERS?"waiting for reply":
+                response->tls.phase==HTTPS_PHASE_RESPONSE_BODY?"reading reply":
+                response->tls.phase==HTTPS_PHASE_HANDSHAKE?"TLS handshake":"request headers";
+            snprintf(detail,sizeof(detail),"%s %s %s; %llu/%llu MiB sent",action,
+                response->tls.rc==MBEDTLS_ERR_SSL_TIMEOUT?"timeout":"HTTPS error",phase,
+                (unsigned long long)(response->tls.bytes_sent/(1024*1024)),
+                (unsigned long long)(response->tls.payload_size/(1024*1024)));
+            return fail(model,detail,response->tls.rc?response->tls.rc:-1);
+        }
         snprintf(detail,sizeof(detail),"%s HTTPS: stage %d errno %d verify %x",action,
                  response->tls.connect_stage,response->tls.posix_errno,response->tls.verify_flags);
         return fail(model,detail,response->tls.rc?response->tls.rc:-1);
@@ -89,7 +108,7 @@ static int flush_queue(PairClient *client,UiModel *model){
     mbedtls_platform_zeroize(&item,sizeof(item));return 0;
 }
 typedef struct {PairClient *client;UiModel *model;mbedtls_ctr_drbg_context *rng;unsigned queued;} QueueContext;
-static int queue_collection(sqlite3 *db,unsigned records,void *opaque){
+static int queue_rows(sqlite3 *db,unsigned records,int (*batch)(sqlite3*,const char*,unsigned,unsigned,char*),void *opaque){
     QueueContext *context=opaque;
     for(unsigned first=0;first<records;){
         if(!same_user())return -1;
@@ -97,15 +116,17 @@ static int queue_collection(sqlite3 *db,unsigned records,void *opaque){
         random[6]=(random[6]&15)|64;random[8]=(random[8]&63)|128;
         char uuid[37];snprintf(uuid,sizeof(uuid),"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",random[0],random[1],random[2],random[3],random[4],random[5],random[6],random[7],random[8],random[9],random[10],random[11],random[12],random[13],random[14],random[15]);
         unsigned count=records-first;if(count>8)count=8;char json[8193];
-        while(count&&native_export_batch(db,uuid,first,count,json))count--;
+        while(count&&batch(db,uuid,first,count,json))count--;
         if(!count)return -1;
         unsigned slot;
         if(sync_queue_put(context->client->directory,selected,context->client->installation_id,context->client->profile_uuid,context->client->origin,json,&slot))return -1;
         context->queued++;first+=count;
         snprintf(context->model->sync_status,sizeof(context->model->sync_status),"Sync: %u batches safely queued",context->queued);publish(context->model);
+        if(first%256==0&&flush_queue(context->client,context->model))return -1;
     }
     return 0;
 }
+static int queue_collection(sqlite3 *db,unsigned records,void *opaque){return queue_rows(db,records,native_export_batch,opaque);}
 static int queue_activity_collection(sqlite3 *db,unsigned records,void *opaque){
     QueueContext *context=opaque;
     for(unsigned first=0;first<records;){
@@ -151,9 +172,69 @@ static int queue_assets(sqlite3 *memory,unsigned count,const unsigned char *pack
     }
     sqlite3_finalize(check);return valid?0:fail(context->model,"Artwork acknowledgement invalid",200);
 }
+static int queue_ps4(const Ps4State *state,const unsigned char *package,size_t size,void *opaque){
+    QueueContext *context=opaque;sqlite3 *memory=NULL;
+    if(ps4_export_prepare(state,&memory))return fail(context->model,"PS4 trophy serialization failed",-1);
+    int rc=queue_rows(memory,state->count,ps4_export_batch,opaque);sqlite3_close(memory);
+    if(rc)return fail(context->model,"PS4 trophy queue failed",rc);
+    if(flush_queue(context->client,context->model))return -1;
+    if(!same_user())return fail(context->model,"Profile changed before PS4 artwork",-2);
+    unsigned char hash[32];char digest[65],json[256],body[512],path[128];
+    if(mbedtls_sha256(package,size,hash,0))return fail(context->model,"PS4 artwork digest failed",-1);
+    for(unsigned i=0;i<32;i++)snprintf(digest+i*2,3,"%02x",hash[i]);
+    snprintf(json,sizeof(json),"{\"title_id\":\"%s\",\"sha256\":\"%s\"}",state->title,digest);
+    JsonResponse response=https_json(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,"/api/device/ps4-artwork/check",context->client->device_token,json,body,sizeof(body));
+    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200)return fail_response(context->model,"PS4 artwork check",&response);
+    if(sqlite3_open(":memory:",&memory))return fail(context->model,"PS4 artwork response failed",-1);
+    sqlite3_stmt *q=NULL;int needed=-1;
+    const char *sql="SELECT json_extract(?1,'$.needed') WHERE json_valid(?1) AND json_type(?1,'$.needed') IN ('true','false') AND NOT EXISTS(SELECT 1 FROM json_tree(?1) GROUP BY fullkey HAVING count(*)>1)";
+    if(!sqlite3_prepare_v2(memory,sql,-1,&q,NULL)){sqlite3_bind_text(q,1,body,-1,SQLITE_STATIC);if(sqlite3_step(q)==SQLITE_ROW)needed=sqlite3_column_int(q,0);}
+    sqlite3_finalize(q);q=NULL;if(needed<0){sqlite3_close(memory);return fail(context->model,"PS4 artwork check invalid",200);}if(!needed){sqlite3_close(memory);return 0;}
+    if(!same_user()){sqlite3_close(memory);return fail(context->model,"Profile changed before PS4 upload",-2);}
+    snprintf(context->model->error,sizeof(context->model->error),"Uploading PS4 artwork and translations: %s",state->title);publish(context->model);
+    snprintf(path,sizeof(path),"/api/device/ps4-artwork/%s",state->title);
+    response=https_binary(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,path,context->client->device_token,package,size,body,sizeof(body));
+    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200){sqlite3_close(memory);return fail_response(context->model,"PS4 artwork upload",&response);}
+    int valid=0;sql="SELECT json_extract(?1,'$.status')='stored' AND json_extract(?1,'$.title_id')=?2 AND json_extract(?1,'$.sha256')=?3 WHERE json_valid(?1) AND NOT EXISTS(SELECT 1 FROM json_tree(?1) GROUP BY fullkey HAVING count(*)>1)";
+    if(!sqlite3_prepare_v2(memory,sql,-1,&q,NULL)){sqlite3_bind_text(q,1,body,-1,SQLITE_STATIC);sqlite3_bind_text(q,2,state->title,-1,SQLITE_STATIC);sqlite3_bind_text(q,3,digest,-1,SQLITE_STATIC);if(sqlite3_step(q)==SQLITE_ROW)valid=sqlite3_column_int(q,0);}
+    sqlite3_finalize(q);sqlite3_close(memory);
+    return valid&&same_user()?0:fail(context->model,"PS4 artwork acknowledgement invalid",200);
+}
+static int queue_application_artwork(const unsigned char *image,size_t size,const char *title,void *opaque){
+    QueueContext *context=opaque;
+    if(!same_user())return fail(context->model,"Profile changed before application artwork",-2);
+    unsigned char hash[32];char digest[65],json[256],body[512],path[128];
+    if(mbedtls_sha256(image,size,hash,0))return fail(context->model,"Application artwork digest failed",-1);
+    for(unsigned i=0;i<32;i++)snprintf(digest+i*2,3,"%02x",hash[i]);
+    snprintf(json,sizeof(json),"{\"title_id\":\"%s\",\"sha256\":\"%s\"}",title,digest);
+    JsonResponse response=https_json(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,"/api/device/application-artwork/check",context->client->device_token,json,body,sizeof(body));
+    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200)return fail_response(context->model,"Application artwork check",&response);
+    sqlite3 *memory=NULL;sqlite3_stmt *query=NULL;int needed=-1;
+    if(sqlite3_open(":memory:",&memory))return fail(context->model,"Application artwork response failed",-1);
+    const char *sql="SELECT json_extract(?1,'$.needed') WHERE json_valid(?1) AND json_type(?1,'$.needed') IN ('true','false') AND NOT EXISTS(SELECT 1 FROM json_tree(?1) GROUP BY fullkey HAVING count(*)>1)";
+    if(!sqlite3_prepare_v2(memory,sql,-1,&query,NULL)){
+        sqlite3_bind_text(query,1,body,-1,SQLITE_STATIC);if(sqlite3_step(query)==SQLITE_ROW)needed=sqlite3_column_int(query,0);
+    }
+    sqlite3_finalize(query);query=NULL;
+    if(needed<0){sqlite3_close(memory);return fail(context->model,"Application artwork check invalid",200);}
+    if(!needed){sqlite3_close(memory);return 0;}
+    if(!same_user()){sqlite3_close(memory);return fail(context->model,"Profile changed before application artwork upload",-2);}
+    snprintf(context->model->error,sizeof(context->model->error),"Uploading application artwork: %s",title);publish(context->model);
+    snprintf(path,sizeof(path),"/api/device/application-artwork/%s",title);
+    response=https_binary(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,path,context->client->device_token,image,size,body,sizeof(body));
+    if(response.tls.rc||!response.tls.verified_handshake||response.tls.verify_flags||response.status!=200){sqlite3_close(memory);return fail_response(context->model,"Application artwork upload",&response);}
+    int valid=0;
+    sql="SELECT json_extract(?1,'$.status')='stored' AND json_extract(?1,'$.title_id')=?2 AND json_extract(?1,'$.sha256')=?3 WHERE json_valid(?1) AND NOT EXISTS(SELECT 1 FROM json_tree(?1) GROUP BY fullkey HAVING count(*)>1)";
+    if(!sqlite3_prepare_v2(memory,sql,-1,&query,NULL)){
+        sqlite3_bind_text(query,1,body,-1,SQLITE_STATIC);sqlite3_bind_text(query,2,title,-1,SQLITE_STATIC);sqlite3_bind_text(query,3,digest,-1,SQLITE_STATIC);
+        if(sqlite3_step(query)==SQLITE_ROW)valid=sqlite3_column_int(query,0);
+    }
+    sqlite3_finalize(query);sqlite3_close(memory);
+    return valid&&same_user()?0:fail(context->model,"Application artwork acknowledgement invalid",200);
+}
 static void *network_worker(void *unused){
     (void)unused;UiModel model;pthread_mutex_lock(&lock);model=published;pthread_mutex_unlock(&lock);
-    PairClient client;memset(&client,0,sizeof(client));client.directory=-1;
+    PairClient client;memset(&client,0,sizeof(client));client.directory=-1;sqlite3 *activity_memory=NULL;
     mbedtls_entropy_context entropy;mbedtls_ctr_drbg_context rng;mbedtls_entropy_init(&entropy);mbedtls_ctr_drbg_init(&rng);
     if(!same_user()||!pair_start(&client,&model,selected,now_ms())){publish(&model);goto done;}
     publish(&model);
@@ -163,14 +244,13 @@ static void *network_worker(void *unused){
     const unsigned char label[]="ps5-native-sync-batch-v2";
     if(mbedtls_ctr_drbg_seed(&rng,mbedtls_entropy_func,&entropy,label,sizeof(label)-1)){fail(&model,"Batch randomness",-1);goto done;}
     QueueContext context={&client,&model,&rng,0};
-    NativeActivityCounts activity_counts;sqlite3 *activity_memory=NULL;
+    NativeActivityCounts activity_counts;
     snprintf(model.error,sizeof(model.error),"Reading native game foreground sessions...");publish(&model);
     int rc=native_activity_collect("/system_data/priv/system_logger2/nobackup/database/sl2_log.db",selected,&activity_memory,&activity_counts);
-    if(rc){sqlite3_close(activity_memory);fail(&model,"Native playtime read failed",rc);goto done;}
+    if(rc){fail(&model,"Native playtime read failed",rc);goto done;}
     if(activity_counts.sessions&&queue_activity_collection(activity_memory,activity_counts.sessions,&context)){
-        sqlite3_close(activity_memory);fail(&model,"Playtime queue failed",-1);goto done;
+        fail(&model,"Playtime queue failed",-1);goto done;
     }
-    sqlite3_close(activity_memory);
     if(flush_queue(&client,&model))goto done;
     /* Activity is independent of trophy availability/artwork transport. */
     snprintf(model.error,sizeof(model.error),"Reading the selected profile's native trophies...");publish(&model);
@@ -179,10 +259,17 @@ static void *network_worker(void *unused){
     snprintf(model.reader_status,sizeof(model.reader_status),"Native: %u sets, %u earned, %u locked, %u unknown",counts.sets,counts.earned,counts.locked,counts.unknown);publish(&model);
     if(rc){fail_collection(&model,rc);goto done;}
     if(flush_queue(&client,&model))goto done;
-    snprintf(model.reader_status,sizeof(model.reader_status),"Native: %u sets; playtime %u complete / %u incomplete",counts.sets,activity_counts.completed,activity_counts.incomplete);publish(&model);
-    snprintf(model.error,sizeof(model.error),"Native trophies and foreground playtime imported.");
-    snprintf(model.sync_status,sizeof(model.sync_status),"Sync complete: %u batches. %u missing / %u rejected sets",context.queued,counts.missing,counts.rejected);publish(&model);
+    NativeApplicationArtworkCounts application_artwork;
+    rc=native_collect_application_artwork(selected,activity_memory,&application_artwork,queue_application_artwork,&context);
+    if(rc){if(model.phase!=UI_ERROR)fail(&model,rc==-2?"Profile changed while reading application artwork":"Application artwork source read failed",rc);goto done;}
+    snprintf(model.error,sizeof(model.error),"Reading selected profile PS4 trophy snapshots...");publish(&model);
+    Ps4Collected ps4;rc=ps4_collect(selected,&ps4,queue_ps4,&context);
+    if(rc){if(model.phase!=UI_ERROR){char action[96];snprintf(action,sizeof(action),"PS4 trophy read failed at stage %d (source %d)",ps4.stage,ps4.rc);fail(&model,rc==-2?"Profile changed while reading PS4 trophies":action,rc);}goto done;}
+    snprintf(model.reader_status,sizeof(model.reader_status),"PS5 %u sets; PS4 %u sets; playtime %u complete / %u incomplete",counts.sets,ps4.sets,activity_counts.completed,activity_counts.incomplete);publish(&model);
+    snprintf(model.error,sizeof(model.error),"Trophies and foreground playtime imported.");
+    snprintf(model.sync_status,sizeof(model.sync_status),"Sync complete: %u batches; %u app images. %u missing / %u rejected sets",context.queued,application_artwork.found,counts.missing+ps4.missing,counts.rejected+ps4.rejected);publish(&model);
 done:
+    sqlite3_close(activity_memory);
     if(client.directory>=0)close(client.directory);
     mbedtls_platform_zeroize(&client,sizeof(client));mbedtls_ctr_drbg_free(&rng);mbedtls_entropy_free(&entropy);return NULL;
 }

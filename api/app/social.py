@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from .db import database
 from .contracts import Strict
-from .models import Account, Login, Profile, Record, Artwork, DeviceArtwork, SocialProfile, Friendship
+from .models import Account, Login, Profile, Record, Artwork, DeviceArtwork, DevicePackage, SocialProfile, Friendship
 from .main import browser, digest, now, rate, fail, library
 
 router=APIRouter()
@@ -119,6 +119,7 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
     rows=library(peer.account,db,language);trophies=aggregated(rows)
     mine=aggregated(library(viewer,db,language)) if viewer else {}
     result=[];games={}
+    def image_url(url):return '/api/players/'+peer.handle+'/artwork/'+url.rsplit('/',1)[1] if url else None
     fields=('title_id','title','trophy_id','name','description','hidden','grade','unlocked','unlocked_at')
     for key,row in trophies.items():
         data={k:row['data'].get(k) for k in fields}
@@ -128,7 +129,6 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
         if masked:data.update(name='Hidden trophy',description=None,hidden=True)
         elif data.get('hidden') and key in mine:
             data.update(name=mine[key]['data'].get('name'),description=mine[key]['data'].get('description'))
-        def image_url(url):return '/api/players/'+peer.handle+'/artwork/'+url.rsplit('/',1)[1] if url else None
         # No profile IDs, native flags or source database details leave this route.
         entry={'profile_uuid':'shared','profile_label':peer.display_name,'source':row['source'],
             'kind':'trophy','mock':False,'data':data,'artwork_url':image_url(row.get('artwork_url')),
@@ -139,7 +139,7 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
         if row['mock'] or row['kind']!='activity' or not counted(row['data']):continue
         key=(row['source'],row['data']['title_id'])
         games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,
-            'source':row['source'],'mock':False,'artwork_url':None,'icon_url':None,
+            'source':row['source'],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'icon_url':None,
             'data':{'title_id':key[1],'title':row['data']['title']}})
         total=totals.setdefault(key,{'seconds':0,'sessions':0})
         total['seconds']+=row['data']['duration_seconds'];total['sessions']+=1
@@ -155,12 +155,13 @@ def shared_image(handle: str,image_id: str,request: Request,db: Session=Depends(
     viewer=optional_viewer(request,db);peer=shared_access(db,handle,viewer)
     image=db.get(DeviceArtwork,image_id) or db.get(Artwork,image_id)
     if not image:fail(404,'Artwork unavailable')
-    source='ps5_native' if isinstance(image,DeviceArtwork) else image.source
+    package=db.get(DevicePackage,(image.profile,image.title_id)) if isinstance(image,DeviceArtwork) else None
+    source=('ps4_bc' if package and package.metadata_json.get('format')=='ps4_trp_v3' else 'ps5_native') if isinstance(image,DeviceArtwork) else image.source
     records=select(Record).join(Profile,Profile.id==Record.profile).where(
         Profile.owner==peer.account,Profile.revoked==False,Record.mock==False,
-        Record.source==source,Record.kind=='trophy',Record.data['title_id'].as_string()==image.title_id)
+        Record.source==source,Record.kind.in_(['trophy','activity']),Record.data['title_id'].as_string()==image.title_id)
     if isinstance(image,DeviceArtwork):records=records.where(Record.profile==image.profile)
-    if image.trophy_id:records=records.where(Record.data['trophy_id'].as_string()==image.trophy_id,Record.data['unlocked'].as_boolean()==True)
+    if image.trophy_id:records=records.where(Record.kind=='trophy',Record.data['trophy_id'].as_string()==image.trophy_id,Record.data['unlocked'].as_boolean()==True)
     if db.scalar(records.limit(1)) is None:fail(404,'Artwork unavailable')
     if image.trophy_id:
         peer_rows=aggregated(library(peer.account,db,'en'))
@@ -260,14 +261,16 @@ def friend_image(handle: str,image_id: str,request: Request,owner: str=Depends(b
     peer=require_friend(db,owner,handle)
     image=db.get(DeviceArtwork,image_id) or db.get(Artwork,image_id)
     if not image:fail(404,'Artwork unavailable')
+    package=db.get(DevicePackage,(image.profile,image.title_id)) if isinstance(image,DeviceArtwork) else None
+    source=('ps4_bc' if package and package.metadata_json.get('format')=='ps4_trp_v3' else 'ps5_native') if isinstance(image,DeviceArtwork) else image.source
     owned=select(Record.id).join(Profile,Profile.id==Record.profile).where(Profile.owner==peer.account,Profile.revoked==False,
-        Record.mock==False,Record.kind=='trophy',Record.source=='ps5_native',Record.data['title_id'].as_string()==image.title_id)
+        Record.mock==False,Record.kind=='trophy',Record.source==source,Record.data['title_id'].as_string()==image.title_id)
     if isinstance(image,DeviceArtwork):owned=owned.where(Record.profile==image.profile)
     if image.trophy_id:owned=owned.where(Record.data['trophy_id'].as_string()==image.trophy_id)
     if db.scalar(owned.limit(1)) is None:fail(404,'Artwork unavailable')
     if image.trophy_id:
         earned=select(Record.id).join(Profile,Profile.id==Record.profile).where(Profile.owner==owner,Profile.revoked==False,
-            Record.mock==False,Record.kind=='trophy',Record.source=='ps5_native',
+            Record.mock==False,Record.kind=='trophy',Record.source==source,
             Record.data['title_id'].as_string()==image.title_id,Record.data['trophy_id'].as_string()==image.trophy_id,Record.data['unlocked'].as_boolean()==True)
         if db.scalar(earned.limit(1)) is None:fail(404,'Artwork unavailable')
     headers={'Cache-Control':'private, no-cache','Vary':'Cookie','ETag':'"'+image.digest+'"'}

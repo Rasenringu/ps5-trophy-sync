@@ -23,7 +23,7 @@ stored source-clock evidence.
 
 Metadata uses bounded read-only `param.json` with exact title identity validation.
 Activity title IDs remain stored unchanged. The library joins activity to a trophy
-set only through an exact, unique title within that profile; ambiguous/missing
+set only for PPSA activity through an exact, unique title within that profile; ambiguous/missing
 matches stay separate. Games without imported trophies appear as activity-only
 entries with no trophy progress bar. Missing metadata keeps the exact observed
 application ID as its label; invalid existing metadata is still rejected.
@@ -35,7 +35,10 @@ The authorized 2026-10-14 diagnostic observed 192 foreground seconds for Simpson
 and 406 across two completed Sonic sessions. PS4 names optionally use the
 console-observed app.db tbl_contentinfo through a separate bounded read-only
 transaction; unavailable/ambiguous names retain the application ID. That new
-name query has compile/host tests and still needs its own hardware result.
+name query has compile/host tests. The user's hosted sync/screenshot now confirms
+Attack on Titan and Nathan Drake Collection names; unavailable older metadata
+still leaves some entries labeled with their CUSA IDs. Application icons are
+independent of trophy imports; the new icon upload path awaits console validation.
 
 ## Console evidence
 

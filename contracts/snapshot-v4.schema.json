@@ -1,0 +1,292 @@
+{
+  "$defs": {
+    "Activity": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "title_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Title Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ended At"
+        },
+        "duration_seconds": {
+          "anyOf": [
+            {
+              "maximum": 604800,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration Seconds"
+        },
+        "complete": {
+          "title": "Complete",
+          "type": "boolean"
+        },
+        "clock": {
+          "enum": [
+            "trusted",
+            "uncertain",
+            "unknown"
+          ],
+          "title": "Clock",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "title_id",
+        "title",
+        "complete",
+        "clock"
+      ],
+      "title": "Activity",
+      "type": "object"
+    },
+    "Ps4Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "raw_state": {
+          "maximum": 4294967295,
+          "minimum": 0,
+          "title": "Raw State",
+          "type": "integer"
+        },
+        "raw_aux": {
+          "maximum": 4294967295,
+          "minimum": 0,
+          "title": "Raw Aux",
+          "type": "integer"
+        },
+        "raw_grade": {
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Raw Grade",
+          "type": "integer"
+        },
+        "first_raw": {
+          "pattern": "^(0|[1-9][0-9]{0,19})$",
+          "title": "First Raw",
+          "type": "string"
+        },
+        "second_raw": {
+          "pattern": "^(0|[1-9][0-9]{0,19})$",
+          "title": "Second Raw",
+          "type": "string"
+        },
+        "trp_sha1": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Trp Sha1",
+          "type": "string"
+        },
+        "application_title_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Application Title Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "raw_state",
+        "raw_aux",
+        "raw_grade",
+        "first_raw",
+        "second_raw",
+        "trp_sha1",
+        "application_title_ids"
+      ],
+      "title": "Ps4Observation",
+      "type": "object"
+    },
+    "Ps4Trophy": {
+      "additionalProperties": false,
+      "properties": {
+        "title_id": {
+          "pattern": "^NPWR[0-9]{5}_00$",
+          "title": "Title Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "trophy_id": {
+          "pattern": "^(0|[1-9][0-9]{0,3})$",
+          "title": "Trophy Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "grade": {
+          "enum": [
+            "bronze",
+            "silver",
+            "gold",
+            "platinum",
+            "unknown"
+          ],
+          "title": "Grade",
+          "type": "string"
+        },
+        "unlocked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unlocked"
+        },
+        "unlocked_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unlocked At"
+        },
+        "clock": {
+          "enum": [
+            "uncertain",
+            "unknown"
+          ],
+          "title": "Clock",
+          "type": "string"
+        },
+        "ps4_observation": {
+          "$ref": "#/$defs/Ps4Observation"
+        }
+      },
+      "required": [
+        "title_id",
+        "title",
+        "trophy_id",
+        "name",
+        "grade",
+        "unlocked",
+        "clock",
+        "ps4_observation"
+      ],
+      "title": "Ps4Trophy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 4,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "batch_id": {
+      "format": "uuid",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "source": {
+      "const": "ps4_bc",
+      "title": "Source",
+      "type": "string"
+    },
+    "mock": {
+      "const": false,
+      "title": "Mock",
+      "type": "boolean"
+    },
+    "trophies": {
+      "items": {
+        "$ref": "#/$defs/Ps4Trophy"
+      },
+      "maxItems": 2000,
+      "minItems": 1,
+      "title": "Trophies",
+      "type": "array"
+    },
+    "activities": {
+      "items": {
+        "$ref": "#/$defs/Activity"
+      },
+      "maxItems": 0,
+      "title": "Activities",
+      "type": "array"
+    },
+    "consistency": {
+      "const": "stable_encrypted_image_copy",
+      "title": "Consistency",
+      "type": "string"
+    },
+    "profile_binding": {
+      "const": "inner_local_user_and_foreground_path",
+      "title": "Profile Binding",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "batch_id",
+    "source",
+    "mock",
+    "trophies",
+    "consistency",
+    "profile_binding"
+  ],
+  "title": "Ps4Snapshot",
+  "type": "object"
+}

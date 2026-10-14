@@ -10,3 +10,5 @@ cc -std=c11 -Wall -Wextra -Werror -O1 -g -I"$deps/mbedtls-3.6.7/include" \
 python3 console/tests/test_https_json.py "$deps/probe-build/https-json-cli"
 cc -std=c11 -Wall -Wextra -Werror -Wno-unused-function -O1 -g -fsanitize=address,undefined -I"$deps/mbedtls-3.6.7/include" console/tests/test_dns_deadline.c -lpthread -o "$deps/probe-build/test-dns-deadline"
 "$deps/probe-build/test-dns-deadline"
+cc -std=c11 -Wall -Wextra -Werror -Wno-unused-function -O1 -g -fsanitize=address,undefined -I"$deps/mbedtls-3.6.7/include" console/tests/test_https_io_deadline.c -lpthread -o "$deps/probe-build/test-https-io-deadline"
+"$deps/probe-build/test-https-io-deadline"

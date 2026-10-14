@@ -21,6 +21,7 @@ pluggy==1.6.0
 psycopg==3.3.3
 psycopg-binary==3.3.3
 pycparser==3.0
+pycryptodomex==3.24.1
 pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.21.0

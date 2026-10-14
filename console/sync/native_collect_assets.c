@@ -65,3 +65,33 @@ cleanup:
     }
     return same_user(profile)?0:-2;
 }
+
+int native_collect_application_artwork(unsigned profile,sqlite3 *activity,NativeApplicationArtworkCounts *counts,NativeApplicationArtworkVisitor visitor,void *context){
+    if(!activity||!counts||!visitor)return -1;
+    memset(counts,0,sizeof(*counts));
+#ifdef NATIVE_APPLICATION_ARTWORK_TEST
+    const char *root=getenv("MOCK_APP_META_ROOT");if(!root)return -1;
+#else
+    const char *root="/user/appmeta";
+#endif
+    sqlite3_stmt *rows=NULL;int rc=-1,step;unsigned seen=0;
+    if(sqlite3_prepare_v2(activity,"SELECT DISTINCT title_id FROM sessions ORDER BY title_id LIMIT 513",-1,&rows,NULL))return -1;
+    while((step=sqlite3_step(rows))==SQLITE_ROW){
+        if(++seen>512)goto done;
+        if(!same_user(profile)){rc=-2;goto done;}
+        const char *title=(const char*)sqlite3_column_text(rows,0);
+        int valid=title&&sqlite3_column_bytes(rows,0)==9&&strlen(title)==9&&(!strncmp(title,"PPSA",4)||!strncmp(title,"CUSA",4));
+        for(unsigned i=4;valid&&i<9;i++)if(title[i]<'0'||title[i]>'9')valid=0;
+        if(!valid){counts->rejected++;continue;}
+        char path[512];int length=snprintf(path,sizeof(path),"%s/%s/icon0.png",root,title);
+        if(length<0||(size_t)length>=sizeof(path))goto done;
+        size_t size=0;int missing=0;unsigned char *bytes=stable_read(path,2000000,&size,&missing);
+        if(!bytes){if(missing)counts->missing++;else counts->rejected++;continue;}
+        if(memcmp(bytes,"\x89PNG\r\n\x1a\n",8)){counts->rejected++;free(bytes);continue;}
+        if(!same_user(profile)){free(bytes);rc=-2;goto done;}
+        int visited=visitor(bytes,size,title,context);free(bytes);
+        if(visited){rc=-3;goto done;}counts->found++;
+    }
+    if(step==SQLITE_DONE)rc=same_user(profile)?0:-2;
+done:sqlite3_finalize(rows);return rc;
+}

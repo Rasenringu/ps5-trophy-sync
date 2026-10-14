@@ -32,12 +32,29 @@ JsonResponse https_binary(const char *ip,unsigned short port,const char *name,
                         const unsigned char *payload,size_t payload_size,char *body,size_t capacity) {
     JsonResponse result={.tls={.rc=-1}};
     if(body&&capacity)body[0]=0;
+    const char *application_prefix="/api/device/application-artwork/";
+    const char *ps4_prefix="/api/device/ps4-artwork/";
+    int application=path&&!strncmp(path,application_prefix,strlen(application_prefix));
+    int ps4=path&&!strncmp(path,ps4_prefix,strlen(ps4_prefix));
+    if(application){
+        const char *title=path+strlen(application_prefix);
+        if(strlen(title)!=9||(strncmp(title,"PPSA",4)&&strncmp(title,"CUSA",4)))return result;
+        for(unsigned i=4;i<9;i++)if(title[i]<'0'||title[i]>'9')return result;
+    }
+    if(ps4){
+        const char *title=path+strlen(ps4_prefix);
+        if(strlen(title)!=12||strncmp(title,"NPWR",4)||strcmp(title+9,"_00"))return result;
+        for(unsigned i=4;i<9;i++)if(title[i]<'0'||title[i]>'9')return result;
+    }
     if(!body||capacity<2||capacity>65536||!header_value(ip,64)||!header_value(name,192)||
        !path||strncmp(path,"/api/device/",12)||!header_value(path,128)||
-       !ca||!ca[0]||!payload||payload_size<96||payload_size>128*1024*1024||(token&&!header_value(token,128)))return result;
-    for(const char *p=path;*p;p++)if(!((*p>='a'&&*p<='z')||*p=='/'))return result;
+       !ca||!ca[0]||!payload||payload_size<(application?45u:96u)||payload_size>(application?2000000u:ps4?32u*1024*1024:128u*1024*1024)||(token&&!header_value(token,128)))return result;
+    for(const char *p=path;*p;p++)if(!((*p>='a'&&*p<='z')||*p=='/'||((application||ps4)&&((*p>='A'&&*p<='Z')||(*p>='0'&&*p<='9')||*p=='-'||*p=='_'))))return result;
     int64_t now=monotonic_ms();if(now<0)return result;
-    Connection connection={.fd=-1,.deadline=now+60000};
+    /* Large native packages need a bounded transfer budget independent of
+     * socket polling slices. JSON/control requests retain their short budget. */
+    Connection connection={.fd=-1,.deadline=now+180000};
+    result.tls.payload_size=payload_size;
     struct HttpWorkspace {char request[1024],headers[8192];};
     struct HttpWorkspace *workspace=calloc(1,sizeof(*workspace));
     if(!workspace)return result;
@@ -59,6 +76,7 @@ JsonResponse https_binary(const char *ip,unsigned short port,const char *name,
     connection.fd=connect_bounded(ip,port,&result.tls);
     if(connection.fd<0){rc=MBEDTLS_ERR_NET_CONNECT_FAILED;goto finished;}
     mbedtls_ssl_set_bio(&tls,&connection,transmit,receive,NULL);
+    result.tls.phase=HTTPS_PHASE_HANDSHAKE;
     do{rc=mbedtls_ssl_handshake(&tls);}while(retry(rc)&&monotonic_ms()<connection.deadline);
     result.tls.verify_flags=mbedtls_ssl_get_verify_result(&tls);
     if(rc||result.tls.verify_flags){if(!rc)rc=-1;goto finished;}
@@ -68,6 +86,7 @@ JsonResponse https_binary(const char *ip,unsigned short port,const char *name,
                    path,name,(unsigned)port,payload_size,token?"Authorization: Bearer ":"",token?token:"",token?"\r\n":"");
     if(n<0||(size_t)n>=sizeof(workspace->request)){rc=-1;goto finished;}
     size_t sent=0;
+    result.tls.phase=HTTPS_PHASE_REQUEST_HEADERS;
     while(sent<(size_t)n){
         rc=mbedtls_ssl_write(&tls,(unsigned char*)request+sent,(size_t)n-sent);
         if(retry(rc)&&monotonic_ms()<connection.deadline)continue;
@@ -75,13 +94,15 @@ JsonResponse https_binary(const char *ip,unsigned short port,const char *name,
         sent+=(size_t)rc;
     }
     sent=0;
+    result.tls.phase=HTTPS_PHASE_UPLOAD;
     while(sent<payload_size){
         size_t block=payload_size-sent;if(block>16384)block=16384;
         rc=mbedtls_ssl_write(&tls,payload+sent,block);
         if(retry(rc)&&monotonic_ms()<connection.deadline)continue;
-        if(rc<=0)goto finished;sent+=(size_t)rc;
+        if(rc<=0)goto finished;sent+=(size_t)rc;result.tls.bytes_sent=sent;
     }
     char *headers=workspace->headers;size_t used=0;char *end=NULL;
+    result.tls.phase=HTTPS_PHASE_RESPONSE_HEADERS;
     while(used<sizeof(workspace->headers)-1){
         rc=mbedtls_ssl_read(&tls,(unsigned char*)headers+used,1);
         if(retry(rc)&&monotonic_ms()<connection.deadline)continue;
@@ -105,13 +126,15 @@ JsonResponse https_binary(const char *ip,unsigned short port,const char *name,
         line=next+2;
     }
     if(!has_length){rc=-1;goto finished;}
+    result.tls.phase=HTTPS_PHASE_RESPONSE_BODY;
     while(result.size<length){
         rc=mbedtls_ssl_read(&tls,(unsigned char*)body+result.size,length-result.size);
         if(retry(rc)&&monotonic_ms()<connection.deadline)continue;
         if(rc<=0){rc=-1;goto finished;}result.size+=(size_t)rc;
     }
-    body[result.size]=0;rc=0;
+    body[result.size]=0;rc=0;result.tls.phase=HTTPS_PHASE_COMPLETE;
 finished:
+    if(retry(rc)&&monotonic_ms()>=connection.deadline)rc=MBEDTLS_ERR_SSL_TIMEOUT;
     result.tls.rc=rc;
     if(rc){body[0]=0;result.size=0;}
     if(connection.fd>=0)close(connection.fd);

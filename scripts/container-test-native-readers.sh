@@ -22,3 +22,6 @@ echo 'PASS native definition decoder PS5 compile; no ELF sent.'
 cc -std=c11 -O1 -g -Wall -Wextra -Werror -ffunction-sections -fdata-sections -Wl,--gc-sections -fsanitize=address,undefined \
   -I"$deps/sqlite-amalgamation-3530400" console/tests/test_native_stable_read.c -o "$deps/probe-build/test-native-stable-read"
 "$deps/probe-build/test-native-stable-read"
+cc -std=c11 -O1 -g -Wall -Wextra -Werror -Wno-misleading-indentation -ffunction-sections -fdata-sections -Wl,--gc-sections -fsanitize=address,undefined \
+  -I"$deps/sqlite-amalgamation-3530400" console/tests/test_application_artwork.c "$deps/probe-build/sqlite3-host.o" -o "$deps/probe-build/test-application-artwork"
+"$deps/probe-build/test-application-artwork"

@@ -371,6 +371,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/NativeActivitySnapshot"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Ps4Snapshot"
                   }
                 ],
                 "title": "Body"
@@ -451,6 +454,154 @@
             "schema": {
               "type": "string",
               "title": "Artwork Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/ps4-artwork/check": {
+      "post": {
+        "summary": "Ps4 Artwork Check",
+        "operationId": "ps4_artwork_check_device_ps4_artwork_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtworkCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/ps4-artwork/{title_id}": {
+      "post": {
+        "summary": "Ps4 Artwork",
+        "operationId": "ps4_artwork_device_ps4_artwork__title_id__post",
+        "parameters": [
+          {
+            "name": "title_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^NPWR[0-9]{5}_00$",
+              "title": "Title Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/application-artwork/check": {
+      "post": {
+        "summary": "Application Artwork Check",
+        "operationId": "application_artwork_check_device_application_artwork_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationArtworkCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/application-artwork/{title_id}": {
+      "post": {
+        "summary": "Application Artwork",
+        "operationId": "application_artwork_device_application_artwork__title_id__post",
+        "parameters": [
+          {
+            "name": "title_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(PPSA|CUSA)[0-9]{5}$",
+              "title": "Title Id"
             }
           }
         ],
@@ -1096,6 +1247,27 @@
         ],
         "title": "Activity"
       },
+      "ApplicationArtworkCheck": {
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "pattern": "^(PPSA|CUSA)[0-9]{5}$",
+            "title": "Title Id"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title_id",
+          "sha256"
+        ],
+        "title": "ApplicationArtworkCheck"
+      },
       "Approval": {
         "properties": {
           "code": {
@@ -1682,6 +1854,210 @@
           "display_name"
         ],
         "title": "ProfileEdit"
+      },
+      "Ps4Observation": {
+        "properties": {
+          "raw_state": {
+            "type": "integer",
+            "maximum": 4294967295.0,
+            "minimum": 0.0,
+            "title": "Raw State"
+          },
+          "raw_aux": {
+            "type": "integer",
+            "maximum": 4294967295.0,
+            "minimum": 0.0,
+            "title": "Raw Aux"
+          },
+          "raw_grade": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Raw Grade"
+          },
+          "first_raw": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,19})$",
+            "title": "First Raw"
+          },
+          "second_raw": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,19})$",
+            "title": "Second Raw"
+          },
+          "trp_sha1": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$",
+            "title": "Trp Sha1"
+          },
+          "application_title_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 16,
+            "title": "Application Title Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw_state",
+          "raw_aux",
+          "raw_grade",
+          "first_raw",
+          "second_raw",
+          "trp_sha1",
+          "application_title_ids"
+        ],
+        "title": "Ps4Observation"
+      },
+      "Ps4Snapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 4,
+            "title": "Schema Version"
+          },
+          "batch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Batch Id"
+          },
+          "source": {
+            "type": "string",
+            "const": "ps4_bc",
+            "title": "Source"
+          },
+          "mock": {
+            "type": "boolean",
+            "const": false,
+            "title": "Mock"
+          },
+          "trophies": {
+            "items": {
+              "$ref": "#/components/schemas/Ps4Trophy"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Trophies"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            },
+            "type": "array",
+            "maxItems": 0,
+            "title": "Activities"
+          },
+          "consistency": {
+            "type": "string",
+            "const": "stable_encrypted_image_copy",
+            "title": "Consistency"
+          },
+          "profile_binding": {
+            "type": "string",
+            "const": "inner_local_user_and_foreground_path",
+            "title": "Profile Binding"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "batch_id",
+          "source",
+          "mock",
+          "trophies",
+          "consistency",
+          "profile_binding"
+        ],
+        "title": "Ps4Snapshot"
+      },
+      "Ps4Trophy": {
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "pattern": "^NPWR[0-9]{5}_00$",
+            "title": "Title Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "trophy_id": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,3})$",
+            "title": "Trophy Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "bronze",
+              "silver",
+              "gold",
+              "platinum",
+              "unknown"
+            ],
+            "title": "Grade"
+          },
+          "unlocked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked"
+          },
+          "unlocked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At"
+          },
+          "clock": {
+            "type": "string",
+            "enum": [
+              "uncertain",
+              "unknown"
+            ],
+            "title": "Clock"
+          },
+          "ps4_observation": {
+            "$ref": "#/components/schemas/Ps4Observation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title_id",
+          "title",
+          "trophy_id",
+          "name",
+          "grade",
+          "unlocked",
+          "clock",
+          "ps4_observation"
+        ],
+        "title": "Ps4Trophy"
       },
       "Snapshot": {
         "properties": {

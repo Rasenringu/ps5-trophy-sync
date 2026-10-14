@@ -73,3 +73,36 @@ truncated rewrite body behavior. Official [proxyClientMaxBodySize documentation]
 describes the same limit. `config-shared.d.ts`/`router-server.js` confirm the
 experimental `proxyTimeout` API used for a 70-second upstream timeout. Both config
 options compile in the pinned version. No dependency/image version changed.
+
+## PS4 reader investigation (2026-10-14)
+
+Inspected primary source at exact revisions:
+[PS5-Suite payload/main.c](https://github.com/manos555555/PS5-Suite/blob/a4005c1c004aa8baa77e07d69ff7bec3b012bdec/payload/main.c)
+and [Apollo-PS4 source/sd.c](https://github.com/bucanero/apollo-ps4/blob/ef0f8fc321ebc187d5b8ef91b8af0648450dc520/source/sd.c).
+These save-mount implementations do not establish a read-only PS4 trophy export
+path on this console. No source was copied/linked into the product, no new
+dependency was added, and neither payload was executed. Their mount/decryption
+or privilege-changing behavior is outside the current read-only test scope.
+The original export-only capability probe is separately documented in STATUS;
+its empty report provides no usable interface verification. Native trophy
+registration/unlock source remains unsuitable as an earned-state exporter.
+
+[MyTrophies-PS4](https://github.com/OfficialAhmed/MyTrophies-PS4/blob/e290fbd1cde618720bc90a29323681c90d0c536e/MyTrophies.py)
+at `e290fbd1cde618720bc90a29323681c90d0c536e` reads trpsummary.dat JSON
+earnedTrophies grade totals. The actual console file matched this aggregate
+shape but contains no per-game or individual unlock identities. It cannot fill
+the missing PS4 game lists. Research only: no source/dependency incorporated.
+
+Follow-up primary references, research only (no third-party code/keys incorporated):
+
+- [PS4-vsh-utils trophy mount API](https://github.com/hzhreal/PS4-vsh-utils/blob/b8edba35450c69b13f2c67e0dfb7e66f5b37a947/source/trophy.c)
+  distinguishes trophy-specific FS exports; its defaults do not establish RO mounts.
+- [PS5 Save Mounter](https://github.com/n0llptr/Playstation-5-Save-Mounter/blob/1a0281ea9794afadc2e2da345ca0b66e5db45bc7/mounter_payload/main.c)
+  uses linked FS imports and pfsmgr key operations; GPLv3. Its source mounts and
+  copy-back path are not suitable for this project's source-preserving reader.
+- [LibOrbisPkg PFS reader](https://github.com/maxton/LibOrbisPkg/blob/643477263b2644e0803e0f58b8726ea4e3f3b7d4/LibOrbisPkg/PFS/PfsReader.cs)
+  is LGPLv3 and implements readonly userspace package PFS access. Generic package
+  key derivation is insufficient evidence for saved trophy image decryption.
+- [pkg_pfs_tool saved-data derivation](https://github.com/flatz/pkg_pfs_tool/blob/4e74afa98b0f57b2b50a2182c1ef89905dc040a7/src/keymgr.c)
+  identifies the extra saved-data key schedule. It does not provide usable keys
+  in its configuration. No code from this repository was linked or copied.

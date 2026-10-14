@@ -1,4 +1,21 @@
 import {test,expect} from '@playwright/test';
+test('PS4 imported trophy set and its exact activity binding share one card',async({page})=>{
+ const base={profile_uuid:'MOCK_PS4',profile_label:'MOCK profile',source:'ps4_bc',mock:false,artwork_url:null,icon_url:null};
+ const game={title_id:'NPWR00001_00',title:'MOCK PS4 imported game'};
+ const rows=[...Array.from({length:3},(_,id)=>({...base,kind:'trophy',data:{...game,trophy_id:String(id),name:'MOCK trophy '+id,grade:'bronze',unlocked:id===2?null:id===1}})),
+  {...base,kind:'activity',data:{...game,event_id:'MOCK_PS4_SESSION',activity_source:'ps5_native',complete:true,duration_seconds:192,clock:'uncertain',duration_basis:'native_foreground_seconds',consistency:'sqlite_read_transaction',profile_binding:'activity_header_single_local_user'}}];
+ await page.route('**/api/account/me',route=>route.fulfill({json:{email:'mock-ps4@example.test'}}));
+ await page.route('**/api/account/devices',route=>route.fulfill({json:[]}));
+ await page.route('**/api/account/library**',route=>route.fulfill({json:rows}));
+ await page.goto('/');
+ const card=page.locator('.game-card').filter({hasText:game.title});
+ await expect(card).toHaveCount(1);await expect(card.locator('.platform-pill')).toHaveText('PS4');
+ await expect(card.getByRole('progressbar')).toBeVisible();
+ await expect(card.getByText('0h 3m recorded across 1 sessions',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'View trophies for '+game.title,exact:true}).click();
+ await expect(page.getByText('MOCK trophy 2',{exact:true})).toBeVisible();
+ await expect(page.getByText('State unknown',{exact:true})).toBeVisible();
+});
 test('native duration counts independently of clock; unknown sessions do not inflate playtime',async({page})=>{
  const base={profile_uuid:'MOCK_PLAYTIME',profile_label:'MOCK playtime preview',source:'ps5_native',mock:false,artwork_url:null,icon_url:null};
  const rows=[{...base,kind:'trophy',data:{title_id:'MOCK',title:'MOCK game',trophy_id:'0',name:'MOCK trophy',grade:'bronze',unlocked:true}},
@@ -33,4 +50,21 @@ test('native duration counts independently of clock; unknown sessions do not inf
  await expect(page.getByRole('cell',{name:'9999s',exact:true})).toHaveCount(0);
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('playtime-only PS4 entry displays its authorized application icon',async({page})=>{
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jJXcAAAAASUVORK5CYII=','base64');
+ await page.route('**/api/account/me',route=>route.fulfill({json:{email:'mock-art@example.test'}}));
+ await page.route('**/api/account/devices',route=>route.fulfill({json:[]}));
+ await page.route('**/api/account/library**',route=>route.fulfill({json:[{
+  profile_uuid:'MOCK',profile_label:'MOCK profile',source:'ps5_native',mock:false,kind:'activity',
+  artwork_url:'/api/account/device-artwork/MOCK_IMAGE',icon_url:null,
+  data:{title_id:'CUSA03804',title:'MOCK Attack on Titan',complete:true,duration_seconds:192,
+   clock:'uncertain',duration_basis:'native_foreground_seconds',consistency:'sqlite_read_transaction',profile_binding:'activity_header_single_local_user'}}]}));
+ await page.route('**/api/account/device-artwork/MOCK_IMAGE',route=>route.fulfill({contentType:'image/png',body:png}));
+ await page.goto('/');
+ const card=page.locator('.game-card').filter({hasText:'MOCK Attack on Titan'});
+ await expect(card.getByRole('img',{name:'MOCK Attack on Titan'})).toBeVisible();
+ await expect(card.locator('.platform-pill')).toHaveText('PS4');
+ await expect(card.getByRole('progressbar')).toHaveCount(0);
 });

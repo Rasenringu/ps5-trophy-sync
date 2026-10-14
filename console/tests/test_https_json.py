@@ -8,7 +8,7 @@ assert certs
 context=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain(str(certs[0]),str(root/'.local/tls/server.key'))
 client,=sys.argv[1:]
-def attempt(response,name=None,ca=None,host="127.0.0.1"):
+def attempt(response,name=None,ca=None,host="127.0.0.1",path='/api/device/status'):
     listener=socket.socket();listener.bind(('127.0.0.1',0));listener.listen(1);listener.settimeout(5)
     errors=[]
     def serve():
@@ -17,20 +17,21 @@ def attempt(response,name=None,ca=None,host="127.0.0.1"):
             with context.wrap_socket(raw,server_side=True) as peer:
                 request=b''
                 while b'\r\n\r\n' not in request:request+=peer.recv(4096)
-                assert request.startswith(b'POST /api/device/status HTTP/1.1\r\n')
+                assert request.startswith(('POST '+path+' HTTP/1.1\r\n').encode())
                 assert b'Authorization:' not in request
                 peer.sendall(response)
         except (ssl.SSLError,ConnectionError,OSError):pass
         except Exception as e:errors.append(e)
         finally:listener.close()
     worker=threading.Thread(target=serve,daemon=True);worker.start()
-    output=subprocess.check_output([client,str(listener.getsockname()[1]),name or identity['server_ip'],str(ca or root/'.local/tls/ca.crt'),'/api/device/status',host],text=True,timeout=20)
+    output=subprocess.check_output([client,str(listener.getsockname()[1]),name or identity['server_ip'],str(ca or root/'.local/tls/ca.crt'),path,host],text=True,timeout=20)
     worker.join(timeout=6);assert not worker.is_alive() and not errors,errors
     return [int(x) for x in output.split()]
 body=b'{"status":"MOCK"}'
 good=b'HTTP/1.1 200 OK\r\nContent-Length: '+str(len(body)).encode()+b'\r\nConnection: close\r\n\r\n'+body
 assert attempt(good)==[0,0,1,200,len(body)]
 assert attempt(good,host="localhost")==[0,0,1,200,len(body)]
+assert attempt(good,path='/api/device/application-artwork/check')==[0,0,1,200,len(body)]
 for invalid in [
     b'HTTP/1.1 200 OK\r\nContent-Length: 8\r\nContent-Length: 8\r\n\r\n{}',
     b'HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n2\r\n{}\r\n0\r\n\r\n',

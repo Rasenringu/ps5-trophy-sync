@@ -45,7 +45,10 @@ static int wait_io(Connection *c,int writing) {
     struct timeval timeout={remaining/1000,(remaining%1000)*1000};
     fd_set ready;FD_ZERO(&ready);FD_SET(c->fd,&ready);
     int rc=select(c->fd+1,writing ? NULL : &ready,writing ? &ready : NULL,NULL,&timeout);
-    if (!rc) return MBEDTLS_ERR_SSL_TIMEOUT;
+    /* A polling slice is not the request deadline. Servers may legitimately
+     * spend more than three seconds consuming/validating a large package. */
+    if (!rc) return monotonic_ms()>=c->deadline ? MBEDTLS_ERR_SSL_TIMEOUT :
+        (writing ? MBEDTLS_ERR_SSL_WANT_WRITE : MBEDTLS_ERR_SSL_WANT_READ);
     if (rc<0) return errno==EINTR ? (writing ? MBEDTLS_ERR_SSL_WANT_WRITE : MBEDTLS_ERR_SSL_WANT_READ) : MBEDTLS_ERR_NET_POLL_FAILED;
     return 0;
 }

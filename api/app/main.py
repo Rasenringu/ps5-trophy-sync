@@ -2,13 +2,15 @@ import hashlib
 import json
 import logging
 import os
+import re
 import secrets
 import time
 import uuid
 from urllib.parse import urlencode, urlsplit
+from xml.etree import ElementTree as ET
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, InvalidHashError
-from fastapi import FastAPI, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, Path as ApiPath
 from fastapi.responses import JSONResponse
 from starlette.requests import ClientDisconnect
 from sqlalchemy import select, delete, tuple_
@@ -17,7 +19,7 @@ from sqlalchemy.orm import Session as DbSession
 from .db import database
 from .models import Account, Login, Installation, Profile, Pairing, Import, Record, Rate, Artwork, TrophyInfo, TrophyText, DevicePackage, DeviceArtwork
 from .locales import choose_language
-from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot
+from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
 
 app = FastAPI(title='PS5 Trophy Sync', version='0.1.0')
 origin = os.environ.get('WEB_ORIGIN', 'http://localhost:3000').rstrip('/')
@@ -58,9 +60,10 @@ async def guard(request: Request, call_next):
         length = int(request.headers.get('content-length', '0'))
     except ValueError:
         return Response('Invalid Content-Length', status_code=400)
-    if request.url.path=='/device/artwork':
+    if request.url.path=='/device/artwork' or re.fullmatch(r'/device/ps4-artwork/NPWR[0-9]{5}_00',request.url.path):
         # Authenticate before accepting a larger streamed native package.
-        if length<0 or length>128*1024*1024:
+        bound=128*1024*1024 if request.url.path=='/device/artwork' else 32*1024*1024
+        if length<0 or length>bound:
             return Response('Artwork package exceeds bounds',status_code=413)
         response=await call_next(request)
         response.headers['Cache-Control']='no-store'
@@ -282,7 +285,7 @@ def revoke(profile_id: str, owner: str = Depends(browser), db: DbSession = Depen
     return {'status': 'revoked'}
 
 @app.post('/device/sync')
-def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot, profile: Profile = Depends(device), db: DbSession = Depends(database)):
+def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot | Ps4Snapshot, profile: Profile = Depends(device), db: DbSession = Depends(database)):
     if body.mock and not development_tools:fail(422, 'Demo imports are disabled')
     data = body.model_dump(mode='json')
     checksum = digest(json.dumps(data, sort_keys=True, separators=(',', ':')))
@@ -293,7 +296,7 @@ def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot, profile: Prof
         return {'status': 'duplicate', 'batch_id': str(body.batch_id)}
     for kind, rows in [('trophy', data['trophies']), ('activity', data['activities'])]:
         for row in rows:
-            if isinstance(body, NativeSnapshot):
+            if isinstance(body, (NativeSnapshot,Ps4Snapshot)):
                 row['consistency'] = body.consistency
                 row['profile_binding'] = body.profile_binding
                 row['observed_unlock_state'] = row['unlocked']
@@ -344,8 +347,19 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
     aliases={record.id:next(iter(names[(record.profile,record.data['title'])]))
              for record,_ in rows if not record.mock and record.kind=='activity'
              and record.source=='ps5_native' and record.data.get('duration_basis')=='native_foreground_seconds'
+             and record.data.get('native_observation',{}).get('application_title_id','').startswith('PPSA')
              and record.data['title']!=record.data['title_id']
              and len(names.get((record.profile,record.data['title']),set()))==1}
+    ps4_bindings={}
+    for record,_ in rows:
+        if record.mock or record.kind!='trophy' or record.source!='ps4_bc' or record.data.get('profile_binding')!='inner_local_user_and_foreground_path':continue
+        for application in record.data.get('ps4_observation',{}).get('application_title_ids',[]):
+            ps4_bindings.setdefault((record.profile,application),set()).add(record.data['title_id'])
+    ps4_aliases={record.id:next(iter(ps4_bindings[(record.profile,record.data['title_id'])]))
+        for record,_ in rows if not record.mock and record.kind=='activity' and record.source=='ps5_native'
+        and record.data.get('duration_basis')=='native_foreground_seconds'
+        and len(ps4_bindings.get((record.profile,record.data['title_id']),set()))==1}
+    aliases.update(ps4_aliases)
     titles = {r.data['title_id'] for r, _ in rows if not r.mock}
     titles.update(aliases.values())
     # The library response needs URLs, never the cached PNG bodies.
@@ -366,17 +380,19 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
     result = []
     for r, label in rows:
         title=aliases.get(r.id,r.data['title_id'])
-        key = (r.source,title,r.data.get('trophy_id',''))
+        source='ps4_bc' if r.id in ps4_aliases else r.source
+        key = (source,title,r.data.get('trophy_id',''))
         metadata = None if r.mock else info.get(key)
         data = dict(r.data)
         if r.kind=='activity' and data['title']==data['title_id']:
             data['title_binding']='application_id_only'
         if r.id in aliases:
             data['title_id']=title
-            data['title_binding']='unique_local_title_metadata'
+            data['title_binding']='ps4_inner_application_id' if r.id in ps4_aliases else 'unique_local_title_metadata'
+            if r.id in ps4_aliases:data['activity_source']=r.source
         earned = data.get('unlocked') is True
         translated=None if r.mock or r.kind!='trophy' else translations.get(key)
-        translated_game=None if r.mock else translations.get((r.source,title,''))
+        translated_game=None if r.mock else translations.get((source,title,''))
         if translated_game:
             data['title']=translated_game.name
         if translated:
@@ -386,7 +402,8 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
             data['description'] = (translated.description if translated else metadata.description) if earned or not metadata.hidden else None
             if metadata.hidden and not earned:
                 data['name'] = 'Hidden trophy'
-        package=None if r.mock or r.source!='ps5_native' else packages.get((r.profile,title))
+        package=None if r.mock or source not in ('ps5_native','ps4_bc') else packages.get((r.profile,title))
+        if package and (package.metadata_json.get('format')=='ps4_trp_v3')!=(source=='ps4_bc'):package=None
         package_language=None
         if package:
             bundle=package.metadata_json
@@ -398,9 +415,9 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
                 data['hidden']=hidden
                 data['name']=text[data['trophy_id']][0] if earned or not hidden else 'Hidden trophy'
                 data['description']=text[data['trophy_id']][1] if earned or not hidden else None
-        result.append({'profile_uuid':r.profile,'profile_label':label,'source':r.source,'kind':r.kind,
+        result.append({'profile_uuid':r.profile,'profile_label':label,'source':source,'kind':r.kind,
             'mock':r.mock,'data':data,'content_language':None if r.mock else package_language or choices.get((r.source,title)),
-            'artwork_url':None if r.mock else scoped_images.get((r.profile,title,'')) or images.get((r.source,title,'')),
+            'artwork_url':None if r.mock else scoped_images.get((r.profile,title,'')) or scoped_images.get((r.profile,r.data['title_id'],'')) or images.get((source,title,'')),
             'icon_url':None if r.mock or not earned else scoped_images.get((r.profile,title,data.get('trophy_id',''))) or images.get(key)})
     return result
 
@@ -429,6 +446,70 @@ from pydantic import Field
 class ArtworkCheck(Strict):
     title_id: str=Field(pattern=r'^NPWR[0-9]{5}_00$')
     sha256: str=Field(pattern=r'^[0-9a-f]{64}$')
+
+@app.post('/device/ps4-artwork/check')
+def ps4_artwork_check(body: ArtworkCheck, profile: Profile=Depends(device), db: DbSession=Depends(database)):
+    rate(db,'ps4-artwork-check:'+profile.id,256,600)
+    known=db.scalar(select(Record.id).where(Record.profile==profile.id,Record.source=='ps4_bc',Record.mock==False,
+        Record.kind=='trophy',Record.data['title_id'].as_string()==body.title_id))
+    if known is None:fail(403,'Import this profile PS4 trophy set before artwork')
+    package=db.get(DevicePackage,(profile.id,body.title_id))
+    return {'needed':package is None or package.digest!=body.sha256 or package.metadata_json.get('format')!='ps4_trp_v3'}
+
+@app.post('/device/ps4-artwork/{title_id}')
+async def ps4_artwork(request: Request,title_id: str=ApiPath(pattern=r'^NPWR[0-9]{5}_00$'),
+                      profile: Profile=Depends(device),db: DbSession=Depends(database)):
+    from .device_artwork import store_ps4_package
+    rate(db,'ps4-artwork-upload:'+profile.id,128,600)
+    if request.headers.get('content-type')!='application/octet-stream':fail(415,'PS4 TRP package required')
+    parts=[];size=0
+    try:
+        async for chunk in request.stream():
+            size+=len(chunk)
+            if size>32*1024*1024:fail(413,'PS4 TRP exceeds bounds')
+            parts.append(chunk)
+    except ClientDisconnect:fail(400,'PS4 package interrupted; retry sync')
+    raw=b''.join(parts)
+    if not 96<=len(raw)<=32*1024*1024:fail(413,'PS4 TRP exceeds bounds')
+    declared=request.headers.get('content-length')
+    if declared is not None and len(raw)!=int(declared):fail(400,'PS4 package incomplete; retry sync')
+    current=db.scalar(select(Profile).where(Profile.id==profile.id).with_for_update().execution_options(populate_existing=True))
+    if not current or current.revoked or current.token!=bearer(request) or not current.owner:fail(401,'Pair this profile again; credential missing or revoked')
+    try:title,sha=store_ps4_package(db,profile.id,title_id,raw)
+    except PermissionError as error:fail(403,str(error))
+    except (ValueError,KeyError,UnicodeError,ET.ParseError):fail(422,'Invalid PS4 TRP package')
+    db.commit();return {'status':'stored','title_id':title,'sha256':sha}
+
+class ApplicationArtworkCheck(Strict):
+    title_id: str=Field(pattern=r'^(PPSA|CUSA)[0-9]{5}$')
+    sha256: str=Field(pattern=r'^[0-9a-f]{64}$')
+
+@app.post('/device/application-artwork/check')
+def application_artwork_check(body: ApplicationArtworkCheck, profile: Profile=Depends(device), db: DbSession=Depends(database)):
+    from .device_artwork import application_imported
+    rate(db,'application-artwork-check:'+profile.id,512,600)
+    if not application_imported(db,profile.id,body.title_id):fail(403,'Import this profile application activity before its artwork')
+    image=db.scalar(select(DeviceArtwork).where(DeviceArtwork.profile==profile.id,
+        DeviceArtwork.title_id==body.title_id,DeviceArtwork.trophy_id==''))
+    return {'needed':image is None or image.digest!=body.sha256}
+
+@app.post('/device/application-artwork/{title_id}')
+async def application_artwork(request: Request, title_id: str=ApiPath(pattern=r'^(PPSA|CUSA)[0-9]{5}$'),
+                              profile: Profile=Depends(device), db: DbSession=Depends(database)):
+    from .device_artwork import store_application_image
+    rate(db,'application-artwork-upload:'+profile.id,128,600)
+    if request.headers.get('content-type')!='application/octet-stream':fail(415,'Application PNG required')
+    raw=await request.body()
+    if not 45<=len(raw)<=2_000_000:fail(413,'Application artwork exceeds bounds')
+    declared=request.headers.get('content-length')
+    if declared is not None and len(raw)!=int(declared):fail(400,'Application artwork incomplete; retry sync')
+    current=db.scalar(select(Profile).where(Profile.id==profile.id).with_for_update().execution_options(populate_existing=True))
+    if not current or current.revoked or current.token!=bearer(request) or not current.owner:fail(401,'Pair this profile again; credential missing or revoked')
+    try:title,sha=store_application_image(db,profile.id,title_id,raw)
+    except PermissionError as error:fail(403,str(error))
+    except ValueError:fail(422,'Invalid application PNG')
+    db.commit()
+    return {'status':'stored','title_id':title,'sha256':sha}
 
 @app.post('/device/artwork/check')
 def artwork_check(body: ArtworkCheck, profile: Profile=Depends(device), db: DbSession=Depends(database)):
@@ -468,9 +549,9 @@ async def device_artwork(request: Request, profile: Profile=Depends(device), db:
 def device_image(identity: str, request: Request, owner: str=Depends(browser), db: DbSession=Depends(database)):
     image=db.scalar(select(DeviceArtwork).join(Profile,Profile.id==DeviceArtwork.profile).where(DeviceArtwork.id==identity,Profile.owner==owner,Profile.revoked==False))
     if image is None:fail(404,'Artwork unavailable')
-    owned=select(Record.id).where(Record.profile==image.profile,Record.source=='ps5_native',Record.mock==False,
-        Record.kind=='trophy',Record.data['title_id'].as_string()==image.title_id)
-    if image.trophy_id:owned=owned.where(Record.data['trophy_id'].as_string()==image.trophy_id,Record.data['unlocked'].as_boolean()==True)
+    owned=select(Record.id).where(Record.profile==image.profile,Record.source.in_(['ps5_native','ps4_bc']),Record.mock==False,
+        Record.kind.in_(['trophy','activity']),Record.data['title_id'].as_string()==image.title_id)
+    if image.trophy_id:owned=owned.where(Record.kind=='trophy',Record.data['trophy_id'].as_string()==image.trophy_id,Record.data['unlocked'].as_boolean()==True)
     if db.scalar(owned.limit(1)) is None:fail(404,'Artwork unavailable')
     headers={'Cache-Control':'private, no-cache','Vary':'Cookie','ETag':'"'+image.digest+'"','X-Content-Type-Options':'nosniff'}
     if request.headers.get('if-none-match')==headers['ETag']:return Response(status_code=304,headers=headers)

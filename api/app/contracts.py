@@ -147,3 +147,45 @@ class NativeActivitySnapshot(Snapshot):
     activities: list[NativeActivity] = Field(default_factory=list,max_length=128)
     consistency: Literal['sqlite_read_transaction']
     profile_binding: Literal['activity_header_single_local_user']
+
+class Ps4Observation(Strict):
+    raw_state: int=Field(ge=0,le=4294967295,strict=True)
+    raw_aux: int=Field(ge=0,le=4294967295,strict=True)
+    raw_grade: int=Field(ge=1,le=4,strict=True)
+    first_raw: str=Field(pattern=r'^(0|[1-9][0-9]{0,19})$')
+    second_raw: str=Field(pattern=r'^(0|[1-9][0-9]{0,19})$')
+    trp_sha1: str=Field(pattern=r'^[0-9a-f]{40}$')
+    application_title_ids: list[str]=Field(max_length=16)
+    @model_validator(mode='after')
+    def identities(self):
+        import re
+        if max(int(self.first_raw),int(self.second_raw))>18446744073709551615:
+            raise ValueError('PS4 timestamp exceeds uint64')
+        if len(set(self.application_title_ids))!=len(self.application_title_ids) or any(not re.fullmatch(r'CUSA[0-9]{5}',x) for x in self.application_title_ids):
+            raise ValueError('Invalid PS4 application bindings')
+        return self
+
+class Ps4Trophy(Trophy):
+    title_id: str=Field(pattern=r'^NPWR[0-9]{5}_00$')
+    trophy_id: str=Field(pattern=r'^(0|[1-9][0-9]{0,3})$')
+    unlocked: bool|None
+    clock: Literal['uncertain','unknown']
+    ps4_observation: Ps4Observation
+    @model_validator(mode='after')
+    def observed(self):
+        o=self.ps4_observation
+        expected=False if (o.raw_state,o.raw_aux,int(o.first_raw),int(o.second_raw))==(0,0,0,0) else True if (o.raw_state,o.raw_aux)==(1,0x2000) else None
+        if self.unlocked is not expected or self.grade!=('platinum','gold','silver','bronze')[o.raw_grade-1]:
+            raise ValueError('Unsupported PS4 unlock/grade evidence')
+        if self.unlocked_at is not None and (expected is not True or not int(o.first_raw) or self.clock!='uncertain'):
+            raise ValueError('PS4 timestamp lacks earned evidence')
+        return self
+
+class Ps4Snapshot(Snapshot):
+    schema_version: Literal[4]
+    source: Literal['ps4_bc']
+    mock: Literal[False]
+    trophies: list[Ps4Trophy]=Field(min_length=1,max_length=2000)
+    activities: list[Activity]=Field(default_factory=list,max_length=0)
+    consistency: Literal['stable_encrypted_image_copy']
+    profile_binding: Literal['inner_local_user_and_foreground_path']

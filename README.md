@@ -15,6 +15,9 @@ Games with recorded activity appear even without imported trophies, including
 homebrew recomp titles. Completed native foreground counters supply playtime;
 incomplete sessions retain unknown duration. Native logger `CUSA` sessions can
 appear as PS4 playtime entries (with the application ID if a name is unavailable).
+Activity-only entries can use their installed application icon, including PS4
+and recomp titles. Update the hosted API before the new worker; this added
+artwork path still needs console validation.
 PS4 trophy extraction is still unimplemented; see [current evidence](docs/STATUS.md).
 Native trophy packages are bounded to 128 MiB, including Uncharted's observed
 70.17 MiB package. Update both the console worker and server/web ingress for this fix.

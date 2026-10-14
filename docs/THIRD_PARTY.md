@@ -57,3 +57,12 @@ references, not console-linked dependencies. Their exact research pins remain in
 LibProsperoPKG was a GPLv3 format reference; no C# code/library is incorporated.
 PS5-PHU-Trophy-System was inspected and excluded because it registers/unlocks or
 modifies trophies. No unlocking code is used by this project.
+
+## PS4 metadata dependency
+
+PyCryptodomex 3.24.1 (BSD 2-Clause and public-domain components) is pinned in
+api/requirements.lock. Full upstream notice is retained at
+api/licenses/PyCryptodomex.txt. It decodes publisher PS4 ESFM metadata using the
+public format constant; console/user sealed keys are never sent to the API.
+Research repository revisions are recorded in docs/SOURCES.md; their payloads
+and code are not incorporated into the product.

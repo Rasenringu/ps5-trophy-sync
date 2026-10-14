@@ -1,38 +1,33 @@
 # Missing library entries: continuation plan
 
-2026-10-14. User requests native Uncharted, Attack on Titan/Nathan Drake PS4
-entries and playtime-only Simpsons/Sonic recomp games. See STATUS for evidence.
+2026-10-14. See STATUS for commands, exact hashes and hardware evidence.
 
-1. Implemented and locally verified: 128 MiB package bounds throughout; chunked
-   stable second reads; activity-only web/private/shared entries; native CUSA
-   sessions and optional PS4 names from observed app.db; playtime before trophies.
-2. One diagnostic run was expressly authorized and executed. Real recomp counters
-   and CUSA sessions were observed, without source DB copies, mounts or changes.
-   Changes to the PS4 name lookup after that run are not yet hardware validated.
-3. Upgrade the existing hosted API/web checkout, preserving env/database volume,
-   with `scripts/Start-Local.ps1 -Build` (or the existing production Compose
-   workflow), plus its nginx configuration if used. The current worker requires
-   the API's expanded CUSA validator and 128 MiB artwork limit.
-   User will commit/pull to the Docker host 192.168.1.100 themselves. Remote
-   management access from this PC is unavailable; no host deployment has occurred.
-4. Obtain authorization for the **new worker** test: replace only the installed
-   TrophySync.elf, leave title/autoload/other payloads and saved pairing/queue
-   untouched, then launch TrophySync normally. Reads native activity/metadata/
-   trophies; writes only its existing private queue/connection state and performs
-   authenticated uploads to the user's existing service. Confirm Uncharted's 101
-   trophies, recomp counters, PS4 names and replay without doubled durations.
-   Prior one-shot diagnostic approval does not authorize this different sync test.
-5. PS4 trophies require an independently verified read adapter. Current files are
-   sealed images and the visible existing mount is empty; the probed databases
-   cannot open. Ask user to open the missing PS4 game's trophy list and inspect
-   existing read-only mount again. Do not mount images, patch services, register/
-   unlock trophies or change databases on the assumption this is authorized.
-6. If readable PS4 state is still unavailable, research a read-only system query/
-   mount path, prepare a narrowly scoped concrete probe, and obtain its specific
-   authorization before execution. Do not substitute invented state or treat
-   package definitions as earned evidence. Keep native and PS4 adapters separate.
+1. Previous fix is now deployed by the user: native Uncharted sync succeeds;
+   playtime includes recomp/CUSA games and observed PS4 names. Some older games
+   still have no readable trophy source or optional name metadata.
+2. New independent application artwork path is built and locally tested (62 API,
+   6 focused browser tests, full console suite). Transfer polling/deadline handling
+   and action-specific upload errors were improved. Current ZIP is at
+   artifacts/console/final-ui/TrophySync-PS5.zip, console_verified=false.
+3. User commits/pulls/rebuilds API on Docker host 192.168.1.100 using
+   scripts/Start-Local.ps1 -Build, preserving env/database. New application-artwork
+   endpoints must exist BEFORE replacing the worker. No migration is needed.
+4. Test the new worker's normal sync with specific authorization or user installation:
+   preserve foreground/pairing/queue/autoload and verify PS4/recomp/older icons,
+   repeated sync/cache and unchanged durations. No host deployment or new-worker
+   console test has occurred in this follow-up.
+5. PS4 trophies need a separate verified reader. Existing sources are sealed;
+   the user opened Attack on Titan's console trophy list, but FTP still sees the
+   existing mount empty. The readable JSON summary contains only profile totals. Never invent a schema or treat definitions as earned state.
+6. One authorized export-only capability probe returned an empty report; its
+   runtime cause is unknown. Temporary staging/report were removed. Revised v2
+   was specifically authorized and run once: filesystem library returned loaded=0,
+   then reporting stopped at the trophy library load (278 bytes). No exports were
+   verified. Own staging/report were cleaned. It called no trophy APIs, decrypted
+   or mounted no images, and accessed no databases. No further probe is authorized.
+7. If neither path establishes readable data, research a narrow read-only query
+   interface before further implementation/testing. No RW mounting, authid/kernel
+   changes, registration/unlocking or source database modification is authorized.
 
-Native source captures and the diagnostic report are under ignored
-captures/library-investigation. They contain personal console data and must
-never enter Git or a distributable package. Built worker/ZIP are under ignored
-artifacts/console/final-ui. No dependency pins were changed.
+Private captures/diagnostic reports stay in ignored captures/library-investigation;
+never put them in Git/packages. No dependency pins changed. User handles commits.
