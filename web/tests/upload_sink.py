@@ -23,7 +23,7 @@ class Sink(BaseHTTPRequestHandler):
         if self.path!='/device/artwork':
             self.reply(404,{});return
         expected=int(self.headers.get('Content-Length','0'))
-        if expected>64*1024*1024:
+        if expected>128*1024*1024:
             self.reply(413,{});return
         self.connection.settimeout(3)
         used=0;digest=hashlib.sha256()

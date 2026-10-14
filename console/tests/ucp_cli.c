@@ -7,7 +7,7 @@ int main(int argc,char **argv) {
     FILE *f=fopen(argv[1],"rb");if(!f) return 2;
     if(fseek(f,0,SEEK_END)) { fclose(f);return 2; }
     long length=ftell(f);
-    if(length<0 || length>64*1024*1024) { fclose(f);return 2; }
+    if(length<0 || length>128*1024*1024) { fclose(f);return 2; }
     rewind(f);unsigned char *bytes=malloc((size_t)length ? (size_t)length : 1);
     if(!bytes) { fclose(f);return 2; }
     if(fread(bytes,1,(size_t)length,f)!=(size_t)length) { free(bytes);fclose(f);return 2; }

@@ -34,7 +34,7 @@ JsonResponse https_binary(const char *ip,unsigned short port,const char *name,
     if(body&&capacity)body[0]=0;
     if(!body||capacity<2||capacity>65536||!header_value(ip,64)||!header_value(name,192)||
        !path||strncmp(path,"/api/device/",12)||!header_value(path,128)||
-       !ca||!ca[0]||!payload||payload_size<96||payload_size>64*1024*1024||(token&&!header_value(token,128)))return result;
+       !ca||!ca[0]||!payload||payload_size<96||payload_size>128*1024*1024||(token&&!header_value(token,128)))return result;
     for(const char *p=path;*p;p++)if(!((*p>='a'&&*p<='z')||*p=='/'))return result;
     int64_t now=monotonic_ms();if(now<0)return result;
     Connection connection={.fd=-1,.deadline=now+60000};

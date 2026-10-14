@@ -7,7 +7,7 @@ a new upload is necessary. New imported games obtain artwork and official text
 on sync; cached packages are not repeatedly uploaded. No paid API or PSN login is
 required. A missing asset uses a generic placeholder.
 
-UCP parsing bounds package size/count, checks SHA1, offsets, overlap and duplicate
+UCP parsing bounds package size to 128 MiB/count, checks SHA1, offsets, overlap and duplicate
 or unsafe names. PNGs are bounded and validated for signature, dimensions, CRC,
 format and terminal IEND; animated assets are rejected. Metadata joins by exact
 set/revision/trophy identity and rejects duplicate JSON keys or invalid types.
@@ -35,8 +35,10 @@ The library defaults to a compact list, with a persisted Cards switch. The whole
 game row/card opens trophy details with keyboard, mouse or touch. Rows stretch to
 available width, retain artwork on the left and adapt to library-container width.
 Recorded session details sort newest first; totals count eligible complete native
-sessions without double-counting replay. Revoked profiles and games without
-imported trophies are omitted. Search/sort do not change aggregate playtime.
+sessions without double-counting replay. Revoked profiles are omitted. Activity-only
+games remain visible without trophy progress or grade counters. Shared libraries
+export eligible playtime totals, never private session details or native identifiers.
+Search/sort do not change aggregate playtime.
 
 See [social visibility](SOCIAL_AND_COMPARISONS.md), [playtime](PLAYTIME.md) and
 [current verification](STATUS.md).

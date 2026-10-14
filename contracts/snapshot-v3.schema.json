@@ -97,7 +97,7 @@
       "additionalProperties": false,
       "properties": {
         "application_title_id": {
-          "pattern": "^PPSA[0-9]{5}$",
+          "pattern": "^(PPSA|CUSA)[0-9]{5}$",
           "title": "Application Title Id",
           "type": "string"
         },

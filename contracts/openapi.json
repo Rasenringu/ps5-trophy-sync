@@ -1325,7 +1325,7 @@
         "properties": {
           "application_title_id": {
             "type": "string",
-            "pattern": "^PPSA[0-9]{5}$",
+            "pattern": "^(PPSA|CUSA)[0-9]{5}$",
             "title": "Application Title Id"
           },
           "session_digest": {

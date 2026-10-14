@@ -7,7 +7,7 @@
 int main(int argc,char **argv){
     if(argc!=4)return 2;
     size_t ucp_size=0,state_size=0;
-    unsigned char *ucp_bytes=load(argv[1],&ucp_size,64*1024*1024),*state_bytes=load(argv[2],&state_size,2*1024*1024);
+    unsigned char *ucp_bytes=load(argv[1],&ucp_size,128*1024*1024),*state_bytes=load(argv[2],&state_size,2*1024*1024);
     if(!ucp_bytes||!state_bytes){free(ucp_bytes);free(state_bytes);return 2;}
     Ucp ucp;NativeDefinitions defs={0};NativeState state={0};sqlite3 *db=NULL;int rc=2;
     if(ucp_validate(ucp_bytes,ucp_size,&ucp)||native_definitions(&ucp,&defs)||native_state_decode(state_bytes,state_size,&state)||native_export_prepare(&defs,&state,&db))goto done;

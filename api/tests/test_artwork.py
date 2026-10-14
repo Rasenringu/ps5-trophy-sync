@@ -34,6 +34,14 @@ def test_ucp_icons_map_numeric_ids_and_validate_container():
     with pytest.raises(ValueError):entries(package({'../icon.png':image()}))
     with pytest.raises(ValueError):read_artwork(package({'tropconf.json':b'{"schemaVersion":"1.00","schemaVersion":"0.90"}'}))
 
+def test_ucp_accepts_valid_package_above_old_64_mib_cutoff():
+    # Conspicuously synthetic padding; verifies the same header/digest/bounds
+    # gates still apply to larger containers rather than bypassing validation.
+    data=package({'MOCK-padding.bin':bytes(71*1024*1024)})
+    assert len(entries(data)['MOCK-padding.bin'])==71*1024*1024
+    broken=bytearray(data);broken[-1]^=1
+    with pytest.raises(ValueError):entries(bytes(broken))
+
 def test_hidden_flag_description_join_and_revision_are_exact():
     conf={'trophyNpCommId':'NPWR12345_00','trophyDefinitionRevision':'1','trophySetVersion':'1','defaultLanguage':'en-US','trophies':[{'id':'0021','hidden':True}]}
     meta={**{k:conf[k] for k in ('trophyNpCommId','trophyDefinitionRevision','trophySetVersion')},'schemaVersion':'0.90','metadata':{'trophyMetadata':[{'id':'0021','detail':'MOCK secret description'}]}}

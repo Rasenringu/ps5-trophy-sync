@@ -11,7 +11,7 @@ had used HTTP. This was not a port 3000/8000 reachability problem.
 An API `ClientDisconnect` during `/device/artwork` can indicate an interrupted
 or truncated upstream upload. A real defect was reproduced in Next.js's default
 10 MiB rewrite buffer: the isolated receiver got 10 MiB of a declared 11 MiB
-upload. The fixed config allows 64 MiB, matching the API's package bound, and
+upload. The fixed config allows 128 MiB, matching the API's package bound, and
 a 70-second proxy timeout. Deploy updated host source with `Start-Local.ps1 -Build`.
 
 The API now handles incomplete/interrupted streams explicitly and never caches

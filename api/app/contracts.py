@@ -113,7 +113,7 @@ class NativeSnapshot(Snapshot):
     profile_binding: Literal['foreground_user_path_scoped']
 
 class NativeActivityObservation(Strict):
-    application_title_id: str = Field(pattern=r'^PPSA[0-9]{5}$')
+    application_title_id: str = Field(pattern=r'^(PPSA|CUSA)[0-9]{5}$')
     session_digest: str = Field(pattern=r'^[0-9a-f]{64}$')
     # A native foreground counter is independent of wall-clock timestamps.
     foreground_seconds: int | None = Field(default=None, ge=0, le=604800)

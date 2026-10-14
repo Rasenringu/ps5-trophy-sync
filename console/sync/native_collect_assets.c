@@ -19,11 +19,17 @@ static unsigned char *stable_read(const char *path,size_t limit,size_t *size,int
     *missing=0;int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);if(fd<0){*missing=1;return NULL;}
     struct stat before,middle,after;unsigned char *first=NULL,*second=NULL;
     if(fstat(fd,&before)||!S_ISREG(before.st_mode)||before.st_size<64||(uint64_t)before.st_size>limit)goto done;
-    *size=(size_t)before.st_size;first=malloc(*size);second=malloc(*size);
-    if(!first||!second||!read_all(fd,first,*size)||fstat(fd,&middle)||!same(&before,&middle)||lseek(fd,0,SEEK_SET)!=0||
-       !read_all(fd,second,*size)||fstat(fd,&after)||!same(&before,&after)||memcmp(first,second,*size)){
+    *size=(size_t)before.st_size;first=malloc(*size);second=malloc(65536);
+    if(!first||!second||!read_all(fd,first,*size)||fstat(fd,&middle)||!same(&before,&middle)||lseek(fd,0,SEEK_SET)!=0){
         free(first);first=NULL;
     }
+    /* Compare the second pass in bounded chunks, retaining one package buffer. */
+    for(size_t at=0;first&&at<*size;){
+        size_t count=*size-at;if(count>65536)count=65536;
+        if(!read_all(fd,second,count)||memcmp(first+at,second,count)){free(first);first=NULL;break;}
+        at+=count;
+    }
+    if(first&&(fstat(fd,&after)||!same(&before,&after))){free(first);first=NULL;}
 done:free(second);close(fd);return first;
 }
 int native_collect_assets(unsigned profile,NativeCollected *counts,NativeAssetVisitor visitor,void *context){
@@ -42,7 +48,7 @@ int native_collect_assets(unsigned profile,NativeCollected *counts,NativeAssetVi
         int rc=-1;
         if(native_state_decode(state_bytes,state_size,&state))goto cleanup;
         snprintf(path,sizeof(path),"/user/trophy2/nobackup/conf/%s/TROPHY.UCP",name);
-        ucp_bytes=stable_read(path,64*1024*1024,&ucp_size,&missing);Ucp ucp;
+        ucp_bytes=stable_read(path,128*1024*1024,&ucp_size,&missing);Ucp ucp;
         if(!ucp_bytes||ucp_validate(ucp_bytes,ucp_size,&ucp)||native_definitions(&ucp,&definitions)||strcmp(definitions.npwr,name)||native_export_prepare(&definitions,&state,&exported))goto cleanup;
         if(!same_user(profile)){rc=-2;goto cleanup;}
         if(visitor(exported,state.count,ucp_bytes,ucp_size,name,context)){rc=-3;goto cleanup;}

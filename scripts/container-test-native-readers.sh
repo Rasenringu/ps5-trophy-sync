@@ -19,3 +19,6 @@ python3 console/tests/test_native_definitions.py "$deps/probe-build/native-defin
   -I"$deps/probe-ps5/include" -I"$deps/sqlite-amalgamation-3530400" \
   -c console/readers/native_definitions.c -o "$deps/probe-build/native-definitions-ps5.o"
 echo 'PASS native definition decoder PS5 compile; no ELF sent.'
+cc -std=c11 -O1 -g -Wall -Wextra -Werror -ffunction-sections -fdata-sections -Wl,--gc-sections -fsanitize=address,undefined \
+  -I"$deps/sqlite-amalgamation-3530400" console/tests/test_native_stable_read.c -o "$deps/probe-build/test-native-stable-read"
+"$deps/probe-build/test-native-stable-read"

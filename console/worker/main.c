@@ -162,21 +162,22 @@ static void *network_worker(void *unused){
     if(flush_queue(&client,&model))goto done;
     const unsigned char label[]="ps5-native-sync-batch-v2";
     if(mbedtls_ctr_drbg_seed(&rng,mbedtls_entropy_func,&entropy,label,sizeof(label)-1)){fail(&model,"Batch randomness",-1);goto done;}
-    snprintf(model.error,sizeof(model.error),"Reading the selected profile's native trophies...");publish(&model);
-    NativeCollected counts;QueueContext context={&client,&model,&rng,0};
-    int rc=native_collect_assets(selected,&counts,queue_assets,&context);
-    snprintf(model.reader_status,sizeof(model.reader_status),"Native: %u sets, %u earned, %u locked, %u unknown",counts.sets,counts.earned,counts.locked,counts.unknown);publish(&model);
-    if(rc){fail_collection(&model,rc);goto done;}
-    if(!counts.sets){fail(&model,"Native sources unavailable",-1);goto done;}
-    if(flush_queue(&client,&model))goto done;
+    QueueContext context={&client,&model,&rng,0};
     NativeActivityCounts activity_counts;sqlite3 *activity_memory=NULL;
     snprintf(model.error,sizeof(model.error),"Reading native game foreground sessions...");publish(&model);
-    rc=native_activity_collect("/system_data/priv/system_logger2/nobackup/database/sl2_log.db",selected,&activity_memory,&activity_counts);
+    int rc=native_activity_collect("/system_data/priv/system_logger2/nobackup/database/sl2_log.db",selected,&activity_memory,&activity_counts);
     if(rc){sqlite3_close(activity_memory);fail(&model,"Native playtime read failed",rc);goto done;}
     if(activity_counts.sessions&&queue_activity_collection(activity_memory,activity_counts.sessions,&context)){
         sqlite3_close(activity_memory);fail(&model,"Playtime queue failed",-1);goto done;
     }
     sqlite3_close(activity_memory);
+    if(flush_queue(&client,&model))goto done;
+    /* Activity is independent of trophy availability/artwork transport. */
+    snprintf(model.error,sizeof(model.error),"Reading the selected profile's native trophies...");publish(&model);
+    NativeCollected counts;
+    rc=native_collect_assets(selected,&counts,queue_assets,&context);
+    snprintf(model.reader_status,sizeof(model.reader_status),"Native: %u sets, %u earned, %u locked, %u unknown",counts.sets,counts.earned,counts.locked,counts.unknown);publish(&model);
+    if(rc){fail_collection(&model,rc);goto done;}
     if(flush_queue(&client,&model))goto done;
     snprintf(model.reader_status,sizeof(model.reader_status),"Native: %u sets; playtime %u complete / %u incomplete",counts.sets,activity_counts.completed,activity_counts.incomplete);publish(&model);
     snprintf(model.error,sizeof(model.error),"Native trophies and foreground playtime imported.");

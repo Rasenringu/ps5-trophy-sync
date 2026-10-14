@@ -11,6 +11,14 @@ It supports English, French, German, Portuguese, Brazilian Portuguese, Spanish
 and Italian. Sharing defaults to friends only; public profiles require opting in.
 Secret trophies stay concealed until the viewer earns them.
 
+Games with recorded activity appear even without imported trophies, including
+homebrew recomp titles. Completed native foreground counters supply playtime;
+incomplete sessions retain unknown duration. Native logger `CUSA` sessions can
+appear as PS4 playtime entries (with the application ID if a name is unavailable).
+PS4 trophy extraction is still unimplemented; see [current evidence](docs/STATUS.md).
+Native trophy packages are bounded to 128 MiB, including Uncharted's observed
+70.17 MiB package. Update both the console worker and server/web ingress for this fix.
+
 ## Requirements
 
 - Windows 11, native PowerShell and Docker Desktop running Linux containers.

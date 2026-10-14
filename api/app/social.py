@@ -138,10 +138,12 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
     for row in rows:
         if row['mock'] or row['kind']!='activity' or not counted(row['data']):continue
         key=(row['source'],row['data']['title_id'])
+        games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,
+            'source':row['source'],'mock':False,'artwork_url':None,'icon_url':None,
+            'data':{'title_id':key[1],'title':row['data']['title']}})
         total=totals.setdefault(key,{'seconds':0,'sessions':0})
         total['seconds']+=row['data']['duration_seconds'];total['sessions']+=1
     for key,total in totals.items():
-        if key not in games:continue
         game=games[key]
         result.append({**game,'kind':'activity','icon_url':None,'data':{
             'title_id':key[1],'title':game['data']['title'],'duration_seconds':total['seconds'],

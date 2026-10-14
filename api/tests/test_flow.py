@@ -463,12 +463,46 @@ def test_device_artwork_automatic_cache_is_private_localized_and_idempotent():
     c.post('/account/devices/'+t['profile_uuid']+'/revoke',json={})
     assert c.post('/device/artwork',headers=binary,content=raw).status_code==401
 
-def test_library_hides_activity_only_titles_without_deleting_source_records():
+def test_library_includes_owned_activity_only_titles_and_excludes_revoked_profiles():
     from app.models import Record
     c=browser();_,_,t=paired(c)
     assert upload(c,t['device_token'],native_activity()).status_code==200
-    assert c.get('/account/library').json()==[]
+    rows=c.get('/account/library').json()
+    assert len(rows)==1 and rows[0]['kind']=='activity'
+    assert rows[0]['data']['duration_seconds']==120
+    assert browser('other@example.test').get('/account/library').json()==[]
     with Session() as db:assert db.scalar(select(Record).where(Record.kind=='activity')) is not None
+    c.post('/account/devices/'+t['profile_uuid']+'/revoke',json={})
+    assert c.get('/account/library').json()==[]
+
+def test_shared_activity_only_games_export_totals_without_native_or_profile_details():
+    c=browser();_,_,t=paired(c)
+    assert upload(c,t['device_token'],native_activity()).status_code==200
+    handle=social_handle(c)
+    anon=TestClient(app)
+    assert anon.get('/players/'+handle+'/library').status_code==403
+    assert c.post('/account/profile',json={'handle':handle,'display_name':'MOCK player','visibility':'public'}).status_code==200
+    rows=anon.get('/players/'+handle+'/library').json()
+    assert len(rows)==1 and rows[0]['kind']=='activity'
+    assert rows[0]['profile_uuid']=='shared'
+    assert rows[0]['data']=={'title_id':'PPSA12345','title':'MOCK GAME','duration_seconds':120,
+        'complete':True,'duration_basis':'shared_total','session_count':1}
+
+def test_ps4_application_sessions_keep_native_logger_source_and_exact_identity():
+    c=browser();_,_,t=paired(c)
+    body=native_activity()
+    activity=body['activities'][0]
+    activity.update(title_id='CUSA03804',title='CUSA03804')
+    activity['native_observation']['application_title_id']='CUSA03804'
+    assert upload(c,t['device_token'],body).status_code==200
+    rows=c.get('/account/library').json()
+    assert len(rows)==1 and rows[0]['source']=='ps5_native' and rows[0]['kind']=='activity'
+    assert rows[0]['data']['title_id']=='CUSA03804'
+    assert rows[0]['data']['title_binding']=='application_id_only'
+    assert upload(c,t['device_token'],body).json()['status']=='duplicate'
+    body['batch_id']=str(uuid.uuid4())
+    activity['native_observation']['application_title_id']='PPSA03804'
+    assert upload(c,t['device_token'],body).status_code==422
 
 
 def social_handle(client):

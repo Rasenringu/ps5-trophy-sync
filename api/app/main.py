@@ -60,7 +60,7 @@ async def guard(request: Request, call_next):
         return Response('Invalid Content-Length', status_code=400)
     if request.url.path=='/device/artwork':
         # Authenticate before accepting a larger streamed native package.
-        if length<0 or length>64*1024*1024:
+        if length<0 or length>128*1024*1024:
             return Response('Artwork package exceeds bounds',status_code=413)
         response=await call_next(request)
         response.headers['Cache-Control']='no-store'
@@ -344,9 +344,8 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
     aliases={record.id:next(iter(names[(record.profile,record.data['title'])]))
              for record,_ in rows if not record.mock and record.kind=='activity'
              and record.source=='ps5_native' and record.data.get('duration_basis')=='native_foreground_seconds'
+             and record.data['title']!=record.data['title_id']
              and len(names.get((record.profile,record.data['title']),set()))==1}
-    trophy_games={(r.profile,r.source,r.mock,r.data['title_id']) for r,_ in rows if r.kind=='trophy'}
-    rows=[(r,label) for r,label in rows if (r.profile,r.source,r.mock,aliases.get(r.id,r.data['title_id'])) in trophy_games]
     titles = {r.data['title_id'] for r, _ in rows if not r.mock}
     titles.update(aliases.values())
     # The library response needs URLs, never the cached PNG bodies.
@@ -370,6 +369,8 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
         key = (r.source,title,r.data.get('trophy_id',''))
         metadata = None if r.mock else info.get(key)
         data = dict(r.data)
+        if r.kind=='activity' and data['title']==data['title_id']:
+            data['title_binding']='application_id_only'
         if r.id in aliases:
             data['title_id']=title
             data['title_binding']='unique_local_title_metadata'
@@ -446,7 +447,7 @@ async def device_artwork(request: Request, profile: Profile=Depends(device), db:
     try:
         async for chunk in request.stream():
             size+=len(chunk)
-            if size>64*1024*1024:fail(413,'Artwork package exceeds bounds')
+            if size>128*1024*1024:fail(413,'Artwork package exceeds bounds')
             parts.append(chunk)
     except ClientDisconnect:
         logging.getLogger('uvicorn.error').warning('Artwork upload interrupted after %d bytes',size)

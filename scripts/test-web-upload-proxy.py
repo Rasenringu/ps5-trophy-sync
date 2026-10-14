@@ -14,7 +14,7 @@ parser.add_argument('--web-image',default='deployment-web:latest')
 parser.add_argument('--size-mib',type=int,action='append')
 args=parser.parse_args()
 sizes=args.size_mib or [11]
-if any(n<1 or n>64 for n in sizes):parser.error('Sizes must be between 1 and 64 MiB')
+if any(n<1 or n>128 for n in sizes):parser.error('Sizes must be between 1 and 128 MiB')
 root=Path(__file__).resolve().parents[1]
 prefix='trophysync-upload-'+uuid.uuid4().hex[:10]
 sink,web=prefix+'-sink',prefix+'-web'

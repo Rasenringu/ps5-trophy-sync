@@ -17,7 +17,10 @@ Schema version 3 carries native activity observations separately from trophies.
 Complete sessions require a native End foreground counter, matching application
 and session identity, a single-profile header binding and a read-only SQLite
 transaction. Repeated observations retain the largest counter; timestamps do
-not determine native duration. An interrupted/restarted rest test corroborates sleep exclusion; uninterrupted
+not determine native duration. Native logger application IDs accept PPSA and
+CUSA; CUSA playtime provenance remains ps5_native and establishes no PS4 trophy
+support. Version 3's shape and session identities otherwise remain unchanged.
+An interrupted/restarted rest test corroborates sleep exclusion; uninterrupted
 resume remains unverified. Profile-scoped UCP artwork check/upload endpoints
 are included in OpenAPI; they do not change snapshot versions or unlock state.
 Stable source event IDs and batch UUIDs are required; no cumulative snapshot

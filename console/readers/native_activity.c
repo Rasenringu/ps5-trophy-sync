@@ -3,6 +3,7 @@
 #include "native_activity.h"
 #include "schema_probe.h"
 #include <mbedtls/sha256.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,8 +15,42 @@
 extern int sceUserServiceGetForegroundUser(uint32_t*);
 static int same_user(unsigned profile){uint32_t user=UINT32_MAX;return !sceUserServiceGetForegroundUser(&user)&&user==profile;}
 static int budget(void *opaque){struct timespec now;if(clock_gettime(CLOCK_MONOTONIC,&now))return 1;return now.tv_sec>=*(time_t*)opaque;}
-static int title_id(const char *s){if(!s||strlen(s)!=9||strncmp(s,"PPSA",4))return 0;for(int i=4;i<9;i++)if(s[i]<'0'||s[i]>'9')return 0;return 1;}
-static int project_title(const char *s){unsigned n=(unsigned)strtoul(s+4,NULL,10);return n>=99871&&n<=99889;}
+static int title_id(const char *s){if(!s||strlen(s)!=9||(strncmp(s,"PPSA",4)&&strncmp(s,"CUSA",4)))return 0;for(int i=4;i<9;i++)if(s[i]<'0'||s[i]>'9')return 0;return 1;}
+static int project_title(const char *s){unsigned n=(unsigned)strtoul(s+4,NULL,10);return !strncmp(s,"PPSA",4)&&n>=99871&&n<=99889;}
+/* The authorized FW8 console diagnostic observed tbl_contentinfo(titleId,
+ * titleName) in app.db, journal=delete. This supplies names only, not trophies
+ * or duration. Missing/unsupported metadata retains the logged CUSA identity. */
+static int ps4_titles(sqlite3 *memory,unsigned profile){
+#ifdef NATIVE_ACTIVITY_TEST
+ const char *path=getenv("MOCK_APP_DB");if(!path)return 0;
+#else
+ const char *path="/system_data/priv/mms/app.db";
+#endif
+ SchemaProbe probe=schema_probe(path);if(probe.rc||strcmp(probe.journal_mode,"delete"))return 0;
+ sqlite3 *db=NULL;sqlite3_stmt *rows=NULL,*insert=NULL;int result=0;
+ if(sqlite3_open_v2(path,&db,SQLITE_OPEN_READONLY|SQLITE_OPEN_NOFOLLOW,"ps5-sync-deny-write")||sqlite3_db_readonly(db,"main")!=1)goto done;
+ sqlite3_busy_timeout(db,250);sqlite3_limit(db,SQLITE_LIMIT_LENGTH,65536);
+ sqlite3_db_config(db,SQLITE_DBCONFIG_TRUSTED_SCHEMA,0,NULL);sqlite3_db_config(db,SQLITE_DBCONFIG_DEFENSIVE,1,NULL);
+ struct timespec start;if(clock_gettime(CLOCK_MONOTONIC,&start))goto done;time_t deadline=start.tv_sec+3;
+ sqlite3_progress_handler(db,100,budget,&deadline);
+ if(sqlite3_exec(db,"PRAGMA query_only=ON; BEGIN",NULL,NULL,NULL))goto done;
+ if(sqlite3_prepare_v2(db,"SELECT titleId,min(titleName) FROM tbl_contentinfo WHERE typeof(titleId)='text' AND typeof(titleName)='text' AND titleId GLOB 'CUSA[0-9][0-9][0-9][0-9][0-9]' GROUP BY titleId HAVING count(DISTINCT titleName)=1 LIMIT 513",-1,&rows,NULL))goto done;
+ if(sqlite3_prepare_v2(memory,"INSERT INTO titles VALUES(?1,?2)",-1,&insert,NULL))goto done;
+ unsigned count=0;int step;
+ while((step=sqlite3_step(rows))==SQLITE_ROW){
+  if(++count>512)goto discard;if(!same_user(profile)){result=-2;goto discard;}
+  const char *title=(const char*)sqlite3_column_text(rows,0),*name=(const char*)sqlite3_column_text(rows,1);
+  int length=sqlite3_column_bytes(rows,1);
+  if(!title_id(title)||!name||length<1||length>200||memchr(name,0,(size_t)length))continue;
+  sqlite3_reset(insert);sqlite3_clear_bindings(insert);
+  sqlite3_bind_text(insert,1,title,-1,SQLITE_TRANSIENT);sqlite3_bind_text(insert,2,name,length,SQLITE_TRANSIENT);
+  if(sqlite3_step(insert)!=SQLITE_DONE)goto discard;
+ }
+ if(step!=SQLITE_DONE)goto discard;
+ goto done;
+discard:sqlite3_exec(memory,"DELETE FROM titles",NULL,NULL,NULL);
+done:sqlite3_finalize(rows);sqlite3_finalize(insert);if(db){sqlite3_exec(db,"ROLLBACK",NULL,NULL,NULL);sqlite3_close(db);}return result;
+}
 static int metadata_title(sqlite3 *memory,const char *title,char output[201]){
  char path[512],body[65537];
 #ifdef NATIVE_ACTIVITY_TEST
@@ -24,7 +59,7 @@ static int metadata_title(sqlite3 *memory,const char *title,char output[201]){
  const char *root="/user/appmeta";
 #endif
  int size=snprintf(path,sizeof(path),"%s/%s/param.json",root,title);if(size<=0||(size_t)size>=sizeof(path))return -1;
- int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);if(fd<0)return -1;struct stat st;size_t at=0;int rc=-1;
+ int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);if(fd<0)return errno==ENOENT?-2:-1;struct stat st;size_t at=0;int rc=-1;
  if(fstat(fd,&st)||!S_ISREG(st.st_mode)||st.st_size<2||st.st_size>65536)goto done;
  while(at<(size_t)st.st_size){ssize_t n=read(fd,body+at,(size_t)st.st_size-at);if(n<=0)goto done;at+=(size_t)n;}body[at]=0;
  struct stat after;if(fstat(fd,&after)||st.st_size!=after.st_size||st.st_mtime!=after.st_mtime)goto done;
@@ -48,6 +83,7 @@ int native_activity_collect(const char *path,unsigned profile,sqlite3 **output,N
  if(sqlite3_open(":memory:",&memory))goto done;
  sqlite3_limit(memory,SQLITE_LIMIT_LENGTH,131072);sqlite3_db_config(memory,SQLITE_DBCONFIG_TRUSTED_SCHEMA,0,NULL);
  if(sqlite3_exec(memory,"CREATE TABLE sessions(identity TEXT PRIMARY KEY,title_id TEXT,title TEXT,started TEXT,ended TEXT,seconds INTEGER,event TEXT); CREATE TABLE titles(id TEXT PRIMARY KEY,name TEXT)",NULL,NULL,NULL))goto done;
+ if(ps4_titles(memory,profile)){result=-2;goto done;}
  if(sqlite3_open_v2(path,&source,SQLITE_OPEN_READONLY|SQLITE_OPEN_NOFOLLOW,"ps5-sync-deny-write")||sqlite3_db_readonly(source,"main")!=1)goto done;
  sqlite3_busy_timeout(source,250);sqlite3_limit(source,SQLITE_LIMIT_LENGTH,65536);
  sqlite3_db_config(source,SQLITE_DBCONFIG_TRUSTED_SCHEMA,0,NULL);sqlite3_db_config(source,SQLITE_DBCONFIG_DEFENSIVE,1,NULL);
@@ -80,7 +116,11 @@ int native_activity_collect(const char *path,unsigned profile,sqlite3 **output,N
   sqlite3_stmt *cache=NULL;if(sqlite3_prepare_v2(memory,"SELECT name FROM titles WHERE id=?1",-1,&cache,NULL))goto done;
   sqlite3_bind_text(cache,1,title,-1,SQLITE_STATIC);int cached=sqlite3_step(cache)==SQLITE_ROW;
   if(cached)snprintf(name,sizeof(name),"%s",sqlite3_column_text(cache,0));sqlite3_finalize(cache);
-  if(!cached){if(metadata_title(memory,title,name)){counts->rejected++;continue;}
+  if(!cached){int metadata=metadata_title(memory,title,name);
+   /* A missing optional name must not discard a real session. Keep the exact
+    * observed application ID; malformed/mismatched existing metadata rejects. */
+   if(metadata==-2)snprintf(name,sizeof(name),"%s",title);
+   else if(metadata){counts->rejected++;continue;}
    if(sqlite3_prepare_v2(memory,"INSERT INTO titles VALUES(?1,?2)",-1,&cache,NULL))goto done;
    sqlite3_bind_text(cache,1,title,-1,SQLITE_STATIC);sqlite3_bind_text(cache,2,name,-1,SQLITE_STATIC);int rc=sqlite3_step(cache);sqlite3_finalize(cache);if(rc!=SQLITE_DONE)goto done;}
   const char *type=(const char*)sqlite3_column_text(rows,4);sqlite3_int64 seconds=sqlite3_column_int64(rows,5);

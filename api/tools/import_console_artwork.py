@@ -22,7 +22,7 @@ def main():
     # Validate every selected package before any database mutation.
     decoded = []
     for p in packages:
-        if p.stat().st_size>64*1024*1024:
+        if p.stat().st_size>128*1024*1024:
             raise ValueError('Oversized capture')
         data=p.read_bytes();title,images=read_artwork(data);metadata_title,metadata=read_trophy_info(data)
         if title!=metadata_title:

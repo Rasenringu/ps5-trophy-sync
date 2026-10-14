@@ -18,7 +18,7 @@ static int offsets(const void *a,const void *b) {
 int ucp_validate(const unsigned char *bytes,size_t size,Ucp *result) {
     if (!result) return UCP_FORMAT;
     memset(result,0,sizeof(*result));
-    if (!bytes || size<96 || size>64u*1024*1024) return UCP_BOUNDS;
+    if (!bytes || size<96 || size>128u*1024*1024) return UCP_BOUNDS;
     if (be32(bytes)!=0xb228c60a || be32(bytes+4)!=1 || be32(bytes+20)!=64) return UCP_FORMAT;
     uint32_t count=be32(bytes+16);
     if (be64(bytes+8)!=size || count>4096 || count>(size-96)/64) return UCP_BOUNDS;

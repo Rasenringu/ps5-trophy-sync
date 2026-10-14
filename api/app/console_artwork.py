@@ -38,7 +38,7 @@ def png(data: bytes) -> bytes:
     raise ValueError('Missing PNG end')
 
 def entries(data: bytes) -> dict[str, bytes]:
-    if not 96 <= len(data) <= 64 * 1024 * 1024:
+    if not 96 <= len(data) <= 128 * 1024 * 1024:
         raise ValueError('UCP size outside bounds')
     magic, version, size, count, stride = struct.unpack_from('>IIQII', data)
     if (magic, version, size, stride) != (0xb228c60a, 1, len(data), 64) or not 1 <= count <= 4096 or 96+count*64 > size:

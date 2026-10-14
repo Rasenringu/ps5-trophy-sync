@@ -28,6 +28,11 @@ with tempfile.TemporaryDirectory(prefix='MOCK-ucp-') as temp:
     bad=fixture();bad[160:192]=bad[96:128];assert run(digest(bad))[0]=='4'
     bad=fixture();bad[96:128]=b'../a'+bytes(28);assert run(digest(bad))[0]=='4'
     bad=fixture();struct.pack_into('>I',bad,16,4097);assert run(digest(bad))[0]=='2'
+    # MOCK padded package above the former 64 MiB cutoff. Real Uncharted's
+    # observed UCP is 73,575,712 bytes; its individual entries remain bounded.
+    large=fixture();large.extend(bytes(71*1024*1024-len(large)))
+    struct.pack_into('>Q',large,8,len(large))
+    assert run(digest(large))==['0','2','1']
 print('PASS LOCAL UCP: truncation, version/magic, digest mismatch, overflow, overlap, duplicate/path names and count bounds.')
 if len(sys.argv)>2:
     files = sorted(Path(sys.argv[2]).glob('definitions-*.ucp'))

@@ -1,5 +1,114 @@
 # Current status
 
+## Missing games and playtime-only entries - 2026-10-14
+
+Read-only FTP at the configured console IP/2121 observed FTPSRV 0.21.1.
+User identified missing PS4 games as Attack on Titan and Uncharted: The Nathan
+Drake Collection. Native PS5 Uncharted: Legacy of Thieves Collection uses
+`NPWR26589_00`; its UCP is **73,575,712 bytes**, above the former 64 MiB cutoff.
+Two equal state reads were captured without copying any live database. The
+updated native parser joins all **101 locked trophies**; API readers accept its
+101 definitions and 102 images. Exact activity/trophy metadata names match.
+This is real source parsing evidence, not a completed hosted console sync.
+
+The user explicitly authorized **one LibraryDiagnostic.elf test**. No payload
+was sent to port 9021 (connection refused). Observed Payload Manager `/version`
+returned 0.5.2; its existing allowlisted launch route ran the diagnostic once
+from a separate test directory. Launch returned OK and FTP retrieved the report.
+Executed diagnostic SHA256:
+`b5308f79ede45bc8753ff46ea2dc5548a6da826f345fdb0a4e2603a9d2c8943b`.
+It used locked, query-only SQLite through the existing deny-write VFS, wrote only
+its own report, and performed no imports, mounts, patches or credential reads.
+
+Console results: 975 relevant log rows, 169 sessions, 159 complete, 10 incomplete,
+zero reader rejections. Simpsons (`PPSA74207`) has one complete session / **192
+foreground seconds**; Sonic Unleashed Recompiled (`PPSA99902`) has two / **406
+seconds**. Native logger `CUSA` sessions are present, including CUSA03804 and
+CUSA02344. Native Uncharted currently has a start-only session, with duration
+unknown. These are available recorded sessions, not lifetime totals.
+
+The console diagnostic established app.db `tbl_contentinfo(titleId,titleName)`
+and delete journaling. The new optional PS4 name lookup probes that schema,
+uses a bounded locked read transaction, and falls back to the logged ID when
+metadata is absent/unsupported/ambiguous. Its new name query is host-tested and
+compiled, but has not yet run on the console. Existing malformed PS5 param.json
+still rejects; missing optional names now retain sessions rather than hiding them.
+
+PS4 trophy state remains **unimplemented/unavailable**: FTP exposed sealedkey/
+trophy.img containers; the existing mounted sce_trop directory was empty. Both
+checked PS4 trophy database locations returned SQLite rc14 (cannot open). No
+image mounting, decryption, registration/unlocking or DB modification was attempted.
+Opening a PS4 trophy list and rechecking the existing mount is still a next step.
+
+Implemented:
+
+- UCP/transport/API/Next/nginx bounds agree at 128 MiB. Stable second package reads
+  compare 64 KiB chunks, retaining one full package buffer instead of two.
+- Activity-only games appear in private libraries and permitted shared totals;
+  trophy bars/grade counters are omitted when trophies are not imported.
+- Native activity accepts PPSA/CUSA, preserves exact identifiers/provenance and
+  incomplete durations, and displays CUSA entries as PS4. This is not PS4 trophy
+  support. Activity sync now runs before trophy/artwork collection so an artwork
+  failure cannot prevent playtime import. Zero trophy sets no longer block playtime.
+- Ownership, revocation, mock filtering and public session redaction remain tested.
+  Snapshot3/OpenAPI regenerated; earlier snapshot schemas are unchanged.
+
+Commands/results (local unless stated):
+
+- `python scripts/inspect-console-library.py`: authorized read-only FTP inventory
+  and native file captures; private outputs in ignored captures/library-investigation.
+- `docker run --rm --mount type=bind,source=C:\git\ps5-trophy-sync-windows,target=/workspace
+  ps5-trophy-build:starter bash /workspace/scripts/container-build-library-diagnostic.sh`:
+  compile/no-write startup inspection passed. `python scripts/run-library-diagnostic.py`:
+  one authorized Manager launch/report success after the unavailable direct loader.
+- `Build-Console.ps1 -HostTest`: worker/full native, pairing, queue, IPC, SQLite and
+  transport suites passed. After final reader/order changes, focused native activity
+  and worker-import regressions plus `container-build.sh` passed. Added synthetic
+  CUSA/recomp/missing/ambiguous name checks and source/sidecar byte preservation.
+- `container-test-native-readers.sh`: passes added >64 MiB UCP and exact collector
+  second-pass chunk/boundary/symlink/unchanged-source regressions under ASan/UBSan.
+- `Start-Local.ps1 -Build`: production API/web build and local health pass, existing
+  database volume preserved. `Test-Local.ps1`: **59 passed**, existing one
+  Starlette/httpx deprecation warning; includes large UCP, activity-only ownership,
+  revocation/shared privacy and CUSA identity/replay tests.
+- Focused Playwright playtime/library-layout/trophy-privacy/public-profile: **5 passed**.
+- `python scripts/test-web-upload-proxy.py --size-mib 71 --size-mib 128`: complete
+  MOCK bodies and hashes pass on isolated network, no real token/database/console.
+- Actual captured Uncharted parsed using native-join-cli and API artwork readers;
+  no observations were uploaded to any server during the investigation.
+- `python tools/export_contracts.py /workspace/contracts` in API image with
+  PYTHONPATH=/app: passed. Initial invocation without PYTHONPATH failed and was corrected.
+- `python scripts/package-final-ui.py`: refreshed ZIP/manifest. New worker SHA256
+  `7b03fe5968764e6abd9f8d66c64bd0c1b5b0737374d2251e2cfb02270adf1e8b`.
+  Foreground binary unchanged:
+  `9066b444bebe1b1440414e3f02bdb86ab5025b43d831b7f68603e70c04b4cdda`.
+
+**Deployment/validation gate:** the hosted service is on a separate host; only
+this Windows PC's local stack was updated. Apply the updated API/web (and nginx
+if used) on that host **before** installing the new worker: the older API rejects
+CUSA activity IDs and packages above 64 MiB. New worker/title ZIP is prepared at
+artifacts/console/final-ui/TrophySync-PS5.zip, with console_verified=false. The
+installed TrophySync worker/title were not replaced or run by this session.
+Authorize the updated worker's normal hosted sync test after the server upgrade;
+validate real imports/replay/Uncharted upload and the PS4 name query. Readable PS4
+trophy evidence remains a separate gate. See [continuation plan](LIBRARY_FIX_PLAN.md).
+
+User identified the Docker service host as 192.168.1.100 and will commit/pull the
+changes there themselves, then rebuild its existing stack. Remote SSH/Docker TCP/
+PowerShell were unavailable; SMB returned access denied. No remote files,
+containers or database volumes were changed. Do not commit/push on the user's behalf.
+An anonymous hosted `/api/openapi.json` check returned 403, so the current public
+API schema/version could not be verified from here; do not infer host deployment
+from local build success. Revised diagnostic source (profile suffix redaction and
+new optional metadata lookup) was recompiled locally but not rerun on the console.
+
+The first diagnostic exposed profile-suffixed shell table names. Local report
+and report-printing code now redact those suffixes; captures remain ignored.
+FTP cleanup hash-verified the executed diagnostic against the local artifact,
+then removed only that uploaded file, its now-empty test directory and its own
+report. The redacted local report is preserved. No installed worker/title,
+autoload settings, credentials/queues or source databases were changed.
+
 ## PS5 artwork upload truncation fix - 2026-10-08
 
 User confirms the phone login problem was use of HTTP rather than HTTPS; Safari
