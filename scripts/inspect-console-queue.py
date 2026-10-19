@@ -62,7 +62,7 @@ for name in names:
     for kind in ('trophies', 'activities'):
         for row in snapshot[kind]:
             kinds[kind] += 1
-            if row['title_id'] not in ('PPSA74207', 'PPSA99902', 'CUSA03804', 'CUSA02344', 'NPWR26589_00','NPWR09798_00','NPWR10954_00','NPWR29343_00'):
+            if row['title_id'] not in ('PPSA74207', 'PPSA99902', 'CUSA03804', 'CUSA02344', 'NPWR26589_00','NPWR09798_00','NPWR09799_00','NPWR09801_00','NPWR10954_00','NPWR29343_00'):
                 continue
             entry = requested.setdefault(row['title_id'], {'title': row['title'], 'trophies': 0,
                 'activities': 0, 'acknowledged_records': 0, 'completed_seconds': 0, 'earned': 0, 'locked': 0, 'unknown': 0})

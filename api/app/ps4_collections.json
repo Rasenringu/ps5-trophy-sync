@@ -1,0 +1,17 @@
+{
+  "CUSA02344": {
+    "title": "Uncharted™: The Nathan Drake Collection",
+    "trophy_sets": ["NPWR09798_00", "NPWR09799_00", "NPWR09801_00"],
+    "evidence": {
+      "observed": "2026-10-19",
+      "source": "/system_data/priv/appmeta/CUSA02344",
+      "application_version": "01.02",
+      "content_id": "EP9000-CUSA02344_00-UNCHARTEDTRILOGY",
+      "npbind_bytes": 1300,
+      "npbind_sha256": "d71662e43029a8358c29e7fe84a7a2b3bcc790e68250dce979a1c6f97035aec4",
+      "param_sfo_sha256": "b07daf65d9c5c9c05b0ab283d0210ae921e49e3c20ec3170c5968cbd0ab15ab1",
+      "consistency": "two_equal_bounded_reads",
+      "npbind_trailing_sha1_verified": true
+    }
+  }
+}

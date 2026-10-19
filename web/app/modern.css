@@ -30,3 +30,21 @@ main{padding-top:46px}.page-heading{margin-bottom:35px}h1{font-size:40px;font-we
 @media(max-width:760px){main{padding:26px 18px}.sidebar{padding:16px 18px}.brand-symbol{width:40px;height:40px}.brand-symbol svg{width:33px}.sidebar nav a{font-size:11px;min-height:44px}.page-heading h1{font-size:32px}.stats>div{padding:20px 16px}.toolbar{padding:10px}.toolbar select{width:100%}.profile-hero{padding:25px 20px;min-height:220px}.profile-hero h1{font-size:27px}.profile-hero>.profile-avatar,.profile-preview>.profile-avatar{width:64px;height:64px;border-radius:18px;font-size:27px}.profile-bio{font-size:13px}.profile-actions{gap:8px}.favorite-showcase{padding:18px;gap:16px}.favorite-showcase>img,.favorite-placeholder{width:92px;height:112px;border-radius:12px}.favorite-showcase h2{font-size:20px;margin:10px 0}.favorite-showcase p:last-child{display:none}.profile-form label{min-width:0}.profile-preview{padding:20px;gap:16px}.profile-preview h2{font-size:22px}.dialog-visibility{padding:12px 15px}.game-dialog{border-radius:15px}.card-action{padding-right:125px}}
 @container(max-width:620px){.compact-list .game-card{grid-template-columns:88px minmax(0,1fr)}.compact-list .game-body{padding:14px;gap:7px}.compact-list .game-visibility{align-self:flex-start;min-height:36px;margin-top:6px}.compact-list .game-body h2{font-size:15px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.collection-groups{position:relative;z-index:4;min-width:0;margin:12px 0 18px;border:1px solid #3b5778;border-radius:12px;background:#0b1c30;overflow:hidden}
+.collection-groups>summary{cursor:pointer;padding:13px 14px;font-size:12px;color:#cfe4ff;min-height:44px}
+.collection-groups>summary>span{margin-left:6px;color:#94b9e5}
+.collection-groups>ul{display:grid;gap:1px;list-style:none;margin:0;padding:0;background:#2b4561}
+.collection-groups>ul>li{min-width:0}
+.collection-game-open{display:grid;gap:7px;width:100%;min-width:0;text-align:left;justify-content:stretch;padding:15px 14px;background:#142a44;color:#e9f3ff;border:0;border-radius:0;white-space:normal;box-shadow:none}
+.collection-game-open:hover{background:#203e60}
+.collection-game-open>strong{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.collection-game-progress,.collection-game-playtime,.collection-game-link{font-size:11px;font-weight:400;line-height:1.5;color:#aac8ea;overflow-wrap:anywhere}
+.collection-game-link{display:flex;justify-content:space-between;color:#cce5ff;margin-top:3px}
+.collection-shared-time{padding:0 14px 13px;display:grid;gap:5px;line-height:1.6}
+.collection-shared-time>span{font-size:11px;color:#a9c5e5}.collection-shared-time>strong{font-size:12px;font-weight:500;color:#e2f0ff}
+.collection-shared-time>p{font-size:11px;margin:0;color:#93accb}
+.compact-list .collection-groups{grid-column:1/-1;grid-row:5;margin:12px 0 0}
+.collection-overview{padding:0 26px}.collection-overview .collection-groups{margin:18px 0}
+.game-dialog .collection-groups{z-index:0}
+.collection-navigation{padding:15px 26px}.collection-navigation>p{font-size:12px;margin:12px 0 0}
+@media(max-width:760px){.collection-overview{padding:0 15px}.collection-navigation{padding:12px 15px}}

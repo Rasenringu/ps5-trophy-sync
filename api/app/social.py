@@ -69,11 +69,18 @@ def hidden_games(owner: str=Depends(browser),db: Session=Depends(database)):
 def game_visibility(body: GameVisibility,owner: str=Depends(browser),db: Session=Depends(database)):
     rate(db,'game-visibility:'+owner,120,600)
     db.scalar(select(Account).where(Account.id==owner).with_for_update())
-    rows=[r for r in library(owner,db,'en') if not r['mock'] and r['source']==body.source and r['data']['title_id']==body.title_id]
+    rows=[r for r in library(owner,db,'en') if not r['mock'] and r['source']==body.source
+          and (r['data']['title_id']==body.title_id or r['data'].get('collection_title_id')==body.title_id)]
+    collections={r['data']['collection_title_id'] for r in rows if 'collection_title_id' in r['data']}
+    if collections:
+        rows=[r for r in library(owner,db,'en') if not r['mock'] and r['source']==body.source
+              and r['data'].get('collection_title_id') in collections]
     keys={(body.source,body.title_id)}
     # Existing evidence-backed activity joins can change the displayed identity
     # after trophy metadata arrives. Retain earlier application preferences.
     for row in rows:
+        keys.add((row['source'],row['data']['title_id']))
+        if 'collection_title_id' in row['data']:keys.add((row['source'],row['data']['collection_title_id']))
         if row['kind']=='activity':
             application=row['data'].get('native_observation',{}).get('application_title_id')
             if application:keys.add((row['data'].get('activity_source',row['source']),application))
@@ -184,7 +191,8 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
     mine=aggregated(library(viewer,db,language)) if viewer else {}
     result=[];games={}
     def image_url(url):return '/api/players/'+peer.handle+'/artwork/'+url.rsplit('/',1)[1] if url else None
-    fields=('title_id','title','trophy_id','name','description','hidden','grade','unlocked','unlocked_at')
+    fields=('title_id','title','trophy_id','name','description','hidden','grade','unlocked','unlocked_at',
+            'collection_title_id','collection_title','collection_component_title_id')
     for key,row in trophies.items():
         data={k:row['data'].get(k) for k in fields}
         viewer_earned=viewer==peer.account or (key in mine and mine[key]['data'].get('unlocked') is True)
@@ -196,30 +204,33 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
         # No profile IDs, native flags or source database details leave this route.
         entry={'profile_uuid':'shared','profile_label':peer.display_name,'source':row['source'],
             'kind':'trophy','mock':False,'data':data,'artwork_url':image_url(row.get('artwork_url')),
+            'component_artwork_url':image_url(row.get('component_artwork_url')),
             'icon_url':None if masked else image_url(row.get('icon_url'))}
         result.append(entry);games[(key[0],key[1])]=entry
     totals={}
     for row in rows:
         if row['mock'] or row['kind']!='activity' or not counted(row['data']):continue
-        key=(row['source'],row['data']['title_id'])
+        key=(row['source'],row['data']['title_id'],row['data'].get('collection_component_title_id'))
         games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,
             'source':row['source'],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'icon_url':None,
-            'data':{'title_id':key[1],'title':row['data']['title']}})
+            'component_artwork_url':image_url(row.get('component_artwork_url')),
+            'data':{k:row['data'][k] for k in ('title_id','title','collection_title_id','collection_title','collection_component_title_id') if k in row['data']}})
         total=totals.setdefault(key,{'seconds':0,'sessions':0})
         total['seconds']+=row['data']['duration_seconds'];total['sessions']+=1
     latest={}
     for row in rows:
         if row['mock'] or row['kind']!='activity':continue
-        key=(row['source'],row['data']['title_id'])
+        key=(row['source'],row['data']['title_id'],row['data'].get('collection_component_title_id'))
         stamp=row['data'].get('ended_at') or row['data'].get('started_at')
         if stamp:
             from datetime import datetime
             if key not in latest or datetime.fromisoformat(stamp)>datetime.fromisoformat(latest[key]):latest[key]=stamp
-            games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,'source':key[0],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'data':{'title':row['data']['title']}})
+            games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,'source':key[0],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'component_artwork_url':image_url(row.get('component_artwork_url')),'data':{k:row['data'][k] for k in ('title','collection_title_id','collection_title','collection_component_title_id') if k in row['data']}})
     for key in totals.keys()|latest.keys():
         total=totals.get(key,{'seconds':None,'sessions':0})
         game=games[key]
         result.append({**game,'kind':'activity','icon_url':None,'data':{
+            **{k:game['data'][k] for k in ('collection_title_id','collection_title','collection_component_title_id') if game['data'].get(k)},
             'title_id':key[1],'title':game['data']['title'],'duration_seconds':total['seconds'],
             'complete':total['seconds'] is not None,'duration_basis':'shared_total','session_count':total['sessions'],'last_played_at':latest.get(key)}})
     return result
@@ -232,7 +243,7 @@ def shared_image(handle: str,image_id: str,request: Request,db: Session=Depends(
     package=db.get(DevicePackage,(image.profile,image.title_id)) if isinstance(image,DeviceArtwork) else None
     source=('ps4_bc' if package and package.metadata_json.get('format')=='ps4_trp_v3' else 'ps5_native') if isinstance(image,DeviceArtwork) else image.source
     if (source,image.title_id) in hidden_keys(db,peer.account):fail(404,'Artwork unavailable')
-    if not any(not r['mock'] and any(url and url.rsplit('/',1)[1]==image_id for url in (r.get('artwork_url'),r.get('icon_url'))) for r in shared_rows(db,peer.account)):fail(404,'Artwork unavailable')
+    if not any(not r['mock'] and any(url and url.rsplit('/',1)[1]==image_id for url in (r.get('artwork_url'),r.get('component_artwork_url'),r.get('icon_url'))) for r in shared_rows(db,peer.account)):fail(404,'Artwork unavailable')
     records=select(Record).join(Profile,Profile.id==Record.profile).where(
         Profile.owner==peer.account,Profile.revoked==False,Record.mock==False,
         Record.source==source,Record.kind.in_(['trophy','activity']),Record.data['title_id'].as_string()==image.title_id)
@@ -320,8 +331,9 @@ def compare(handle: str,language: str='en',title_id: str|None=Query(default=None
         a,b=mine.get(key),theirs.get(key);row=a or b;data=row['data']
         game=groups.setdefault((platform,title),{'source':platform,'title_id':title,'title':data['title'],
             'artwork_url':None,'total':0,'mine_earned':0,'friend_earned':0,'trophies':[]})
-        if not game['artwork_url'] and row.get('artwork_url'):
-            game['artwork_url']=row['artwork_url'] if a else '/api/account/friends/'+peer.handle+'/artwork/'+row['artwork_url'].rsplit('/',1)[1]
+        game_artwork=row.get('component_artwork_url') or row.get('artwork_url')
+        if not game['artwork_url'] and game_artwork:
+            game['artwork_url']=game_artwork if a else '/api/account/friends/'+peer.handle+'/artwork/'+game_artwork.rsplit('/',1)[1]
         own=a['data'].get('unlocked') if a else None;other=b['data'].get('unlocked') if b else None
         game['total']+=1;game['mine_earned']+=own is True;game['friend_earned']+=other is True
         if title_id:
@@ -344,7 +356,7 @@ def friend_image(handle: str,image_id: str,request: Request,owner: str=Depends(b
     package=db.get(DevicePackage,(image.profile,image.title_id)) if isinstance(image,DeviceArtwork) else None
     source=('ps4_bc' if package and package.metadata_json.get('format')=='ps4_trp_v3' else 'ps5_native') if isinstance(image,DeviceArtwork) else image.source
     if (source,image.title_id) in hidden_keys(db,peer.account)|hidden_keys(db,owner):fail(404,'Artwork unavailable')
-    if not any(not r['mock'] and any(url and url.rsplit('/',1)[1]==image_id for url in (r.get('artwork_url'),r.get('icon_url'))) for r in shared_rows(db,peer.account)):fail(404,'Artwork unavailable')
+    if not any(not r['mock'] and any(url and url.rsplit('/',1)[1]==image_id for url in (r.get('artwork_url'),r.get('component_artwork_url'),r.get('icon_url'))) for r in shared_rows(db,peer.account)):fail(404,'Artwork unavailable')
     owned=select(Record.id).join(Profile,Profile.id==Record.profile).where(Profile.owner==peer.account,Profile.revoked==False,
         Record.mock==False,Record.kind=='trophy',Record.source==source,Record.data['title_id'].as_string()==image.title_id)
     if isinstance(image,DeviceArtwork):owned=owned.where(Record.profile==image.profile)

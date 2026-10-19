@@ -134,7 +134,23 @@ See [current status and limits](docs/STATUS.md) and [passive sync](docs/PASSIVE_
 
 Libraries open with **Most recently played** sorting. Games without a recorded
 activity date appear last; title and trophy progress sorting remain available.
+**Most played (hours)** and **Most sessions** sort by descending recorded totals.
+Incomplete or unverified sessions do not inflate either total; shared libraries
+use their published aggregate session counts.
 PS4/PS5 appears once as a platform badge on each game.
+
+The verified PS4 Nathan Drake Collection (CUSA02344) groups its existing imported
+Drake's Fortune, Uncharted 2 and Uncharted 3 trophy sets on one collection card.
+Expand **Games in this collection** to open each game's own trophies and
+separately recorded playtime. Component artwork and trophy identities stay
+distinct. **Shared collection playtime** is counted once; a collection counter
+cannot establish the individual games' hours. Launching each
+component can create its missing per-profile trophy state. Start-only sessions
+remain incomplete until a valid native foreground end counter is available.
+This correction needs an API/web rebuild on the service host; it needs no new
+console worker, pairing, reimport or database migration. Already imported records
+are regrouped when the library is loaded. Other regions are not inferred from
+this console's verified publisher metadata.
 
 Use **Hide game** on a card or in its details to remove it from your collection,
 shared profile, friend comparisons and shared artwork access. **Hidden Games**

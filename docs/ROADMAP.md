@@ -14,9 +14,12 @@ local/production Compose. See STATUS for exact evidence.
 4. Native Uncharted's 128 MiB package fix, recorded recomp/CUSA playtime,
    additional application icons and the three available PS4 trophy sets now work
    on the console/hosted account. Exact build and limits are recorded in STATUS.
-5. Investigate absent per-profile state only from new evidence: Uncharted 2/3
-   publisher definitions alone do not prove unlock state. Never guess collection
-   application bindings or duplicate playtime. API replay/privacy tests pass;
+5. User launched Uncharted 2/3 on 2026-10-19; their profile images now exist and
+   the user confirms their trophy lists import. Publisher npbind/SFO metadata
+   verifies CUSA02344 membership in the three sets. The server/web collection
+   grouping and hours/session sorts are implemented; rebuild API/web on the
+   separate service host. Keep incomplete playtime unknown; do not infer a
+   component duration split from launcher activity. API replay/privacy tests pass;
    broader multi-profile/offline/lifecycle hardware checks remain in items 1-3.
 6. Implement passive resident mode only after lifecycle, duplicate-start, game,
    profile-change, rest/wake and CPU/memory/network measurements under kstuff.

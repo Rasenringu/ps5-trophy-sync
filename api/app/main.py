@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session as DbSession
 from .db import database
 from .models import Account, Login, Installation, Profile, Pairing, Import, Record, Rate, Artwork, TrophyInfo, TrophyText, DevicePackage, DeviceArtwork, HiddenGame
 from .locales import choose_language
+from .ps4_collections import group_collections
 from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
 
 app = FastAPI(title='PS5 Trophy Sync', version='0.1.0')
@@ -421,6 +422,18 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
             'mock':r.mock,'data':data,'content_language':None if r.mock else package_language or choices.get((r.source,title)),
             'artwork_url':None if r.mock else scoped_images.get((r.profile,title,'')) or scoped_images.get((r.profile,r.data['title_id'],'')) or images.get((source,title,'')),
             'icon_url':None if r.mock or not earned else scoped_images.get((r.profile,title,data.get('trophy_id',''))) or images.get(key)})
+    group_collections(result)
+    for row in result:
+        collection=row['data'].get('collection_title_id')
+        if collection:
+            if row['data'].get('collection_component_title_id'):
+                row['component_artwork_url']=row['artwork_url']
+            row['artwork_url']=scoped_images.get((row['profile_uuid'],collection,'')) or row['artwork_url']
+    hidden_collections={(r['source'],r['data']['collection_title_id']) for r in result
+                        if r['game_hidden'] and 'collection_title_id' in r['data']}
+    for row in result:
+        if not row['mock'] and (row['source'],row['data'].get('collection_title_id')) in hidden_collections | hidden_games:
+            row['game_hidden']=True
     hidden_titles={(r['source'],r['data']['title_id']) for r in result if r['game_hidden']}
     for row in result:
         if not row['mock'] and (row['source'],row['data']['title_id']) in hidden_titles:row['game_hidden']=True

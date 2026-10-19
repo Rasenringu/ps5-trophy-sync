@@ -1,5 +1,22 @@
 # Source evidence and pinned inputs
 
+## PS4 collection membership follow-up (2026-10-19)
+
+Read-only FTP retrieved two equal bounded copies of the installed CUSA02344
+param.sfo/npbind.dat. The former identifies APP_VER 01.02 and content ID
+EP9000-CUSA02344_00-UNCHARTEDTRILOGY; the latter explicitly lists NPWR09798_00,
+NPWR09799_00 and NPWR09801_00. Header sizes, typed entry layout and trailing SHA1
+are validated by `scripts/inspect-ps4-collection.py`. Reviewed membership and
+evidence hashes live in api/app/ps4_collections.json; raw publisher files and
+personal captures are not shipped. This is membership evidence, not unlock
+state, hardware authentication, per-component playtime or other-region support.
+
+Independent format reference: [Al-Azif ps4-file-templates/npbind.bt](https://github.com/Al-Azif/ps4-file-templates/blob/3d9e896716a1538a8f078d3642d379d9f64a9707/npbind.bt),
+commit `3d9e896716a1538a8f078d3642d379d9f64a9707` (HEAD resolved using
+`git ls-remote`, exact-revision source inspected). Research only: no template
+source, library, unknown entry payloads or keys incorporated, no new dependency.
+The actual installed metadata independently matches this format and its SHA1.
+
 Research established the current implementation rather than assuming support from
 SDK filenames, registration/unlocking libraries or PS4 paths. The native format
 and playtime semantics include independent console results described in STATUS,

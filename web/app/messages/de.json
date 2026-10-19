@@ -300,5 +300,13 @@
   "Sunset": "Sonnenuntergang",
   "Orbit": "Orbit",
   "Diamond": "Diamant",
-  "Initial": "Initiale"
+  "Initial": "Initiale",
+  "Most played (hours)": "Am meisten gespielt (Stunden)",
+  "Most sessions": "Die meisten Sitzungen",
+  "Games in this collection": "Spiele in dieser Sammlung",
+  "Shared collection playtime": "Gemeinsame Spielzeit der Sammlung",
+  "Collection-level time is not split between games.": "Die Spielzeit der Sammlung wird nicht auf die Spiele aufgeteilt.",
+  "Playtime not available separately": "Separate Spielzeit nicht verf?gbar",
+  "View {game} in this collection": "{game} in dieser Sammlung ansehen",
+  "Back to collection": "Zur?ck zur Sammlung"
 }

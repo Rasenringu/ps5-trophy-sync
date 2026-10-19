@@ -23,6 +23,9 @@ for(const [locale,labels] of languages){
    await expect(page.getByRole('heading',{name:labels['Your library'],exact:true})).toBeVisible();
    await expect.poll(()=>requested.split(',')[0]).toBe(locale);
    await expect(page.locator('html')).toHaveAttribute('lang',locale==='pt-BR'?locale:locale.split('-')[0]);
+   const sort=page.getByRole('combobox',{name:labels['Sort games']});
+   await expect(sort.locator('option[value="hours"]')).toHaveText(labels['Most played (hours)']);
+   await expect(sort.locator('option[value="sessions"]')).toHaveText(labels['Most sessions']);
    
    const card=page.getByRole('button',{name:labels['View trophies for {game}'].replace('{game}','MOCK '+locale),exact:true});
    await card.focus();await page.keyboard.press('Enter');

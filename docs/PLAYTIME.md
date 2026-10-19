@@ -24,9 +24,12 @@ stored source-clock evidence.
 Metadata uses bounded read-only `param.json` with exact title identity validation.
 Activity title IDs remain stored unchanged. The library joins activity to a trophy
 set for PPSA activity through an exact, unique title within that profile. PS4
-activity joins only through an exact, unique CUSA binding embedded in validated
-PS4 state; no name matching or duplicated collection playtime. Ambiguous/missing
-matches stay separate. Games without imported trophies appear as activity-only
+activity joins through an exact, unique CUSA binding embedded in validated
+PS4 state. Verified publisher collection membership can additionally group the
+launcher and existing component rows in the same console profile (currently
+CUSA02344 only). Separate collection fields preserve canonical trophy-set IDs,
+image access and comparisons. There is no name matching or copied duration for
+each component. Other ambiguous/missing matches stay separate. Games without imported trophies appear as activity-only
 entries with no trophy progress bar. Missing metadata keeps the exact observed
 application ID as its label; invalid existing metadata is still rejected.
 Native PS5 logger sessions accept `PPSA` and `CUSA` identifiers. A `CUSA` entry
@@ -41,6 +44,25 @@ name query has compile/host tests. The user's hosted sync/screenshot now confirm
 Attack on Titan and Nathan Drake Collection names; unavailable older metadata
 still leaves some entries labeled with their CUSA IDs. Application icons are
 independent of trophy imports; the new icon upload path awaits console validation.
+
+Collection hours describe the available native foreground records, not an
+estimated per-component split. An application that launches several games can
+retain a start-only collection record until a matching valid end record is
+observed. An incomplete record's dates never establish duration. Where the
+console does emit a distinct component application session, its exact PS4
+inner-state binding may include that existing session in the collection once.
+Neither component membership nor switching games supplies a missing counter.
+Most-played sorting uses exact eligible seconds, not rounded display hours;
+most-sessions sorting uses eligible session counts (the shared aggregate's
+session_count for shared libraries). Ties sort by displayed title.
+
+The collection's expandable game subgroups have independent trophy/session views.
+`collection_component_title_id` marks only an existing component trophy or a
+session resolved through its distinct exact application binding. Launcher events
+remain collection-level even if the general library join gave them a unique
+trophy-set alias. Public totals keep those buckets separate before redacting
+native observations. A component with no eligible counter shows that its
+individual playtime is unavailable; no estimate is derived from the parent.
 
 ## Console evidence
 

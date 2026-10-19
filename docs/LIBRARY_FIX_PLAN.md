@@ -1,5 +1,13 @@
 # Missing library entries: completed reader fix and continuation
 
+2026-10-19 follow-up: publisher metadata now verifies CUSA02344 membership in
+NPWR09798_00/NPWR09799_00/NPWR09801_00. User launching Uncharted 2/3 created their
+per-profile images; FTP and the supplied imported-list screenshots confirm this
+new evidence. The API/web grouping repair and recorded-hours/session sorts are
+implemented without a console binary change. Rebuild API/web on the service host
+to apply it to existing imports. See UNCHARTED_COLLECTION_PLAN.md and latest
+STATUS; the absent-state and unverified-binding observations below are historical.
+
 2026-10-14. See STATUS for exact commands, hashes and hardware evidence.
 
 The user rebuilt the host and authorized the final foreground sync. Console

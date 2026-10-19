@@ -1,5 +1,86 @@
 # Current status
 
+## Uncharted PS4 collection subgroups and playtime sorting ? 2026-10-19
+
+Implemented and locally validated; the separate hosted API/web still needs its
+normal rebuild. No console binary update, pairing, reimport or migration is
+needed. Existing imports regroup when the library is loaded.
+
+Read-only FTP confirms FTPSRV 0.21.1. Installed CUSA02344 param.sfo identifies
+APP_VER 01.02 and EP9000-CUSA02344_00-UNCHARTEDTRILOGY. Its 1,300-byte npbind.dat
+has version 1, three 384-byte records and a valid trailing SHA1, explicitly
+listing NPWR09798_00, NPWR09799_00, NPWR09801_00. Both metadata files match
+complete second reads. Reviewed IDs/hashes are in api/app/ps4_collections.json;
+raw files remain ignored. This establishes membership without equating the
+collection application with component CUSA03280 or inventing unlock state.
+
+Initially only Drake's Fortune had profile state. User then launched Uncharted
+2/3 and supplied screenshots of their imported 53/59-trophy lists. Fresh FTP
+lists both new profile images alongside the original three PS4 sets. Surviving
+queue slots contain 59 acknowledged Uncharted 3 records, explicitly bound to
+CUSA02344. All 25 surviving slots are acknowledged; slots are reused and this
+is not a complete hosted-library audit. No CUSA activity survived in these slots.
+User's collection screenshot shows one completed minute plus an incomplete
+session; no new complete component playtime counter was established here.
+
+API groups existing real state/activity only within the same owned console
+profile and reviewed collection identity. Canonical set/trophy IDs, component
+artwork, comparison/privacy and revocation checks remain intact. Expandable
+collection subgroups open each component's trophy list and separately observed
+sessions. A launcher session's unique set alias never assigns its time to that
+component. Shared API totals retain distinct collection/component buckets even
+when canonical title IDs coincide. Collection-level time stays separate, unknown
+component durations remain unknown, and no session is cloned per game. Hiding
+covers the collection, component rows/images and previous application preference.
+
+Both new sorts (Most played (hours), Most sessions) use descending eligible
+recorded seconds/session counts, including shared aggregate session_count, with
+title tie-breaks. Incomplete/unverified sessions do not inflate either count.
+Subgroup/sort text is included in all six translation catalogs. No dependency,
+snapshot-schema, SDK, database or console source modification was required.
+
+Commands/results:
+
+- `scripts/Doctor.ps1`: Docker was initially stopped; started Docker Desktop
+  hidden, rerun passes (Linux engine 29.8.2, Compose 5.6.0).
+- `python scripts/inspect-ps4-collection.py CUSA02344`: bounded double-read,
+  identity, entry layout and SHA1 validation pass; metadata hashes unchanged
+  on repeat. No database, credentials, payload or console write involved.
+- `python scripts/inspect-console-queue.py`: stable surviving-slot ACK audit;
+  profiles/device/batch IDs omitted. New Uncharted 2/3 IDs included in summaries.
+- `npm --prefix web run check`: pass.
+- `scripts/Test-Local.ps1`: **76 passed**, one existing Starlette/httpx warning.
+  Covers collection ownership/profile isolation, membership/region boundaries,
+  exact and ambiguous aliases, repeat imports, distinct counter buckets,
+  component art/friend access, secret privacy, hide/unhide and revocation.
+- `scripts/Start-Local.ps1 -Build`: final API/Next.js production build, migrations
+  and local health pass; existing data volumes and HTTPS origin preserved.
+- `docker build -f web/Dockerfile.test -t ps5-sync-web-test web`, then
+  `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  library-sorting.spec.ts playtime.spec.ts personalization.spec.ts locale.spec.ts
+  trophy-privacy.spec.ts library-layout.spec.ts public-profile.spec.ts
+  navigation.spec.ts`: **23 passed**. Final run additionally sets
+  COLLECTION_SCREENSHOT_DIR=/previews and bind-mounts artifacts/web/collections.
+  Includes exact seconds/session sorting, public aggregates, component navigation,
+  shared-time separation, privacy, six locales and responsive layout.
+- Actual prior stripped Drake's Fortune capture (54) plus fresh stripped
+  Uncharted 3 queue capture (59) validate in Pydantic and match their real TRP
+  digests/definitions/grades. In-memory grouping with one explicitly synthetic
+  incomplete launcher yields 113 trophies plus one unknown-duration activity.
+  No database writes, new payload or new hardware playtime measurement.
+
+No source database, installed binary, pairing, autoload, DNS or reboot action was
+performed. No Git commit/push, remote host rebuild or external deployment. Raw
+publisher data/private captures are excluded from Git. Implementation decisions
+and the source reference pin are in UNCHARTED_COLLECTION_PLAN.md and SOURCES.md.
+
+Next: user rebuild API and web together on the existing service host and refresh
+the library. With all three imported sets, expect one collection with 54/53/59
+component trophies (166 total), with available recorded time counted once.
+Per-game playtime needs a distinct valid component counter; collection-only or
+incomplete records cannot establish it. See PLAYTIME.md. Broader hardware
+lifecycle/offline gates remain in ROADMAP and are unaffected by this server fix.
+
 ## Library privacy, profile customization and visual redesign — 2026-10-14
 
 Implemented server-enforced account game hiding, an owner-only Hidden Games
