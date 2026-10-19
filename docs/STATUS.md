@@ -1,5 +1,69 @@
 # Current status
 
+## PS5 Demon Slayer regional-release matching - 2026-10-19
+
+Anonymous public library reads reproduce two PS5 entries: NPWR23868_00 has
+47 trophies and 1,029 seconds/two sessions; PPSA03457 has no trophies and
+1,219 seconds/one session. The latter's English title omits the hyphens around
+Kimetsu no Yaiba; the existing resolver requires identical raw names.
+
+Read-only FTP independently verifies native param.json/trophy2/npbind.dat for
+PPSA03457 (HP0177) and PPSA03490 (EP0177). Both single-set bindings explicitly
+identify NPWR23868_00. Two complete equal reads, exact param application/content
+IDs, native header/typed-entry bounds and trailing SHA1 pass. Only identifiers
+and hashes are checked in; raw files/public snapshots remain ignored. This is
+PS5 evidence, independently observed rather than inferred from the PS4 reader.
+
+Both initial regressions fail before the fix with a separate PPSA activity ID.
+Implemented reviewed native application bindings plus unique, conservative
+case/punctuation/whitespace matching across stored and publisher-localized titles.
+Known bindings override text; unowned target sets cannot fall back to a different
+same-named stack. Ambiguous names and sequel/edition differences stay separate.
+Profile/source isolation, stored IDs, counters and trophies remain unchanged.
+Matching is applied on library reads, including shared profiles; no destructive
+record merge or migration is needed. Earlier application hide/favorite references
+resolve to the canonical owned game and retain visibility/privacy checks.
+
+Validation/results:
+
+- Two new reproduction tests fail against the previous API, each retaining a
+  separate PPSA activity ID. The same regressions pass with the resolver.
+- `python scripts/inspect-native-title-bindings.py PPSA03457 PPSA03490`: both
+  native publisher binding/param identities, headers, SHA1 and equal repeated
+  reads pass. Exact hashes are in api/app/native_title_bindings.json. No database,
+  credential, unknown publisher payload or sealed-key information is printed.
+- `scripts/Test-Local.ps1`: final **87 passed**, one existing Starlette/httpx
+  warning. Covers region bindings, all publisher-language names, punctuation,
+  ambiguity/independent stacks, sequel/edition/symbol differences, known-target
+  absence, ownership/profile/platform separation, repeat counts, secret privacy,
+  hiding and favorite compatibility. Existing PS4 collection tests still pass.
+- Isolated private replay of the captured public snapshot: **1 passed**. Retains
+  all 47 numeric trophy IDs and observed unlock states, with one shared PS5 entry
+  totaling **2,248 seconds / three sessions**. Aggregate session counters are
+  represented by explicitly synthetic events only in sync_test; no new hardware
+  measurement, hosted account write or live database copy is claimed. Private
+  fixture is .local/test_demon_replay.py, captures are read-only mounts. Initial
+  Compose `--mount` invocation failed; corrected to Compose `--volume ...:ro`.
+- `scripts/Start-Local.ps1 -Build`: final API/web images, migrations and local
+  health pass with existing volumes/origin retained. Production Next.js build
+  passes. `npm --prefix web run check` and Python compile checks pass.
+- `docker build -f web/Dockerfile.test -t ps5-sync-web-test web`, then
+  `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  native-identity.spec.ts playtime.spec.ts public-profile.spec.ts
+  trophy-privacy.spec.ts library-sorting.spec.ts`: **11 passed**. Includes merged
+  47-trophy PS5 presentation, all shared counters, privacy and PS4 subgroups.
+
+No console payload, source DB copy/edit, installed file update, DNS/reboot,
+external deployment, Git commit or push. No dependencies, SDK interfaces,
+snapshots, migrations or console code changed. Raw publisher/public snapshots
+and private replay remain ignored. See NATIVE_GAME_MATCHING_PLAN.md and SOURCES.
+
+Next: update/rebuild API on the existing hosted stack and refresh the library.
+The usual `docker compose --env-file .local/app.env -f deployment/compose.yaml
+up -d --build` preserves existing imports/pairing. No console update, resync or
+new pairing is needed. The hosted page was read for evidence but was not changed
+by this session. Other ambiguous/independent trophy sets remain distinct.
+
 ## Uncharted PS4 collection subgroups and playtime sorting ? 2026-10-19
 
 Implemented and locally validated; the separate hosted API/web still needs its

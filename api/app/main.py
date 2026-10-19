@@ -20,6 +20,7 @@ from .db import database
 from .models import Account, Login, Installation, Profile, Pairing, Import, Record, Rate, Artwork, TrophyInfo, TrophyText, DevicePackage, DeviceArtwork, HiddenGame
 from .locales import choose_language
 from .ps4_collections import group_collections
+from .native_identity import native_activity_aliases
 from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
 
 app = FastAPI(title='PS5 Trophy Sync', version='0.1.0')
@@ -339,18 +340,16 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
         fail(422,'Invalid language preferences')
     rows = list(db.execute(select(Record, Profile.label).join(Profile, Record.profile == Profile.id).where(Profile.owner == owner,Profile.revoked==False)))
     if not development_tools:rows=[(r,label) for r,label in rows if not r.mock]
-    # Sony application IDs and trophy-set IDs are separate namespaces. Join only
-    # an unambiguous exact metadata title inside the same owned console profile.
-    names={}
-    for record,_ in rows:
-        if not record.mock and record.source=='ps5_native' and record.kind=='trophy':
-            names.setdefault((record.profile,record.data['title']),set()).add(record.data['title_id'])
-    aliases={record.id:next(iter(names[(record.profile,record.data['title'])]))
-             for record,_ in rows if not record.mock and record.kind=='activity'
-             and record.source=='ps5_native' and record.data.get('duration_basis')=='native_foreground_seconds'
-             and record.data.get('native_observation',{}).get('application_title_id','').startswith('PPSA')
-             and record.data['title']!=record.data['title_id']
-             and len(names.get((record.profile,record.data['title']),set()))==1}
+    # Sony application IDs and trophy-set IDs remain separate in storage.
+    # Publisher bindings and unique translated titles resolve owned display IDs.
+    titles={r.data['title_id'] for r,_ in rows if not r.mock}
+    profiles={r.profile for r,_ in rows}
+    packages={(p.profile,p.title_id):p for p in db.scalars(select(DevicePackage).where(DevicePackage.profile.in_(profiles),DevicePackage.title_id.in_(titles)))} if titles else {}
+    published_names={}
+    for title,label in db.execute(select(TrophyText.title_id,TrophyText.name).where(TrophyText.source=='ps5_native',TrophyText.trophy_id=='',TrophyText.title_id.in_(titles))):
+        published_names.setdefault(title,set()).add(label)
+    native_aliases=native_activity_aliases([r for r,_ in rows],packages,published_names)
+    aliases={identity:match[0] for identity,match in native_aliases.items()}
     ps4_bindings={}
     for record,_ in rows:
         if record.mock or record.kind!='trophy' or record.source!='ps4_bc' or record.data.get('profile_binding')!='inner_local_user_and_foreground_path':continue
@@ -376,7 +375,6 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
     choices={(source,title):choose_language(value['available'],language,value['default']) for (source,title),value in languages.items()}
     selected=[(source,title,locale) for (source,title),locale in choices.items()]
     translations={(v.source,v.title_id,v.trophy_id):v for v in db.scalars(select(TrophyText).where(tuple_(TrophyText.source,TrophyText.title_id,TrophyText.language).in_(selected)))} if selected else {}
-    packages={(p.profile,p.title_id):p for p in db.scalars(select(DevicePackage).where(DevicePackage.profile.in_({r.profile for r,_ in rows}),DevicePackage.title_id.in_(titles)))} if titles else {}
     scoped_images={(p,t,trophy):'/api/account/device-artwork/'+identity for p,t,trophy,identity in db.execute(select(DeviceArtwork.profile,DeviceArtwork.title_id,DeviceArtwork.trophy_id,DeviceArtwork.id).where(DeviceArtwork.profile.in_({r.profile for r,_ in rows}),DeviceArtwork.title_id.in_(titles)))} if titles else {}
     result = []
     hidden_games={(g.source,g.title_id) for g in db.scalars(select(HiddenGame).where(HiddenGame.account==owner))}
@@ -390,7 +388,7 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
             data['title_binding']='application_id_only'
         if r.id in aliases:
             data['title_id']=title
-            data['title_binding']='ps4_inner_application_id' if r.id in ps4_aliases else 'unique_local_title_metadata'
+            data['title_binding']='ps4_inner_application_id' if r.id in ps4_aliases else native_aliases[r.id][1]
             if r.id in ps4_aliases:data['activity_source']=r.source
         earned = data.get('unlocked') is True
         translated=None if r.mock or r.kind!='trophy' else translations.get(key)

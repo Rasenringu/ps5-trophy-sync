@@ -1,0 +1,30 @@
+{
+  "PPSA03457": {
+    "trophy_set_id": "NPWR23868_00",
+    "evidence": {
+      "observed": "2026-10-19",
+      "source": "/system_data/priv/appmeta/PPSA03457/trophy2/npbind.dat",
+      "content_id": "HP0177-PPSA03457_00-HINOKAMI00000000",
+      "param_json_sha256": "711f358910346929bea882722b4ce1f992c538ada7372f7bfbb4b36e0213341d",
+      "npbind_sha256": "0ca02f345b16a82a5a40814905b51fbea4e492a84a8d9729e10e73f7b1a5bf25",
+      "npbind_bytes": 532,
+      "npbind_entries": 1,
+      "npbind_trailing_sha1_verified": true,
+      "consistency": "two_equal_bounded_reads"
+    }
+  },
+  "PPSA03490": {
+    "trophy_set_id": "NPWR23868_00",
+    "evidence": {
+      "observed": "2026-10-19",
+      "source": "/system_data/priv/appmeta/PPSA03490/trophy2/npbind.dat",
+      "content_id": "EP0177-PPSA03490_00-HINOKAMI00000000",
+      "param_json_sha256": "5a61ade5b3d077fc6b8dc304817a95cca32073a0600b50b2531667e20ca6a63b",
+      "npbind_sha256": "8f9f945209f56afb70adb99fe1dc974b5b3a17e460d29bb31424e37ee7da36fc",
+      "npbind_bytes": 532,
+      "npbind_entries": 1,
+      "npbind_trailing_sha1_verified": true,
+      "consistency": "two_equal_bounded_reads"
+    }
+  }
+}

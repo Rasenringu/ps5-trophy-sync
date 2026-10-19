@@ -1,5 +1,10 @@
 # Remaining work
 
+PS5 Demon Slayer's regional application IDs now resolve to their verified shared
+trophy set; localized/punctuation title matching and preference compatibility are
+implemented. Rebuild the separate hosted API to apply this to existing imports.
+See the 2026-10-19 matching evidence and local test results in STATUS.
+
 Current implementation includes native PS5 trophies, native recorded playtime,
 automatic artwork/translations, pairing, web libraries, optional public profiles,
 friends/comparisons, persistent hidden games, profile themes/bios/favorites and

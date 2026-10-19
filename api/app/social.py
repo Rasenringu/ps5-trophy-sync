@@ -61,6 +61,14 @@ def shared_rows(db,owner,language='en'):
 def customization(profile):
     return {'bio':profile.bio,'theme':profile.theme,'avatar':profile.avatar,'favorite':profile.favorite}
 
+
+def favorite_game(rows, favorite):
+    if not favorite:return None
+    return next((r for r in rows if not r['mock'] and (
+        (r['source']==favorite['source'] and r['data']['title_id']==favorite['title_id'])
+        or (r['kind']=='activity' and r['data'].get('activity_source',r['source'])==favorite['source']
+            and r['data'].get('native_observation',{}).get('application_title_id')==favorite['title_id']))),None)
+
 @router.get('/account/hidden-games')
 def hidden_games(owner: str=Depends(browser),db: Session=Depends(database)):
     return [{'source':source,'title_id':title} for source,title in sorted(hidden_keys(db,owner))]
@@ -130,7 +138,10 @@ def require_friend(db,owner,handle):
 @router.get('/account/profile')
 def own_profile(owner: str=Depends(browser),db: Session=Depends(database)):
     profile=ensure_social(db,owner)
-    result={**identity(profile),'visibility':profile.visibility,**customization(profile)};db.commit();return result
+    result={**identity(profile),'visibility':profile.visibility,**customization(profile)}
+    row=favorite_game(shared_rows(db,owner),profile.favorite) if profile.favorite else None
+    if row:result['favorite']={'source':row['source'],'title_id':row['data']['title_id']}
+    db.commit();return result
 
 @router.post('/account/profile')
 def edit_profile(body: ProfileEdit,owner: str=Depends(browser),db: Session=Depends(database)):
@@ -138,11 +149,15 @@ def edit_profile(body: ProfileEdit,owner: str=Depends(browser),db: Session=Depen
     # Lock the account to serialize edits/first identity creation.
     db.scalar(select(Account).where(Account.id==owner).with_for_update())
     profile=ensure_social(db,owner)
-    if body.favorite and not any(not r['mock'] and r['source']==body.favorite.source and r['data']['title_id']==body.favorite.title_id for r in shared_rows(db,owner)):fail(422,'Choose a visible game from your library')
+    favorite=body.favorite.model_dump() if body.favorite else None
+    if favorite:
+        row=favorite_game(shared_rows(db,owner),favorite)
+        if not row:fail(422,'Choose a visible game from your library')
+        favorite={'source':row['source'],'title_id':row['data']['title_id']}
     profile.handle,profile.display_name=body.handle,body.display_name
     # Older clients omit customization; keep previously saved values.
     for field in ('bio','theme','avatar','favorite'):
-        if field in body.model_fields_set:setattr(profile,field,body.favorite.model_dump() if field=='favorite' and body.favorite else getattr(body,field))
+        if field in body.model_fields_set:setattr(profile,field,favorite if field=='favorite' else getattr(body,field))
     if body.visibility is not None:profile.visibility=body.visibility
     try:db.commit()
     except IntegrityError:db.rollback();fail(409,'That profile handle is already taken')
@@ -164,8 +179,8 @@ def public_profile(handle: str,request: Request,db: Session=Depends(database)):
     visible=peer.visibility=='public' or status in ('self','friends')
     favorite=None
     if visible and peer.favorite:
-        row=next((r for r in shared_rows(db,peer.account) if not r['mock'] and r['source']==peer.favorite['source'] and r['data']['title_id']==peer.favorite['title_id']),None)
-        if row:favorite={**peer.favorite,'title':row['data']['title'],'artwork_url':'/api/players/'+peer.handle+'/artwork/'+row['artwork_url'].rsplit('/',1)[1] if row.get('artwork_url') else None}
+        row=favorite_game(shared_rows(db,peer.account),peer.favorite)
+        if row:favorite={'source':row['source'],'title_id':row['data']['title_id'],'title':row['data']['title'],'artwork_url':'/api/players/'+peer.handle+'/artwork/'+row['artwork_url'].rsplit('/',1)[1] if row.get('artwork_url') else None}
     return {**identity(peer),'relationship':status,'viewer_authenticated':viewer is not None,
         'bio':peer.bio,'theme':peer.theme,'avatar':peer.avatar,'favorite':favorite,
         'request_id':link.id if link and status in ('incoming','outgoing','friends') else None,

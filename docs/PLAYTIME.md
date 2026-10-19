@@ -22,8 +22,12 @@ lifetime totals. The presentation omits an uncertainty suffix without altering
 stored source-clock evidence.
 
 Metadata uses bounded read-only `param.json` with exact title identity validation.
-Activity title IDs remain stored unchanged. The library joins activity to a trophy
-set for PPSA activity through an exact, unique title within that profile. PS4
+Activity title IDs remain stored unchanged. For PPSA activity, reviewed native
+publisher application bindings take precedence. Otherwise, the library matches
+unique publisher/localized titles within that profile after conservative case,
+punctuation and whitespace normalization. All words/numbers and meaningful
+symbols remain significant; independent ambiguous trophy stacks stay separate.
+PS4
 activity joins through an exact, unique CUSA binding embedded in validated
 PS4 state. Verified publisher collection membership can additionally group the
 launcher and existing component rows in the same console profile (currently

@@ -1,5 +1,25 @@
 # Source evidence and pinned inputs
 
+## PS5 regional-release bindings (2026-10-19)
+
+Native PS5 source paths and metadata were independently observed over read-only
+FTP for PPSA03457 and PPSA03490. `param.json` verifies their exact title/content
+IDs (HP0177 and EP0177 respectively); each `trophy2/npbind.dat` explicitly binds
+NPWR23868_00. Both 532-byte files have the observed single-set version-1 header,
+384-byte typed record and valid trailing SHA1. Both files and params match
+complete second reads. This PS5 evidence was not inferred from PS4 source paths
+or earned-state schemas. The existing pinned npbind format reference below is
+research only; no template/source/dependency was incorporated.
+
+`scripts/inspect-native-title-bindings.py PPSA03457 PPSA03490` reproduces bounded
+read-only identity/layout/digest verification and emits only IDs/hash evidence.
+The reviewed mapping and exact param/npbind SHA256 values are retained in
+api/app/native_title_bindings.json; raw files remain ignored under captures/.
+Unknown publisher payloads, keys and personal data are not included. The API
+uses this evidence for game identity only, never unlock/authenticity claims.
+The general fallback uses already validated publisher title translations and
+Python's existing Unicode library; no new third-party dependency/API was added.
+
 ## PS4 collection membership follow-up (2026-10-19)
 
 Read-only FTP retrieved two equal bounded copies of the installed CUSA02344

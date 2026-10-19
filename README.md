@@ -139,6 +139,15 @@ Incomplete or unverified sessions do not inflate either total; shared libraries
 use their published aggregate session counts.
 PS4/PS5 appears once as a platform badge on each game.
 
+PS5 regional releases that share a verified trophy-set identity combine their
+existing trophies and recorded sessions on one game entry. Unique publisher
+translations and normalized punctuation/case also match regional title labels;
+ambiguous trophy stacks, sequels, editions and PS4/PS5 stay separate. This fixes
+Demon Slayer's verified PPSA03457/PPSA03490 releases sharing NPWR23868_00.
+Rebuild the hosted API to apply matching to existing imports; no console update,
+reimport or database migration is required. Hidden games and favorites retain
+their earlier application references when those entries merge.
+
 The verified PS4 Nathan Drake Collection (CUSA02344) groups its existing imported
 Drake's Fortune, Uncharted 2 and Uncharted 3 trophy sets on one collection card.
 Expand **Games in this collection** to open each game's own trophies and
