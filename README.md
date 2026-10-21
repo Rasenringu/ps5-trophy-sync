@@ -11,6 +11,12 @@ It supports English, French, German, Portuguese, Brazilian Portuguese, Spanish
 and Italian. Sharing defaults to friends only; public profiles require opting in.
 Secret trophies stay concealed until the viewer earns them.
 
+The **Integrations** page adds automatic HowLongToBeat completion estimates with
+edition selection/manual overrides, a private playtime CSV export, and optional
+PlatPrices trophy earn rates. HLTB account linking/upload remains pending. PlatPrices needs a
+free noncommercial key configured on the server; match the correct game listing
+before rates appear. See [setup and limitations](docs/INTEGRATIONS.md).
+
 Games with recorded activity appear even without imported trophies, including
 homebrew recomp titles. Completed native foreground counters supply playtime;
 incomplete sessions retain unknown duration. Native logger `CUSA` sessions can
@@ -179,6 +185,12 @@ the migrate service. Keep the existing database volume, domain, cookies and
 console pairing. No new dependencies or service configuration are required.
 
 ## Tests and hosting
+
+The integration/mobile update uses migrations **009–010** and an API/web rebuild with
+the existing volume/env file. It also repairs damaged accents and popup controls,
+improves mobile dialog scrolling, and adds Apple/manifest PNG install icons.
+After updating the host, remove and re-add an old iPhone home-screen shortcut to
+refresh its icon. Physical Firefox/iPhone installation still needs verification.
 
 ```powershell
 .\scripts\Test-Local.ps1

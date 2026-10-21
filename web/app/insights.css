@@ -1,0 +1,27 @@
+.game-insights{padding:22px 26px;border-bottom:1px solid var(--border);min-width:0}
+.insight-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.insight-heading h3{font-size:15px;margin:0}.insight-heading a,.text-link{font-size:12px;color:#badcff;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.completion-times{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 10px}
+.completion-times>div{background:#152b44;border:1px solid #345273;border-radius:12px;padding:15px;min-width:0}
+.completion-times dt{font-size:11px;color:#afc6e1;overflow-wrap:anywhere}.completion-times dd{font-size:21px;font-weight:600;margin:9px 0 0;color:#edf5ff;overflow-wrap:anywhere}
+.insight-note,.rarity-panel>p{font-size:12px;line-height:1.7;color:#a8bfdc;margin:10px 0}
+.insight-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}.insight-actions button{font-size:12px}
+.completion-form{margin:16px 0;padding:18px;background:#0a1526;border:1px solid #385574;border-radius:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-width:0}
+.completion-form label{display:grid;gap:8px;font-size:12px;margin:0;min-width:0}.completion-form .completion-link,.completion-form>p{grid-column:1/-1}.completion-form input{width:100%;max-width:none;min-width:0;margin:0}
+.completion-form>button{grid-column:1/-1;justify-self:start}.input-unit{display:flex;align-items:center;gap:8px;min-width:0}.input-unit>span{color:var(--muted);font-size:11px}
+.rarity-panel{border-top:1px solid #345273;margin-top:20px;padding-top:20px}
+.provider-candidates{display:grid;gap:8px}.provider-candidates>button{justify-content:space-between;text-align:left;white-space:normal;font-size:12px;line-height:1.6;min-width:0}.provider-candidates>button>span:first-child{overflow-wrap:anywhere}
+.trophy-rarity{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;margin-top:10px;font-size:11px;color:#a8bfdc}.trophy-rarity strong{color:#c7e5ff;font-weight:500}
+.integration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.integration-grid .social-panel{margin:0;padding:26px;min-width:0}.integration-grid p{font-size:13px}.integration-grid h2{font-size:23px}.integration-status{font-size:11px;background:#234361;color:#d7ebff;padding:6px 10px;border-radius:20px;display:inline-flex}
+/* Keep one vertical scrolling surface in a modal, including iOS standalone. */
+html{scrollbar-gutter:stable}.game-dialog{overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;max-height:calc(100dvh - 40px);overflow-x:hidden;overflow-y:auto}
+.game-dialog[open]{scroll-padding-top:140px}.game-dialog .dialog-header{isolation:isolate}.dialog-header h2{overflow-wrap:anywhere}.dialog-header>div:not(.art-placeholder){min-width:0}.dialog-close svg{display:block;pointer-events:none}
+.table-scroll{max-width:100%;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.table-scroll td{white-space:nowrap}.dialog-body .session-summary{min-width:0;flex-wrap:wrap}.session-summary>div{min-width:0;overflow-wrap:anywhere}
+@media(max-width:760px){
+ .game-insights{padding:18px 15px}.completion-times{gap:7px}.completion-times>div{padding:12px 9px}.completion-times dd{font-size:17px}.completion-form{grid-template-columns:1fr;padding:14px}.completion-form .completion-link,.completion-form>p,.completion-form>button{grid-column:1}
+ .game-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto}.game-dialog .dialog-header{padding:14px 12px;gap:10px}.dialog-header h2{font-size:16px}.dialog-header>img,.dialog-header>.art-placeholder{width:42px;height:42px}.dialog-header .eyebrow{line-height:1.6}
+ .integration-grid{grid-template-columns:1fr}.integration-grid .social-panel{padding:22px 18px}
+ .sidebar{padding-top:max(16px,env(safe-area-inset-top));padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));min-width:0}.site-footer{padding-bottom:max(24px,env(safe-area-inset-bottom))}.sidebar nav a{flex-shrink:0}
+ input,select,textarea{font-size:16px!important} /* Avoid focus zoom moving iPhone dialogs. */
+}

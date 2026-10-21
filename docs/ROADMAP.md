@@ -1,5 +1,15 @@
 # Remaining work
 
+Game information/mobile update (2026-10-21): automatic HLTB estimates/edition
+selection with manual overrides,
+playtime CSV, optional PlatPrices v2 earn rates, encoding repairs and install PNGs
+are implemented locally. Rebuild the hosted API/web with migrations 009–010; configure
+the host's free PlatPrices key and verify a real matching listing. Authenticated
+provider rate responses and physical Firefox/iPhone home-screen installation
+remain unverified. User confirmed HLTB data access; automatic lookup uses a
+verified current protocol. HLTB account linking/upload still needs a secure
+authorization flow and authenticated validation. See INTEGRATIONS.md.
+
 PS5 Demon Slayer's regional application IDs now resolve to their verified shared
 trophy set; localized/punctuation title matching and preference compatibility are
 implemented. Rebuild the separate hosted API to apply this to existing imports.

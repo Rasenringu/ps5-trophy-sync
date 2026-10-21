@@ -68,7 +68,7 @@ test('catalogs cover all messages and preserve interpolation fields',()=>{
  for(const [,catalog] of languages){
   expect(Object.keys(catalog).sort()).toEqual(Object.keys(fr).sort());
   for(const key of ['Friends','Public handle','Requests received','Request declined','Total playtime','Compact list','Loading friends…','Loading profile…','Loading comparison…','Secret trophies stay hidden until you earn them.']){expect((catalog as Record<string,string>)[key]).toBeTruthy();expect((catalog as Record<string,string>)[key]).not.toContain('?');}
-  for(const [key,value] of Object.entries(catalog)){expect(value.trim().length).toBeGreaterThan(0);expect(parameters(value)).toEqual(parameters(key));}
+  for(const [key,value] of Object.entries(catalog)){expect(value.trim().length).toBeGreaterThan(0);expect(parameters(value)).toEqual(parameters(key));expect(value).not.toMatch(/\p{L}\?+\p{L}|\uFFFD|Ã©|Ã¨|â€|Â·/u);}
  }
 });
 test.describe('unsupported interface language',()=>{

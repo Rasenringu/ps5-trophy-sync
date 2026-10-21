@@ -1,5 +1,77 @@
 # Current status
 
+## Game information integrations and mobile repairs - 2026-10-21
+
+API/web implementation is local; no external deployment or console action.
+Read the behavior and host setup in INTEGRATIONS.md; continuation decisions are
+in WEB_INTEGRATIONS_PLAN.md. Migration 009 adds account-owned game information
+and a durable provider cache without changing imported console records.
+
+The user confirmed permission for HLTB data access and supplied Node/Playnite
+references. The initial manual-only milestone is superseded: automatic
+Main/Main+Extras/Completionist lookup now works, using the current Playnite
+protocol in an independent Python adapter. Exact unique title/platform matches
+are automatic; other editions need review. Seven-day durable cache, bounded
+HTTPS/anonymous-token handling, source/date/stale labels, global backoff/rate
+limits, platform isolation, manual overrides and unknown/sub-hour precision are
+implemented. Migration 010 preserves earlier manual entries. Playnite uploads
+use desktop WebView login-session cookies; secure web account linking/upload
+remains unimplemented. No account passwords/cookies are collected or submitted.
+Private playtime CSV/copying support manual entry, without assuming completion
+from recorded hours. Optional PlatPrices v2 uses a host-owned free noncommercial
+key, explicit listing selection, platform/full returned roster verification,
+numeric-only rate output, daily cache, bounded verified HTTPS, backoff/global
+quota and shared-viewer cache-only access. Secret metadata, hidden games,
+revocation and friends-only privacy are preserved. Live authenticated rate
+responses remain unverified until the host supplies a key.
+
+Repaired literal replacement question marks in six catalogs and popup text;
+close control is SVG. Modal scrolling now fixes/restores the underlying document
+position and handles phone orientation/safe areas. Opaque 180px Apple and
+192/512px manifest PNG icons use the existing original brand. Physical iPhone
+Firefox installation still needs a user observation after the host update.
+
+Validation:
+
+- Doctor initially found Docker stopped; launched Docker Desktop hidden and
+  reran successfully. Existing local origin, volumes and unrelated services kept.
+- `scripts/Start-Local.ps1 -Build`: final API/production Next.js builds and local
+  health pass; `docker compose --env-file .local/app.env -f deployment/compose.yaml
+  exec -T api alembic current` reports **010 (head)**.
+- `scripts/Test-Local.ps1`: final **136 passed**, existing Starlette/httpx warning.
+  A concurrent cold-cache regression exposed stale ORM state after a row-lock
+  wait; explicit refresh under the lock fixes it, and the multi-session test
+  now proves one upstream request. No actual provider or console calls in tests.
+- `npm --prefix web run check`, Python compile checks and `git diff --check` pass.
+- Read-only live verification: shipped adapter search and detail for HLTB 10270
+  both return Main 186,011 / Extra 373,540 / Completionist 630,912 seconds. No
+  account login/upload, scraped catalogue distribution or console access. The
+  protocol/model references and exact revisions/licenses are in SOURCES.md.
+- `docker build -f web/Dockerfile.test -t ps5-sync-web-test web`, then
+  `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  game-insights.spec.ts install-icons.spec.ts locale.spec.ts library-layout.spec.ts
+  library-sorting.spec.ts personalization.spec.ts public-profile.spec.ts
+  trophy-privacy.spec.ts navigation.spec.ts playtime.spec.ts native-identity.spec.ts`:
+  final **31 passed**. Final run also mounts artifacts at /previews and sets
+  INSIGHTS_SCREENSHOT_DIR=/previews/web/integrations. Synthetic desktop/mobile,
+  automatic estimate and original PNG icon previews inspected visually.
+- `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  --config=playwright.mobile.config.ts`: final **22 passed** with 390x844 mobile/
+  touch emulation in WebKit and Chromium, plus 320px/landscape geometry. Mobile
+  WebKit lacks Playwright wheel injection, so its scroll test checks DOM scrolling,
+  geometry and background locking; physical touch/Firefox remains unverified.
+- `docker run --rm --mount type=bind,source=C:\git\ps5-trophy-sync-windows\contracts,target=/contracts
+  deployment-api python -m tools.export_contracts /contracts`: pass. OpenAPI adds
+  the new owned/shared integration routes; all four console snapshot contracts
+  are unchanged. No dependencies, SDK interfaces or console files changed.
+
+Next: user rebuild API/web on the separate service host with its existing env
+and database volume, migrations 009–010, then configure its free PlatPrices key
+and review a real listing. HLTB automatic lookups are enabled by default under
+the user's confirmed access permission. No new console build, resync or pairing
+is needed. No Git commit/push or remote deployment was performed. HLTB account
+linking/upload and physical Firefox/iPhone installation remain separate gates.
+
 ## PS5 Demon Slayer regional-release matching - 2026-10-19
 
 Anonymous public library reads reproduce two PS5 entries: NPWR23868_00 has

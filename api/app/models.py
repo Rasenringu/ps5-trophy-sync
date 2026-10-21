@@ -140,3 +140,24 @@ class Friendship(Base):
     requester: Mapped[str] = mapped_column(ForeignKey('accounts.id'))
     state: Mapped[str] = mapped_column(String(16))
     updated: Mapped[int] = mapped_column(BigInteger)
+
+class GameInsight(Base):
+    __tablename__ = 'game_insights'
+    account: Mapped[str] = mapped_column(ForeignKey('accounts.id'), primary_key=True)
+    source: Mapped[str] = mapped_column(String(16), primary_key=True)
+    title_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    hltb_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    hltb_mode: Mapped[str] = mapped_column(String(16), default='automatic', server_default='automatic')
+    main_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    extra_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    completionist_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    updated: Mapped[int] = mapped_column(BigInteger)
+    platprices_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
+class ProviderCache(Base):
+    __tablename__ = 'provider_cache'
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(32))
+    fetched: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    expires: Mapped[int] = mapped_column(BigInteger)

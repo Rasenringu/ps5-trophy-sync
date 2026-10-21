@@ -1,5 +1,51 @@
 # Source evidence and pinned inputs
 
+## Game information providers and install metadata (2026-10-21)
+
+- [PlatPrices v2 contract](https://platprices.com/api/v2/docs) and
+  [plans](https://platprices.com/developers.php): fixed HTTPS v2 search, catalogue
+  and base-game trophy endpoints; server header authentication, provider credit,
+  local cache permission and noncommercial free tier verified. Contract page
+  SHA256 `45186ca57fd3e604a423945e495905297f612465cd059ca298cd7fe6593b2572`.
+  Keyless `/api/v2/demo` SHA256
+  `9c8ccfc028a4ae4697581eeaa3d3579a9774341bf2d2138b95d51b2d8d67fea3`
+  confirms catalogue fields including GameName, ProductName, PPID and IsPS5.
+  No authenticated live trophy response was available. Provider `list_id` is
+  opaque; no native NPWR equality or ordinal trophy mapping is inferred.
+- [HowLongToBeat policy](https://howlongtobeat.com/robots.txt), SHA256
+  `8d70e159f320e3b4967f9542a7c0aa1d402c69b3dd79128e6d2c929f7339d7bd`:
+  automated extraction needs permission. The user explicitly confirmed its data
+  access authorization on 2026-10-21 and supplied both integrations below.
+  Community ckatzorke/howlongtobeat was inspected at
+  `d57da96a95f16ee89959cad8fa30907a0504040f` (WTFPL v2; exact LICENSE inspected), research only: no library/code
+  incorporated. Its legacy `/api/search` wrapper is not used by the app.
+- [Playnite HowLongToBeat integration](https://github.com/Lacro59/playnite-howlongtobeat-plugin/tree/809c1890b0ce27942fd92c9b50ae7e38a8c89e30)
+  at `809c1890b0ce27942fd92c9b50ae7e38a8c89e30`: exact MIT LICENSE and
+  `source/Services/HowLongToBeatApi.cs`, search models and submission model
+  inspected. Research only; no C# code/library incorporated. Its current
+  anonymous `/api/search/site/init` + `/api/search/site` protocol and game-page
+  `__NEXT_DATA__` shape inform an independent Python adapter. No script execution,
+  user-agent randomization, challenge bypass, passwords or account-cookie imports.
+  Real read-only search/detail calls for HLTB 10270 both returned
+  `comp_main=186011`, `comp_plus=373540`, `comp_100=630912` seconds through the
+  shipped adapter on 2026-10-21. Zero/missing fields become unknown; no sub-hour
+  rounding to a fabricated hour. This verifies provider retrieval, not a user's
+  console-library match or authenticated account upload. Playnite `/api/submit`
+  uses an embedded desktop browser's session cookies. Secure web account linking
+  and actual account-upload validation remain pending; no write was sent.
+- [Next icon file conventions](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/app-icons)
+  and [Apple web-app configuration](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html)
+  support generated PNG touch icons and install metadata. APIs/types and emitted
+  metadata also checked against the existing pinned Next.js 16.4.0 installation.
+  Next emits standard mobile-web-app-capable; the legacy Apple capability tag is
+  also supplied explicitly. Original brand geometry is rendered with bundled
+  ImageResponse; no new image/font dependency or third-party artwork.
+
+No SDK, console, image or runtime dependency versions changed. The independent
+provider adapter uses existing pinned httpx 0.28.1 (BSD-3-Clause), Pydantic and
+SQLAlchemy. Provider content is not licensed under this repository's source
+license; full catalogues/responses are not distributed. See INTEGRATIONS.md.
+
 ## PS5 regional-release bindings (2026-10-19)
 
 Native PS5 source paths and metadata were independently observed over read-only

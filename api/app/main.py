@@ -576,3 +576,5 @@ def device_image(identity: str, request: Request, owner: str=Depends(browser), d
 
 from .social import router as social_router
 app.include_router(social_router)
+from .insights import router as insights_router
+app.include_router(insights_router)

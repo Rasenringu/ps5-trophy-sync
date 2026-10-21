@@ -1213,6 +1213,367 @@
           }
         }
       }
+    },
+    "/account/integrations": {
+      "get": {
+        "summary": "Integrations",
+        "operationId": "integrations_account_integrations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/games/insights": {
+      "get": {
+        "summary": "Insights",
+        "operationId": "insights_account_games_insights_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "ps5_native",
+                "ps4_bc"
+              ],
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "title_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_:-]+$",
+              "title": "Title Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/games/howlongtobeat": {
+      "post": {
+        "summary": "Completion",
+        "operationId": "completion_account_games_howlongtobeat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletionEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/games/howlongtobeat/automatic": {
+      "post": {
+        "summary": "Automatic Completion",
+        "operationId": "automatic_completion_account_games_howlongtobeat_automatic_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomaticCompletion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/integrations/howlongtobeat/search": {
+      "get": {
+        "summary": "Search Completion",
+        "operationId": "search_completion_account_integrations_howlongtobeat_search_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "ps5_native",
+                "ps4_bc"
+              ],
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "title_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_:-]+$",
+              "title": "Title Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/integrations/platprices/search": {
+      "get": {
+        "summary": "Search",
+        "operationId": "search_account_integrations_platprices_search_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "ps5_native",
+                "ps4_bc"
+              ],
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "title_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_:-]+$",
+              "title": "Title Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/games/platprices": {
+      "post": {
+        "summary": "Select Listing",
+        "operationId": "select_listing_account_games_platprices_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListingEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{handle}/games/insights": {
+      "get": {
+        "summary": "Shared Insights",
+        "operationId": "shared_insights_players__handle__games_insights_get",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Handle"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "ps5_native",
+                "ps4_bc"
+              ],
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "title_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_:-]+$",
+              "title": "Title Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/integrations/playtime.csv": {
+      "get": {
+        "summary": "Export Playtime",
+        "operationId": "export_playtime_account_integrations_playtime_csv_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1368,6 +1729,45 @@
         ],
         "title": "ArtworkCheck"
       },
+      "AutomaticCompletion": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_:-]+$",
+            "title": "Title Id"
+          },
+          "hltb_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hltb Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id"
+        ],
+        "title": "AutomaticCompletion"
+      },
       "Code": {
         "properties": {
           "code": {
@@ -1382,6 +1782,84 @@
           "code"
         ],
         "title": "Code"
+      },
+      "CompletionEdit": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_:-]+$",
+            "title": "Title Id"
+          },
+          "hltb_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hltb Id"
+          },
+          "main_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 36000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Main Seconds"
+          },
+          "extra_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 36000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Seconds"
+          },
+          "completionist_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 36000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completionist Seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id"
+        ],
+        "title": "CompletionEdit"
       },
       "Credentials": {
         "properties": {
@@ -1511,6 +1989,46 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ListingEdit": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_:-]+$",
+            "title": "Title Id"
+          },
+          "platprices_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platprices Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id",
+          "platprices_id"
+        ],
+        "title": "ListingEdit"
       },
       "NativeActivity": {
         "properties": {
