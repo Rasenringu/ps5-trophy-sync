@@ -142,3 +142,25 @@ def test_anonymous_token_is_volatile_and_search_posts_only_public_query(monkeypa
 def test_disabled_provider_does_not_fetch(monkeypatch,provider):
     monkeypatch.setenv('HLTB_ENABLED','false');owner=browser();seed(owner)
     assert owner.get(PATH).json()['howlongtobeat']['status']=='disabled' and not provider
+
+def test_demon_slayer_search_uses_title_words_and_never_identifiers(monkeypatch):
+    calls=[]
+    local='Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles'
+    game={**GAME,'title':'Demon Slayer: Kimetsu no Yaiba - The Hinokami Chronicles','hltb_id':98594}
+    sequel={**game,'title':game['title']+' 2','hltb_id':160453}
+    def fetch(kind,query,platform):
+        calls.append(query);return {'games':[game,sequel]}
+    monkeypatch.setattr(hltb,'fetch',fetch)
+    with Session() as db:
+        result=hltb.resolve(db,local,'PlayStation 5')
+    assert result['game']['hltb_id']==98594
+    assert calls==['Demon Slayer Kimetsu no Yaiba The Hinokami Chronicles']
+    for identity in ['NPWR23868_00','PPSA03457','CUSA02344']:
+        with Session() as db:assert hltb.resolve(db,identity,'PlayStation 5')['status']=='title_unavailable'
+    assert len(calls)==1
+
+def test_identifier_library_key_is_resolved_to_publisher_title_before_search(provider):
+    owner=browser();seed(owner)
+    response=owner.get('/account/integrations/howlongtobeat/search?source=ps5_native&title_id='+KEY['title_id'])
+    assert response.json()['query']=='SYNTHETIC Game'
+    assert provider[0][1]=='SYNTHETIC Game'

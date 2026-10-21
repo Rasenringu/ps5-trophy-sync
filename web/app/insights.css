@@ -4,6 +4,7 @@
 .completion-times{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 10px}
 .completion-times>div{background:#152b44;border:1px solid #345273;border-radius:12px;padding:15px;min-width:0}
 .completion-times dt{font-size:11px;color:#afc6e1;overflow-wrap:anywhere}.completion-times dd{font-size:21px;font-weight:600;margin:9px 0 0;color:#edf5ff;overflow-wrap:anywhere}
+.completion-times dd time{white-space:nowrap;font-variant-numeric:tabular-nums}
 .insight-note,.rarity-panel>p{font-size:12px;line-height:1.7;color:#a8bfdc;margin:10px 0}
 .insight-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}.insight-actions button{font-size:12px}
 .completion-form{margin:16px 0;padding:18px;background:#0a1526;border:1px solid #385574;border-radius:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-width:0}
@@ -14,11 +15,12 @@
 .trophy-rarity{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;margin-top:10px;font-size:11px;color:#a8bfdc}.trophy-rarity strong{color:#c7e5ff;font-weight:500}
 .integration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.integration-grid .social-panel{margin:0;padding:26px;min-width:0}.integration-grid p{font-size:13px}.integration-grid h2{font-size:23px}.integration-status{font-size:11px;background:#234361;color:#d7ebff;padding:6px 10px;border-radius:20px;display:inline-flex}
 /* Keep one vertical scrolling surface in a modal, including iOS standalone. */
+.connector-setup{font-size:13px;line-height:1.7}.connector-setup ol{padding-left:20px}.connector-setup li{margin:14px 0}.connector-code{display:block;overflow-wrap:anywhere;user-select:all;font-size:15px}.publication-list{padding:0;list-style:none}.publication-list li{display:grid;gap:8px;padding:14px 0;border-top:1px solid var(--border)}.publication-list span{font-size:12px;color:var(--muted)}
 html{scrollbar-gutter:stable}.game-dialog{overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;max-height:calc(100dvh - 40px);overflow-x:hidden;overflow-y:auto}
 .game-dialog[open]{scroll-padding-top:140px}.game-dialog .dialog-header{isolation:isolate}.dialog-header h2{overflow-wrap:anywhere}.dialog-header>div:not(.art-placeholder){min-width:0}.dialog-close svg{display:block;pointer-events:none}
 .table-scroll{max-width:100%;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.table-scroll td{white-space:nowrap}.dialog-body .session-summary{min-width:0;flex-wrap:wrap}.session-summary>div{min-width:0;overflow-wrap:anywhere}
 @media(max-width:760px){
- .game-insights{padding:18px 15px}.completion-times{gap:7px}.completion-times>div{padding:12px 9px}.completion-times dd{font-size:17px}.completion-form{grid-template-columns:1fr;padding:14px}.completion-form .completion-link,.completion-form>p,.completion-form>button{grid-column:1}
+ .game-insights{padding:18px 15px}.completion-times{gap:7px}.completion-times>div{padding:12px 9px}.completion-times dd{font-size:clamp(12px,3.8vw,17px)}.completion-form{grid-template-columns:1fr;padding:14px}.completion-form .completion-link,.completion-form>p,.completion-form>button{grid-column:1}
  .game-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto}.game-dialog .dialog-header{padding:14px 12px;gap:10px}.dialog-header h2{font-size:16px}.dialog-header>img,.dialog-header>.art-placeholder{width:42px;height:42px}.dialog-header .eyebrow{line-height:1.6}
  .integration-grid{grid-template-columns:1fr}.integration-grid .social-panel{padding:22px 18px}
  .sidebar{padding-top:max(16px,env(safe-area-inset-top));padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}

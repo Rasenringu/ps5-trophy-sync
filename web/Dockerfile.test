@@ -5,4 +5,5 @@ RUN npm ci --ignore-scripts
 COPY playwright*.config.ts ./
 COPY tests ./tests
 COPY app/messages ./app/messages
+COPY connector ./connector
 CMD ["npx", "playwright", "test"]

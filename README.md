@@ -11,11 +11,12 @@ It supports English, French, German, Portuguese, Brazilian Portuguese, Spanish
 and Italian. Sharing defaults to friends only; public profiles require opting in.
 Secret trophies stay concealed until the viewer earns them.
 
-The **Integrations** page adds automatic HowLongToBeat completion estimates with
-edition selection/manual overrides, a private playtime CSV export, and optional
-PlatPrices trophy earn rates. HLTB account linking/upload remains pending. PlatPrices needs a
-free noncommercial key configured on the server; match the correct game listing
-before rates appear. See [setup and limitations](docs/INTEGRATIONS.md).
+The **Integrations** page adds title-based HowLongToBeat estimates, edition
+selection/manual overrides, a private CSV export and keyless Exophase trophy
+rates. A downloadable Chrome/Edge connector signs in on HowLongToBeat and
+publishes reviewed progress totals from your browser session. Real account
+publication still needs live validation. Existing optional PlatPrices selections
+remain supported. See [setup and validation limits](docs/INTEGRATIONS.md).
 
 Games with recorded activity appear even without imported trophies, including
 homebrew recomp titles. Completed native foreground counters supply playtime;

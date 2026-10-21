@@ -25,8 +25,10 @@ on 2026-10-21. Automatic lookup now uses the verified current Playnite protocol
 in an independent adapter. Playnite's submit API uses desktop WebView login
 cookies, not a reusable web OAuth authorization flow. Do not collect passwords/
 account cookies, imply a shortcut verifies ownership, or call manual transfer
-account syncing. Account linking/upload remains pending a secure authorization
-and persistence design plus an authenticated result.
+account syncing. The follow-up in INTEGRATIONS_FOLLOWUP_PLAN.md implements a
+browser connector with scoped pairing and reviewed publication while keeping
+provider login/CAPTCHA/cookies on HLTB. A real authenticated result is still
+required before calling live-account publication validated.
 PlatPrices advertises a noncommercial free key (1,000 requests/month, two store
 regions), attribution and local caching. Its API key remains server-side.
 

@@ -11,7 +11,7 @@ from .contracts import Strict
 from .db import database
 from .models import GameInsight, DevicePackage, TrophyText
 from .main import browser, fail, library, now, rate
-from . import platprices, howlongtobeat
+from . import platprices, howlongtobeat, exophase
 
 router=APIRouter()
 Source=Literal['ps5_native','ps4_bc']
@@ -34,6 +34,13 @@ class ListingEdit(GameKey):
 
 class AutomaticCompletion(GameKey):
     hltb_id: ExternalId | None=None
+
+class FreeListingEdit(GameKey):
+    listing_url: Annotated[str,Field(min_length=1,max_length=320)] | None
+
+def game_title(rows):
+    return next((r['data']['title'] for kind in ('trophy','activity') for r in rows
+                 if r['kind']==kind and howlongtobeat.human_title(r['data']['title'])), '')
 
 def game_rows(db,owner,source,title_id,shared=False):
     rows=[r for r in library(owner,db,'en-US') if not r['mock'] and r['source']==source
@@ -100,7 +107,7 @@ def provider_listing(db,ppid,rows,fetch=True):
 
 def describe(db,owner,source,title_id,rows,fetch=True):
     note=db.get(GameInsight,(owner,source,title_id))
-    title=next((r['data']['title'] for r in rows if r['kind']=='trophy'),rows[0]['data']['title'])
+    title=game_title(rows)
     completion={k:getattr(note,k,None) for k in ('hltb_id','main_seconds','extra_seconds','completionist_seconds')}
     completion.update(url='https://howlongtobeat.com/game/'+str(note.hltb_id) if note and note.hltb_id else
         'https://howlongtobeat.com/?'+urlencode({'q':title}),
@@ -116,12 +123,31 @@ def describe(db,owner,source,title_id,rows,fetch=True):
             'listing':None,'rates':{},'fetched':None,'stale':False}
     if note and note.platprices_id:
         rarity=provider_listing(db,note.platprices_id,rows,fetch)
+        rarity['provider']='platprices'
+    elif note and note.exophase_slug:
+        rarity=free_provider_listing(db,note.exophase_slug,rows,fetch)
+    else:
+        rarity.update(status='not_selected',provider='exophase')
     return {'howlongtobeat':completion,'rarity':rarity}
+
+def free_provider_listing(db,slug,rows,fetch=True):
+    response=exophase.cached(db,slug,fetch)
+    result={k:response[k] for k in ('status','stale','fetched')}
+    result.update(provider='exophase',listing=None,rates={})
+    if not response['data']:return result
+    data=response['data'];listing=data['listing']
+    result['listing']=listing
+    if listing['id']!=slug or listing['platform']!=platform(rows[0]['source'],rows[0]['data']['title_id']):
+        return {**result,'status':'mismatch'}
+    rates=platprices.match_rates(data,publisher_roster(db,rows))
+    if rates is None:return {**result,'status':'mismatch'}
+    return {**result,'rates':rates}
 
 @router.get('/account/integrations')
 def integrations(owner: str=Depends(browser)):
-    return {'howlongtobeat':{'automatic_fetch':howlongtobeat.enabled(),'account_sync':False,'entry_mode':'provider'},
-            'platprices':{'configured':platprices.configured(),'region':platprices.settings()[1] if platprices.configured() else None}}
+    return {'howlongtobeat':{'automatic_fetch':howlongtobeat.enabled(),'account_sync':'browser_connector','entry_mode':'provider'},
+            'platprices':{'configured':platprices.configured(),'region':platprices.settings()[1] if platprices.configured() else None},
+            'trophy_rates':{'provider':'exophase','requires_key':False}}
 
 @router.get('/account/games/insights')
 def insights(source: Source,title_id: Title,owner: str=Depends(browser),db: Session=Depends(database)):
@@ -144,7 +170,7 @@ def automatic_completion(body: AutomaticCompletion,owner: str=Depends(browser),d
     rate(db,'hltb-select:'+owner,12,60)
     rows=game_rows(db,owner,body.source,body.title_id)
     if body.hltb_id:
-        title=rows[0]['data']['title']
+        title=game_title(rows)
         result=howlongtobeat.resolve(db,title,'PlayStation 4' if platform(body.source,body.title_id)=='PS4' else 'PlayStation 5',body.hltb_id)
         if not result['game'] or result['status']!='ok' or result['stale']:
             fail(422,'The HowLongToBeat listing could not be verified for this platform')
@@ -158,15 +184,16 @@ def automatic_completion(body: AutomaticCompletion,owner: str=Depends(browser),d
 def search_completion(source: Source,title_id: Title,owner: str=Depends(browser),db: Session=Depends(database)):
     rate(db,'hltb-search:'+owner,12,60)
     rows=game_rows(db,owner,source,title_id)
-    title=next((r['data']['title'] for r in rows if r['kind']=='trophy'),rows[0]['data']['title'])
+    title=game_title(rows)
     result=howlongtobeat.resolve(db,title,'PlayStation 4' if platform(source,title_id)=='PS4' else 'PlayStation 5')
-    return {k:result[k] for k in ('status','candidates','stale','fetched')}
+    return {k:result[k] for k in ('status','candidates','stale','fetched')} | {'title':title,'query':howlongtobeat.search_title(title)}
 
 @router.get('/account/integrations/platprices/search')
 def search(source: Source,title_id: Title,owner: str=Depends(browser),db: Session=Depends(database)):
     rate(db,'provider-search:'+owner,12,60)
     rows=game_rows(db,owner,source,title_id)
-    title=next((r['data']['title'] for r in rows if r['kind']=='trophy'),rows[0]['data']['title'])
+    title=game_title(rows)
+    if not title:return {'status':'title_unavailable','games':[],'stale':False,'fetched':None}
     response=platprices.cached(db,'/games/search',{'q':title[:200],'limit':25,'platform':platform(source,title_id).lower()})
     return {k:response[k] for k in ('status','stale','fetched')} | {
         'games':[g for g in (response['data'] or {}).get('games',[]) if g['platform']==platform(source,title_id)]}
@@ -180,7 +207,28 @@ def select_listing(body: ListingEdit,owner: str=Depends(browser),db: Session=Dep
         if check['status']!='ok' or not check['rates'] or check['stale']:
             fail(422,'The listing could not be verified against this game trophy list')
     note=owned_note(db,owner,body.source,body.title_id)
-    note.platprices_id=body.platprices_id;db.commit()
+    note.platprices_id=body.platprices_id
+    if body.platprices_id:note.exophase_slug=None
+    db.commit()
+    return describe(db,owner,body.source,body.title_id,rows,False)
+
+@router.post('/account/games/trophy-rates')
+def select_free_listing(body: FreeListingEdit,owner: str=Depends(browser),db: Session=Depends(database)):
+    rate(db,'free-provider-select:'+owner,12,60)
+    rows=game_rows(db,owner,body.source,body.title_id)
+    slug=None
+    if body.listing_url is not None:
+        try:slug=exophase.listing_slug(body.listing_url)
+        except platprices.ProviderError:fail(422,'Enter an Exophase trophy listing URL')
+        result=free_provider_listing(db,slug,rows)
+        if result['status']!='ok' or not result['rates'] or result['stale']:
+            messages={'mismatch':'This listing does not match the imported trophy list.',
+                'rate_limited':'The provider limit has been reached. Try again later.',
+                'invalid_response':'The provider returned data we could not verify.',
+                'not_found':'No trophy data was found for this listing.'}
+            fail(422,messages.get(result['status'],'The provider is unavailable. Try again later.'))
+    note=owned_note(db,owner,body.source,body.title_id)
+    note.exophase_slug=slug;note.platprices_id=None;db.commit()
     return describe(db,owner,body.source,body.title_id,rows,False)
 
 @router.get('/players/{handle}/games/insights')

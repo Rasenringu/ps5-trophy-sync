@@ -1,14 +1,22 @@
 # Remaining work
 
-Game information/mobile update (2026-10-21): automatic HLTB estimates/edition
+Provider follow-up (2026-10-21): normalized human-title searches repair Demon
+Slayer matching; keyless Exophase listings replace the default key requirement.
+Chrome/Edge connector pairing, reviewed progress publication/update and receipts
+are implemented locally. Real HLTB account sign-in/create/update and a provider
+read-back remain unverified; install the downloaded connector after rebuilding
+the separate hosted API/web with migrations 011–013. No console rebuild needed.
+See INTEGRATIONS.md and INTEGRATIONS_FOLLOWUP_PLAN.md.
+
+Earlier game information/mobile update (2026-10-21): automatic HLTB estimates/edition
 selection with manual overrides,
 playtime CSV, optional PlatPrices v2 earn rates, encoding repairs and install PNGs
 are implemented locally. Rebuild the hosted API/web with migrations 009–010; configure
 the host's free PlatPrices key and verify a real matching listing. Authenticated
-provider rate responses and physical Firefox/iPhone home-screen installation
-remain unverified. User confirmed HLTB data access; automatic lookup uses a
-verified current protocol. HLTB account linking/upload still needs a secure
-authorization flow and authenticated validation. See INTEGRATIONS.md.
+PlatPrices rate responses and physical Firefox/iPhone home-screen installation
+remain unverified. User confirmed HLTB data access. The browser connector
+supersedes the earlier account-linking implementation gap; live-account
+validation remains outstanding. See INTEGRATIONS.md.
 
 PS5 Demon Slayer's regional application IDs now resolve to their verified shared
 trophy set; localized/punctuation title matching and preference compatibility are

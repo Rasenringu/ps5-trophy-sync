@@ -1,6 +1,17 @@
 {
   "researched_on": "2026-10-07",
+  "providers_researched_on": "2026-10-21",
   "sources": [
+    {
+      "repo": "https://github.com/leonardoalemax/psn-profile-api",
+      "commit": "3f73263e9ce227acf68e44f3355fdf6a83ec1ad3",
+      "role": "PSNProfiles wrapper research only; WTFPL v2; no code incorporated; HTTP 403 observed"
+    },
+    {
+      "repo": "https://github.com/Lacro59/playnite-howlongtobeat-plugin",
+      "commit": "809c1890b0ce27942fd92c9b50ae7e38a8c89e30",
+      "role": "HLTB anonymous search and browser-session submission protocol research; MIT; no code incorporated"
+    },
     {
       "repo": "https://github.com/ArkSama/PS5-PHU-Trophy-System.git",
       "commit": "ae29e8a7b4b458233c4859c1a33903b814c5010f",

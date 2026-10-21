@@ -1497,6 +1497,42 @@
         }
       }
     },
+    "/account/games/trophy-rates": {
+      "post": {
+        "summary": "Select Free Listing",
+        "operationId": "select_free_listing_account_games_trophy_rates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FreeListingEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/players/{handle}/games/insights": {
       "get": {
         "summary": "Shared Insights",
@@ -1569,6 +1605,238 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/integrations/howlongtobeat/connection": {
+      "get": {
+        "summary": "Status",
+        "operationId": "status_account_integrations_howlongtobeat_connection_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/integrations/howlongtobeat/connect": {
+      "post": {
+        "summary": "Begin",
+        "operationId": "begin_account_integrations_howlongtobeat_connect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/howlongtobeat/claim": {
+      "post": {
+        "summary": "Claim",
+        "operationId": "claim_integrations_howlongtobeat_claim_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Claim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/integrations/howlongtobeat/disconnect": {
+      "post": {
+        "summary": "Disconnect",
+        "operationId": "disconnect_account_integrations_howlongtobeat_disconnect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/games/howlongtobeat/publish": {
+      "post": {
+        "summary": "Publish",
+        "operationId": "publish_account_games_howlongtobeat_publish_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Publish"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/howlongtobeat/next": {
+      "post": {
+        "summary": "Next Job",
+        "operationId": "next_job_integrations_howlongtobeat_next_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/howlongtobeat/receipt": {
+      "post": {
+        "summary": "Receipt",
+        "operationId": "receipt_integrations_howlongtobeat_receipt_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Receipt"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -1768,6 +2036,36 @@
         ],
         "title": "AutomaticCompletion"
       },
+      "Claim": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Code"
+          },
+          "user_id": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_]{3,20}$",
+            "title": "Username"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "user_id",
+          "username"
+        ],
+        "title": "Claim"
+      },
       "Code": {
         "properties": {
           "code": {
@@ -1884,6 +2182,52 @@
           "password"
         ],
         "title": "Credentials"
+      },
+      "Empty": {
+        "properties": {},
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Empty"
+      },
+      "FreeListingEdit": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_:-]+$",
+            "title": "Title Id"
+          },
+          "listing_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id",
+          "listing_url"
+        ],
+        "title": "FreeListingEdit"
       },
       "FriendAction": {
         "properties": {
@@ -2723,6 +3067,124 @@
           "ps4_observation"
         ],
         "title": "Ps4Trophy"
+      },
+      "Publish": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ps5_native",
+              "ps4_bc"
+            ],
+            "title": "Source"
+          },
+          "title_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_:-]+$",
+            "title": "Title Id"
+          },
+          "hltb_id": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Hltb Id"
+          },
+          "seconds": {
+            "type": "integer",
+            "maximum": 36000000.0,
+            "minimum": 1.0,
+            "title": "Seconds"
+          },
+          "confirm": {
+            "type": "boolean",
+            "title": "Confirm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "title_id",
+          "hltb_id",
+          "seconds",
+          "confirm"
+        ],
+        "title": "Publish"
+      },
+      "Receipt": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Job Id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "synced",
+              "failed",
+              "uncertain"
+            ],
+            "title": "State"
+          },
+          "submission_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submission Id"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 36000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sign_in_required",
+                  "account_changed",
+                  "ambiguous_entries",
+                  "existing_time_greater",
+                  "invalid_response",
+                  "provider_unavailable",
+                  "rate_limited",
+                  "write_unverified",
+                  "game_unavailable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job_id",
+          "state"
+        ],
+        "title": "Receipt"
       },
       "Snapshot": {
         "properties": {

@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>TrophySync connector</title><link rel="stylesheet" href="popup.css"></head>
+<body><h1>HowLongToBeat</h1><p id="identity">Browser connector</p>
+<a href="https://howlongtobeat.com/login" target="_blank" rel="noopener">Sign in on HowLongToBeat</a>
+<form id="connect"><label>TrophySync URL<input id="origin" type="url" value="https://trophy-sync.party" required></label>
+<label>Connection code<input id="code" required minlength="32" maxlength="64" autocomplete="off" spellcheck="false"></label>
+<button>Connect</button></form><button id="sync" type="button">Sync queued updates</button><button id="forget" type="button">Forget connection</button>
+<p id="result" role="status"></p><script type="module" src="popup.js"></script></body></html>

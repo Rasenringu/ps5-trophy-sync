@@ -218,7 +218,8 @@ def test_monthly_budget_prevents_new_upstream_requests(monkeypatch,fake_provider
 def test_missing_key_never_requests_provider(monkeypatch,fake_provider):
     monkeypatch.delenv('PLATPRICES_API_KEY');owner=browser();seed(owner)
     assert owner.get('/account/integrations').json()['platprices']['configured'] is False
-    assert owner.get(PATH).json()['rarity']['status']=='not_configured'
+    assert owner.get(PATH).json()['rarity']['status']=='not_selected'
+    assert owner.get(PATH).json()['rarity']['provider']=='exophase'
     assert not fake_provider
 
 def test_csv_is_private_utf8_unknown_preserving_and_formula_safe():

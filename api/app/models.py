@@ -153,6 +153,7 @@ class GameInsight(Base):
     completionist_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     updated: Mapped[int] = mapped_column(BigInteger)
     platprices_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    exophase_slug: Mapped[str | None] = mapped_column(String(250), nullable=True)
 
 class ProviderCache(Base):
     __tablename__ = 'provider_cache'
@@ -161,3 +162,35 @@ class ProviderCache(Base):
     status: Mapped[str] = mapped_column(String(32))
     fetched: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     expires: Mapped[int] = mapped_column(BigInteger)
+
+class HltbPairing(Base):
+    __tablename__='hltb_pairings'
+    account: Mapped[str] = mapped_column(ForeignKey('accounts.id'),primary_key=True)
+    code: Mapped[str] = mapped_column(String(64),unique=True)
+    expires: Mapped[int] = mapped_column(BigInteger)
+
+class HltbConnection(Base):
+    __tablename__='hltb_connections'
+    account: Mapped[str] = mapped_column(ForeignKey('accounts.id'),primary_key=True)
+    token: Mapped[str | None] = mapped_column(String(64),unique=True,nullable=True)
+    user_id: Mapped[int] = mapped_column(BigInteger)
+    username: Mapped[str] = mapped_column(String(20))
+    expires: Mapped[int] = mapped_column(BigInteger)
+    last_seen: Mapped[int] = mapped_column(BigInteger)
+
+class HltbPublication(Base):
+    __tablename__='hltb_publications'
+    id: Mapped[str] = mapped_column(String(64),primary_key=True)
+    account: Mapped[str] = mapped_column(ForeignKey('accounts.id'),index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger)
+    source: Mapped[str] = mapped_column(String(16))
+    title_id: Mapped[str] = mapped_column(String(64))
+    hltb_id: Mapped[int] = mapped_column(BigInteger)
+    title: Mapped[str] = mapped_column(String(400))
+    platform: Mapped[str] = mapped_column(String(32))
+    seconds: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(16))
+    attempted: Mapped[bool] = mapped_column(Boolean,default=False,server_default='false')
+    updated: Mapped[int] = mapped_column(BigInteger)
+    submission_id: Mapped[int | None] = mapped_column(BigInteger,nullable=True)
+    error: Mapped[str | None] = mapped_column(String(64),nullable=True)

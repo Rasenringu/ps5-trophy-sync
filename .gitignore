@@ -29,4 +29,5 @@ captures/
 *.elf
 *.pkg
 *.zip
+!web/app/downloads/trophysync-hltb-browser.zip/
 .DS_Store

@@ -24,6 +24,16 @@ def enabled():
 def normalized_title(title):
     return ''.join(c for c in unicodedata.normalize('NFKC',title).casefold() if c.isalnum() or c in '+&#')
 
+def search_title(title):
+    # HLTB treats punctuation attached to a word as a literal search term.
+    # Keep identity-bearing symbols; turn title separators into word boundaries.
+    title=unicodedata.normalize('NFKC',title)
+    return ' '.join(''.join(c if c.isalnum() or c in '+&#' else ' ' for c in title).split())[:200]
+
+def human_title(title):
+    return isinstance(title,str) and bool(title.strip()) and not re.fullmatch(
+        r'(?:NPWR\d{5}_\d{2}|[PC][PCSU]SA\d{5}|[A-Z]{4}\d{5}(?:_\d{2})?)',title.strip(),re.I)
+
 def read_response(client,method,path,**kwargs):
     if path not in ('/api/search/site/init','/api/search/site') and not re.fullmatch(r'/game/[1-9][0-9]{0,9}',path):
         raise ProviderError('invalid_response')
@@ -95,7 +105,7 @@ def cached(db,kind,query,platform,refresh=True):
     from .main import now,rate
     empty={'data':None,'fetched':None,'stale':False}
     if not enabled():return {**empty,'status':'disabled'}
-    identity=cache_key('hltb-v1',kind,str(query),platform);pause_id=cache_key('hltb-v1','pause')
+    identity=cache_key('hltb-v2',kind,str(query),platform);pause_id=cache_key('hltb-v1','pause')
     def value(row):
         return {'data':row.data if row else None,'fetched':row.fetched if row else None,
                 'status':row.status if row else 'not_cached',
@@ -123,7 +133,9 @@ def cached(db,kind,query,platform,refresh=True):
     result=value(row);db.commit();return result
 
 def resolve(db,title,platform,identity=None,refresh=True):
-    response=cached(db,'detail' if identity else 'search',identity or title[:200],platform,refresh)
+    if not identity and not human_title(title):
+        return {'data':None,'game':None,'candidates':[],'fetched':None,'stale':False,'status':'title_unavailable'}
+    response=cached(db,'detail' if identity else 'search',identity or search_title(title),platform,refresh)
     game=response['data'] if identity else None
     candidates=[] if identity else (response['data'] or {}).get('games',[])
     if not identity:

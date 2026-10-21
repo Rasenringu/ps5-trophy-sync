@@ -1,5 +1,62 @@
 # Source evidence and pinned inputs
 
+## Title matching, keyless rates and browser account connector (2026-10-21)
+
+- Live shipped HLTB adapter: raw publisher title `Demon Slayer -Kimetsu no
+  Yaiba- The Hinokami Chronicles` returns zero results. Separator-normalized
+  title words return 98594 and sequel 160453. Exact normalized title/platform
+  comparison accepts 98594 only. NPWR/PPSA/CUSA identifiers remain internal
+  ownership keys and are rejected as upstream title queries. Cache v2 prevents
+  the old seven-day empty result from retaining this bug.
+- [psn-profile-api](https://github.com/leonardoalemax/psn-profile-api/tree/3f73263e9ce227acf68e44f3355fdf6a83ec1ad3),
+  commit `3f73263e9ce227acf68e44f3355fdf6a83ec1ad3`: README, PsnProfileParser.ts,
+  PsnProfileService.ts and WTFPL v2 LICENSE inspected. This is a PSNProfiles
+  HTML wrapper, not an official PSN service. Research only; no code/dependency
+  incorporated. Actual PSNProfiles request returned HTTP 403; no challenge bypass.
+- [Exophase public PS5 listing](https://www.exophase.com/game/demon-slayer-kimetsu-no-yaiba-the-hinokami-chronicles-psn-2/trophies/):
+  HTTP 200; 47 award rows with data-average percentages, explicit
+  platform-ps5, award-title and exo-icon-trophy-* grades. Anonymous page SHA256
+  `fb16c5c1805224c61ed5fb557f2cfe89853dfee750115ddfd6a532413fcb66ad`.
+  [robots.txt](https://www.exophase.com/robots.txt), SHA256
+  `79ebfbfeaff5ecfce4f8e157b686188597e7bf413d4b03dbf3393bbfc034dce5`,
+  disallows /search. Adapter never searches/crawls catalogues: users choose a
+  public listing URL. It validates the full returned roster against private
+  publisher names/grades, retains only bounded fields internally and exposes
+  numeric rates with linked credit. Percentages describe Exophase's tracked
+  community, not global PSN rarity or this app's users. Site content is not
+  relicensed/distributed with source. Existing httpx/standard HTMLParser only.
+- [HLTB login](https://howlongtobeat.com/login) and its served
+  [login chunk](https://howlongtobeat.com/_next/static/chunks/3ansjkr7hyqx-.js):
+  anonymous HTML SHA256
+  `d7356b1e8d6d6b28850e7e297e7420b5477610911d38f6de8387cd1d0053999f`;
+  chunk SHA256 `d2fb7b34ac012879703b8f6c0638276bc8ae1921abcb1bdb96cb70cb4b7426ce`.
+  The provider posts user_name/password/hCaptcha token to /api/login. The
+  connector leaves this entire login on the provider site and neither solves
+  CAPTCHA nor obtains passwords/cookies. Public assets/manifests can differ
+  across cached builds; no mutable chunk URL is treated as an SDK dependency.
+- The already pinned MIT
+  [Playnite reference](https://github.com/Lacro59/playnite-howlongtobeat-plugin/tree/809c1890b0ce27942fd92c9b50ae7e38a8c89e30)
+  additionally supplies research evidence for /api/user, user games/list,
+  /submit/edit/{id} __NEXT_DATA__.props.pageProps.editData, /api/submit and
+  Models/Api/EditData.cs + UserGamesList*.cs. Independent JavaScript preserves
+  existing edit data, changes only general.progress, and verifies by a second
+  list/edit read. New-entry defaults follow the inspected model. No library/
+  C# source incorporated. Authenticated current schema and real create/update
+  still require a user-owned live-account result; fixtures do not prove them.
+- Chrome official [network requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests),
+  [scripting](https://developer.chrome.com/docs/extensions/reference/api/scripting),
+  [permissions](https://developer.chrome.com/docs/extensions/reference/api/permissions)
+  and [storage](https://developer.chrome.com/docs/extensions/reference/api/storage)
+  documentation checked for MV3 isolated script execution, same-origin provider
+  requests, explicit optional origin grants and trusted-context-only storage.
+  No new runtime dependency. Connector uses the existing pinned browser test
+  runtime and the existing Node 24 image; package has no npm dependencies.
+
+Browser connector receipts are client-reported read-back evidence, not OAuth or
+independent server authentication of an HLTB identity. No credential/cookie is
+sent to TrophySync. There is no auto-run or background provider publication.
+User authorization is enforced by the app's owned review and scoped connector.
+
 ## Game information providers and install metadata (2026-10-21)
 
 - [PlatPrices v2 contract](https://platprices.com/api/v2/docs) and

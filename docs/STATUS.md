@@ -1,5 +1,86 @@
 # Current status
 
+## Provider follow-up implementation - 2026-10-21
+
+Live read-only reproduction establishes the Demon Slayer failure: hyphen-bound
+words return no results; sanitized title words return HLTB 98594 and its sequel.
+Fixed title term normalization, identifier-only rejection and cache-version
+invalidation. Search responses now report the actual human title/query.
+
+Keyless user-selected Exophase trophy rates, fixed-origin bounded transport,
+full roster/platform checks, daily durable cache/backoff and shared cache-only
+access are implemented. PSNProfiles returned 403; no bypass attempted. The
+marked dialog paragraphs and duplicate unavailable message are removed.
+
+Chrome/Edge browser connector and downloadable ZIP, ten-minute single-use
+pairing, hashed/revocable 30-day scoped tokens, reviewed absolute progress
+publication, durable jobs/leases, preserved provider fields, read-back receipts
+and read-only uncertainty reconciliation are implemented. Sign-in/CAPTCHA and
+cookies remain on HLTB. No automatic publication, console or external deployment.
+Migrations 011–013 preserve existing data. Source/protocol evidence is in SOURCES;
+decisions and continuation are in INTEGRATIONS_FOLLOWUP_PLAN.md.
+
+User accepted the browser extension and requested `00h00min` durations. Completion
+cards now show `07h37min` / `10h08min` / `17h41min` for the actual retrieved
+estimates, preserving exact stored/semantic seconds and unknown values. Narrow
+phone typography prevents wrapping. Removed the marked paragraphs and the
+extra hide-game explanation; source/update/stale labels and action errors remain.
+Six translation catalogs cover the new web controls/errors.
+
+Validation (local unless explicitly live/read-only):
+
+- `scripts/Doctor.ps1`: Docker Linux engine/Compose pass. No console contacted.
+- `scripts/Test-Local.ps1`: **168 passed**, one existing Starlette/httpx warning.
+  Covers title queries/cache, keyless roster/transport/cache/privacy, connector
+  ownership/CSRF, single-use/expired codes, hashed tokens, revocation/relink,
+  exact-time confirmation, idempotent jobs and interrupted-write reconciliation.
+  Final error-message adjustment: `docker compose --env-file .local/app.env -f
+  deployment/compose.yaml run --rm --build test pytest -q tests/test_exophase.py`:
+  **18 passed**. All fixtures synthetic, no provider/console calls in tests.
+- `npm --prefix web/connector/hltb-browser test`: final **8 passed**. Preserves
+  existing completion/notes/review/future fields, absolute totals, lost-response
+  read-back, ambiguous/partial data refusal and no second uncertain POST.
+- `scripts/Start-Local.ps1 -Build`: final API/Next.js production builds and
+  local service health pass. `docker compose --env-file .local/app.env -f
+  deployment/compose.yaml exec -T api alembic current`: **013 (head)**. Existing
+  volumes, HTTPS origin and unrelated LAN containers preserved.
+- `docker build -f web/Dockerfile.test -t ps5-sync-web-test web`; then
+  `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  game-insights.spec.ts hltb-connector.spec.ts locale.spec.ts trophy-privacy.spec.ts
+  native-identity.spec.ts playtime.spec.ts personalization.spec.ts`: **25 passed**.
+  Real Chromium MV3 runtime uses intercepted synthetic provider/server hosts and
+  a synthetic HttpOnly cookie; actual shipped runtime code verifies a new entry
+  and transmits only scoped identity/receipt, never the cookie. Test manifest
+  pregrants only the intercepted synthetic host to avoid a permission UI prompt.
+- `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  --config=playwright.mobile.config.ts`: **26 passed**, WebKit/Chromium emulation.
+  After the final narrow-screen size adjustment, focused game-insights/connector
+  rerun **9 passed** and mobile `--grep 'completion cards format'` **2 passed**.
+  320/390/1440px synthetic previews inspected in
+  artifacts/web/integrations-followup; final values stay on one line.
+- Downloaded `http://localhost:3000/downloads/trophysync-hltb-browser.zip`: HTTP
+  200, **17,948 bytes / seven allowlisted files**; independent Python zipfile CRC
+  and exact source-content checks pass. Tests/provider captures/tokens excluded.
+  The .gitignore exception permits only the source route's `.zip` directory.
+- Read-only live shipped adapters: sanitized Demon Slayer search resolves unique
+  HLTB **98594**, Main **27,420**, Extra **36,509**, Completionist **63,687** seconds;
+  detail independently agrees. Keyless Exophase fetch parses **PS5 / 47 trophies /
+  47 numeric rates**. This verifies retrieval/parsing, not a live account roster
+  selection or provider publication. PSNProfiles returned HTTP 403; no bypass.
+- `docker run --rm --mount type=bind,source=C:\git\ps5-trophy-sync-windows\contracts,target=/contracts
+  deployment-api python -m tools.export_contracts /contracts`: pass; OpenAPI adds
+  routes/schemas and all four console snapshot contracts remain unchanged.
+  Final TypeScript, Python compile checks and `git diff --check` pass.
+
+Next: user rebuild API/web on the separate hosted service with its existing env
+and database volume (migrations 011–013), then use Integrations → Connect account
+to install/pair the connector. Select the game's free Exophase listing, review
+the HLTB edition/time, queue a publication, run the connector, refresh status and
+inspect the resulting HLTB entry. Actual HLTB account sign-in/create/update,
+optional authenticated PlatPrices responses and physical iPhone installation
+remain unverified. No real account write, console operation, external deployment,
+Git commit/push or dependency/SDK change was performed in this session.
+
 ## Game information integrations and mobile repairs - 2026-10-21
 
 API/web implementation is local; no external deployment or console action.
