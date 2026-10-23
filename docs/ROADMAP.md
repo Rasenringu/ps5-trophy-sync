@@ -1,5 +1,18 @@
 # Remaining work
 
+Reliability/native UI (2026-10-23): receipt-bounded date presentation, recovery of
+supported missing PS5 unlock dates, explicit missing-counter/state reasons,
+30-day browser logins and the website-matched native screen/icon are implemented
+and locally validated. Rebuild hosted API/web (no new migration) and sign in once.
+The packaged foreground update still needs installation/console observation.
+User confirmed the four Wolverine flags-16 states locked; the native/API/legacy
+read correction and one authorized read-only diagnostic are complete. Current
+clock is close to PC UTC and inspected source dates have explicit zones, so no
+blanket timezone shift is applied. Start-only Uncharted/Fobia durations have no
+end counter. Update hosted API before the new worker; existing trophy correction
+needs no resync. New worker/title installation and launch remain unverified. See
+RELIABILITY_AND_CONSOLE_UI_PLAN.md and STATUS for evidence and exact hashes.
+
 Provider follow-up (2026-10-21): normalized human-title searches repair Demon
 Slayer matching; keyless Exophase listings replace the default key requirement.
 Chrome/Edge connector pairing, reviewed progress publication/update and receipts
@@ -28,7 +41,7 @@ automatic artwork/translations, pairing, web libraries, optional public profiles
 friends/comparisons, persistent hidden games, profile themes/bios/favorites and
 local/production Compose. See STATUS for exact evidence.
 
-1. Install/observe the 2026-10-14 foreground redesign on the test console: pairing/status,
+1. Install/observe the 2026-10-23 foreground redesign on the test console: pairing/status,
    normal sync, Close App and reopen. Installation alone is insufficient.
 2. Validate independent second-console-profile isolation, offline queue recovery,
    live revocation and source-change handling on hardware.

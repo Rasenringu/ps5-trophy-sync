@@ -71,6 +71,10 @@ lives in a persistent Docker volume. Stopping the stack preserves that volume:
 docker compose --env-file .local/app.env -f deployment/compose.yaml down
 ```
 
+New browser sign-ins last **30 days**, including browser restarts; signing out
+revokes the session immediately. After updating the hosted API/web, sign in once
+to receive the longer cookie. Existing sessions keep their earlier expiry.
+
 ## Build the PS5 ELF
 
 Builds run in Docker, without moving the workspace to WSL. They compile locally
@@ -118,6 +122,11 @@ All build products remain ignored by Git. See [console build and installation](d
 and [license obligations](docs/THIRD_PARTY.md) before distributing binaries.
 The SDK is pinned; Ubuntu/apt build-image packages are not a frozen OS snapshot.
 
+The 2026-10-23 native screen uses the website's blue/white sidebar, profile header
+and pairing/sync panels; its title icon uses the same trophy/sync mark. The
+current package and synthetic previews are local build outputs. This update has
+not been installed or observed on a console; see [validation evidence](docs/STATUS.md).
+
 ## Use on PS5
 
 Install the worker through the existing Payload Manager under the exact filename
@@ -145,6 +154,23 @@ activity date appear last; title and trophy progress sorting remain available.
 Incomplete or unverified sessions do not inflate either total; shared libraries
 use their published aggregate session counts.
 PS4/PS5 appears once as a platform badge on each game.
+
+Console dates later than their server receipt are withheld; valid foreground
+playtime still counts. Earlier imports use the profile's last-sync boundary,
+sealed before a new sync advances it. Original source dates are retained.
+Missing supported PS5 unlock dates recover from retained raw evidence. A console
+state that has not been verified stays unknown, and incomplete sessions explain
+the missing end/counter. No time is estimated from wall-clock gaps. Historical
+timezone correction still requires console evidence.
+
+Wolverine's four previously unknown PS5 trophy states now display as **locked**,
+matching the user's console trophy-menu observation. Rebuilding the API corrects
+existing imports without a new sync. A new worker also exports that supported
+locked pattern directly: **update the hosted API before replacing the worker**,
+because the older validator rejects that new locked-state interpretation.
+The authorized clock diagnostic found the current console clock close to the PC
+and explicit timezone markers in the source. No arbitrary two-hour shift is
+applied. Native Uncharted's observed start-only session still lacks a duration.
 
 PS5 regional releases that share a verified trophy-set identity combine their
 existing trophies and recorded sessions on one game entry. Unique publisher

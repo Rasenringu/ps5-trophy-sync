@@ -19,7 +19,7 @@ int main(int argc,char **argv){
         int bad=fwrite(json,1,strlen(json),file)!=strlen(json);if(fclose(file)||bad)goto done;
     }
     sqlite3_close(db);db=NULL;
-    state.records[0].status=NATIVE_STATE_UNKNOWN;state.records[0].raw_flags=16;
+    state.records[0].status=NATIVE_STATE_UNKNOWN;state.records[0].raw_flags=18;
     state.records[0].raw_time_first=0;state.records[0].raw_time_second=62135596800000001ULL;
     if(native_export_prepare(&defs,&state,&db))goto done;
     char json[8193];if(native_export_batch(db,"00000000-0000-4000-8000-000000000002",0,1,json))goto done;

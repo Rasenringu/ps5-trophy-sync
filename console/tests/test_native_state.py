@@ -50,12 +50,16 @@ with tempfile.TemporaryDirectory(prefix='MOCK-native-state-') as directory:
     result=check(pack(b),0);assert result['unknown']==1 and result['records'][1]['flags']==1
     b=fixture();struct.pack_into('>Q',b,656,0)
     result=check(pack(b),0);assert result['unknown']==1 and result['records'][1]['time_known']==2
-    # Actual V13 aggregate shape: flag16, absent first timestamp, valid second.
-    # Preserve uncertainty instead of promoting this record to earned or locked.
+    # The console trophy menu independently confirms this Wolverine pattern locked.
     struct.pack_into('>I',b,644,16)
     result=check(pack(b),0)
-    assert result['unknown']==1 and result['records'][1]['status']==0
+    assert result['locked']==2 and result['unknown']==0 and result['records'][1]['status']==1
     assert result['records'][1]['flags']==16 and result['records'][1]['time_known']==2
+    # Only the observed shape is supported; nearby variants remain unknown.
+    for first,second in [(stamp,stamp),(0,0),(0,1),(0,2**64-1)]:
+        b=fixture();struct.pack_into('>I',b,644,16)
+        struct.pack_into('>Q',b,656,first);struct.pack_into('>Q',b,672,second)
+        result=check(pack(b),0);assert result['unknown']==1
     b=fixture();struct.pack_into('>Q',b,656,2**64-1)
     result=check(pack(b),0);assert result['unknown']==1
 capture=base/'naruto-state-investigation.dat'

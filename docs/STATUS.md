@@ -1,5 +1,173 @@
 # Current status
 
+## Wolverine locked-state correction and authorized clock diagnostic — 2026-10-23
+
+User independently confirms Wolverine's four unknown trophies are **locked** in
+the PS5 trophy menu. The exact observed shape (flags 0x10, absent first time,
+valid second time) is now supported as locked in the native decoder, API validator
+and existing-import presentation. The second time is not an unlock date. Other
+flag/time variants remain unknown, and a previous known earned observation still
+takes precedence. Existing unknown imports correct on library reads without a
+resync or destructive rewrite of source observations.
+
+The user explicitly authorized **one run** of TimeDiagnostic.elf SHA256
+ef4cb1d6fcb02e35174aa415d8c4aea2488d97434d274ac04c8c054348e2e8fc.
+Verified uploaded bytes and live Payload Manager 0.5.2, then sent one launch
+request at 2026-10-23 09:45:58 UTC (11:45:58 Paris). Manager returned OK; the
+report returned diagnostic_result=0 and journal=delete. Console Unix time was
+1792748738, about **20 seconds behind** the PC at launch. The user reports
+manually setting its displayed Paris time; no historical offset is inferred.
+
+Report evidence: 179 title/event aggregates, 847 selected source rows, all with
+explicit timezone markers. Demon Slayer's normalized end candidate remains
+2026-10-20T19:26:05.740. This does not justify a blanket two-hour subtraction;
+impossible dates remain bounded by server receipt while native counters count.
+Native Uncharted PPSA05684 and Fobia PPSA05626 have only start events, with no End
+or EndBi records, so no missing duration can be recovered. Collection CUSA02344
+has two End records with integer counters and two non-scalar EndBi duplicates.
+
+Own diagnostic ELF, temporary staging directory and report were removed after
+stable local receipt; personal output remains ignored under captures/.
+FTPSRV replies 226 to successful deletes; Python ftplib.delete initially treated
+that success as an error. A read-only check confirmed the ELF was already gone;
+cleanup continued with explicit FTP commands for only this run's own files.
+There was no second launch, source database write, raw DB copy, credential read,
+mount, sync/import, installed worker/title replacement, DNS change or reboot.
+
+Validation and artifacts:
+
+- New existing-import regression reproduces unknown before the fix; afterward
+  `scripts/Test-Local.ps1`: **178 passed**, existing Starlette/httpx warning.
+  Covers verified and nearby unsupported shapes, old-batch replay, legacy read
+  correction, new-worker locked imports and retention of earlier earned state.
+- `scripts/Build-Console.ps1 -HostTest`: current SDK worker/no-write startup
+  compilation and full native/PS4, activity, pairing, queue, ownership, IPC,
+  SQLite-lock and verified-HTTPS host suites pass. Optional older PS5 private
+  reference fixtures absent; current synthetic fixtures run without them.
+- `docker run --rm --mount type=bind,source=C:\git\ps5-trophy-sync-windows,target=/workspace
+  ps5-trophy-build:starter python3 /workspace/.local/verify-captured-locks.py`:
+  eleven stable actual console captures decode; Wolverine is **42 locked / zero
+  earned / zero unknown**. This is local parsing, not a new worker console run.
+- Compiled the host native-export CLI under ASan/UBSan, decoded the captured UCP
+  plus stable state and validated its JSON in current Pydantic: 42 locked, all
+  four raw flags-16 observations retained, no unlock dates; unsupported synthetic
+  flags 18 remain unknown. Commands/helpers are .local/export-captured-wolverine.sh
+  and .local/check-captured-wolverine-export.py. The API image check passes with
+  PYTHONPATH=/app; the initial /tmp script invocation without it could not import
+  app and was corrected. No imports or console operation in this check.
+- `scripts/Start-Local.ps1 -Build`: current API/web builds and local health pass.
+  `docker run --rm --mount type=bind,source=C:\git\ps5-trophy-sync-windows\contracts,target=/contracts
+  deployment-api python -m tools.export_contracts /contracts`: pass; generated
+  OpenAPI and all snapshot schemas unchanged. No migration/dependency/SDK change.
+- Current worker **3ee630eda4d16596c1b8f7d5774f3c268ad1ad859e01d884b719d292aa865087**.
+  Foreground remains **64c5f1815113fb35f42753dffe328dab43476965974f495186c3288c8f9632ac**;
+  icon df712ebc934633d4efe13242680679ab0b1f491ddda10303be6385a6537a98f3.
+  Current ZIP/source/file hashes, CRC, notices and private-data exclusion pass.
+  `artifacts/console/final-ui/TrophySync-PS5.zip` stays console_verified=false.
+  Earlier 27 desktop + 16 mobile browser checks and eight native screen/QR checks
+  remain applicable: frontend source was not changed in this continuation.
+
+Next: rebuild the hosted API/web using its existing env/database volume. That
+corrects the existing Wolverine observations without another console sync and
+enables the longer login/date presentation. **Update the API before replacing the
+worker**: the older validator rejects its new flags-16 locked interpretation.
+Use the current package for an authorized native title/worker update afterward;
+new title launch/sync/Close App/reopen remains unverified. The diagnostic consent
+was consumed by this single completed test; no further payload test is authorized.
+No hosted deployment or Git commit/push occurred. Historical dates without a
+reliable clock anchor and start-only durations remain unknown rather than guessed.
+
+## Observation reliability, longer login and native UI — earlier 2026-10-23 milestone
+
+Read-only FTP at configured 192.168.1.127 confirms FTPSRV 0.21.1. Two equal
+complete reads and page SHA256 checks passed for eleven native trophy files.
+Marvel's Wolverine NPWR57054_00 contains 38 zero-state records and four flags-16
+records with no first timestamp and a nonzero second timestamp. The four states
+remain unknown pending independent console evidence. Public read-only library
+confirms those four unknowns and Demon Slayer's latest candidate date
+2026-10-20T19:26:05.740Z, with 3,484 seconds/four sessions. No live database copy,
+credential read, source modification, console upload or payload run.
+
+Implemented per-field server receipt bounds for new imports, preserved on repeat
+observations, and legacy last-sync bounds on library reads. Impossible dates are
+withheld before shared last-played aggregation; valid native counters still count.
+Supported missing native PS5 unlock dates recover from retained first raw time.
+Incomplete/crashed/missing-counter and unsupported trophy states get explicit
+reasons. Undated incomplete activity-only games now remain visible when shared.
+Original records are retained; snapshot schemas/deduplication remain unchanged.
+This bounds dates; it does not establish an unverified console timezone correction.
+Legacy dates already earlier than their latest available checkpoint cannot be
+historically repaired from that checkpoint alone; source evidence is still needed.
+
+Persistent browser login is now 30 days, matching cookie and server expiry;
+HttpOnly/Secure/SameSite, hashing, origin checks and logout revocation remain.
+Existing cookies retain their prior expiry until signing in again.
+
+Native screen now follows the website's sidebar, luminous blue/white panels,
+profile header and numbered pairing/sync/collection progression. The native
+512px icon uses the site's original trophy/sync mark. QR, manual code, expiry,
+URL, profile, connection/sync statuses and action errors remain visible.
+
+Local validation (synthetic tests do not establish console behavior):
+
+- New observation tests first reproduce four failures; after fixes focused tests
+  pass. Final `scripts/Test-Local.ps1`: **176 passed**, existing Starlette/httpx
+  warning. Includes original receipt bounds for recovered raw unlock dates and
+  unchanged legacy timestamps across unrelated later imports.
+- `npm --prefix web run check`: pass; seven new messages in all six catalogs.
+- `scripts/Build-Tools.ps1`: pinned SDK checksum/build and smoke compile pass.
+  Initial enclosing PowerShell stderr redirection raised NativeCommandError;
+  rerunning the actual script without redirection succeeds.
+- `scripts/Build-ConsoleUI.ps1`: worker/native title compile, eight ASan/UBSan
+  synthetic states and independent QR/expiry decoding pass. Synthetic pairing,
+  expired, completed, long-input, error and icon previews visually inspected.
+  After text clipping/icon refinements, reran container-test-final-ui.sh,
+  verify_final_preview.py and container-build-final-ui.sh successfully. Final
+  source-generated icon was repackaged and inspected. ZIP CRC/file/source hashes,
+  license notices, private-file exclusion and shell LF checks pass.
+- `scripts/Start-Local.ps1 -Build`: production API/web builds and local health
+  pass, existing origin/volumes retained; `alembic current`: **013 (head)**.
+  No migration, snapshot schema, SDK or runtime dependency change.
+- `docker build -f web/Dockerfile.test -t ps5-sync-web-test web`, then
+  `docker run --rm --ipc=host ps5-sync-web-test npx playwright test
+  playtime.spec.ts native-identity.spec.ts library-sorting.spec.ts
+  trophy-privacy.spec.ts locale.spec.ts auth-errors.spec.ts personalization.spec.ts
+  public-profile.spec.ts`: **27 passed**. New fixture checks withheld dates,
+  independently counted foreground seconds and explicit missing-end/state text.
+- `docker run --rm --ipc=host --mount
+  type=bind,source=C:\git\ps5-trophy-sync-windows\.local\playwright.reliability.config.ts,target=/app/playwright.reliability.config.ts,readonly
+  ps5-sync-web-test npx playwright test --config=playwright.reliability.config.ts`:
+  **16 passed**, WebKit/Chromium 390x844 touch/mobile emulation, auth/playtime.
+  Physical phone behavior is not established by emulation.
+- Final TypeScript/Python compile and `git diff --check`: pass.
+- `scripts/container-build-time-diagnostic.sh`: compile/no-write startup pass.
+  Local `artifacts/console/time-diagnostic/TimeDiagnostic.elf` SHA256
+  ef4cb1d6fcb02e35174aa415d8c4aea2488d97434d274ac04c8c054348e2e8fc.
+  It queries the selected profile's logger with native read locks, query_only,
+  delete-journal enforcement, a five-second budget and bounded aggregate output;
+  writes only its exclusive private /data/trophy-sync-time-report.txt report.
+  No imports, mounts, credentials or source writes. Authorization requested;
+  it has not been uploaded/run. User timezone and Wolverine state observations
+  are also pending. No current-timezone offset is assumed for historical events.
+
+Current package: artifacts/console/final-ui/TrophySync-PS5.zip;
+manifest console_verified=false. Foreground SHA256:
+64c5f1815113fb35f42753dffe328dab43476965974f495186c3288c8f9632ac.
+Icon SHA256: df712ebc934633d4efe13242680679ab0b1f491ddda10303be6385a6537a98f3.
+Worker unchanged: 4c99e2dfcd5e4556115241c9fe6450b0807f9f943a1e8e31be002e7454afb17f.
+Read-only FTP independently finds the installed title at /data/homebrew/PPSA99889,
+foreground 25ad691be6afe73df95a422b74fa0441ee78151d6e459be3a65ff64959048e6c;
+its worker matches the unchanged build. Payload Manager /version returns 0.5.2.
+New foreground/icon have not been transferred, registered or launched.
+
+Next: run the bounded logger diagnostic only if authorized, then investigate
+historical date bases/missing counters using its report and the requested console
+timezone/trophy-menu observation. Rebuild hosted API/web with existing env/volume;
+sign in once for the new 30-day cookie. Apply the built foreground/icon through
+the existing ShadowMount update workflow and observe launch/sync/Close App/reopen
+only with appropriate authorization. Worker replacement is unnecessary. No
+external deployment, Git commit/push, DNS changes or console database edits.
+
 ## Provider follow-up implementation - 2026-10-21
 
 Live read-only reproduction establishes the Demon Slayer failure: hyphen-bound

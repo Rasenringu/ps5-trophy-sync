@@ -415,5 +415,12 @@
   "Connect your HowLongToBeat browser first": "Conecta primero tu navegador HowLongToBeat",
   "Recorded playtime changed; review it again": "El tiempo de juego cambió; revísalo",
   "Choose and verify the matching HowLongToBeat game first": "Elige y verifica primero el juego de HowLongToBeat correspondiente",
-  "Enter an Exophase trophy listing URL": "Introduce la URL de una lista de trofeos de Exophase"
+  "Enter an Exophase trophy listing URL": "Introduce la URL de una lista de trofeos de Exophase",
+  "Stay signed in for 30 days on this browser.": "Mantener la sesión iniciada durante 30 días en este navegador.",
+  "Playtime unavailable: no completed sessions recorded.": "Tiempo de juego no disponible: no hay sesiones completadas registradas.",
+  "Console dates could not be verified. Recorded playtime is preserved.": "No se pudieron verificar las fechas de la consola. Se conserva el tiempo de juego registrado.",
+  "The console has not provided a confirmed unlock state.": "La consola no ha proporcionado un estado de obtención confirmado.",
+  "No session end was recorded.": "No se registró el final de la sesión.",
+  "The game stopped without a final playtime counter.": "El juego se detuvo sin un contador final del tiempo de juego.",
+  "No foreground playtime counter was recorded.": "No se registró ningún contador del tiempo de juego en primer plano."
 }

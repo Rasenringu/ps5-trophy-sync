@@ -27,5 +27,5 @@ for t in rows:
     else:assert t['unlocked_at'] is None and t['clock']=='unknown'
 t=json.loads(Path(f'{prefix}-unknown.json').read_text())['trophies'][0]
 assert t['unlocked'] is None and t['unlocked_at'] is None and t['clock']=='unknown'
-assert t['native_observation']=={'raw_flags':16,'first_raw':'0','second_raw':'62135596800000001'}
+assert t['native_observation']=={'raw_flags':18,'first_raw':'0','second_raw':'62135596800000001'}
 print('PASS private DTO export: 45 exact joined records, 6 earned bronze, 39 locked; uncertain times/raw fields retained; MOCK unknown fixture null. No import.')

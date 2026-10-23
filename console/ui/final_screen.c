@@ -61,8 +61,9 @@ static void ink(uint32_t *p,int x,int baseline,const FontGlyph *g,uint32_t color
 }
 static int width(const char *s,int size){int n=0;while(*s){const FontGlyph *g=glyph(size,codepoint(&s));if(g)n+=g->advance;}return n;}
 static void label(uint32_t *p,int x,int top,const char *s,int size,uint32_t color,int max_width){
+    int truncate=width(s,size)>max_width;
     int used=0;while(*s){const FontGlyph *g=glyph(size,codepoint(&s));if(!g)continue;
-        int reserve=*s?width("…",size):0;
+        int reserve=truncate&&*s?width("…",size):0;
         if(used+g->advance+reserve>max_width){ink(p,x+used,top+size,glyph(size,0x2026),color);return;}
         ink(p,x+used,top+size,g,color);used+=g->advance;
     }
@@ -123,70 +124,91 @@ static const char *activity(const UiModel *m){
 static void qr_panel(uint32_t *p,const char *link){
     uint8_t temp[qrcodegen_BUFFER_LEN_FOR_VERSION(10)],qr[qrcodegen_BUFFER_LEN_FOR_VERSION(10)];
     if(!qrcodegen_encodeText(link,temp,qr,qrcodegen_Ecc_MEDIUM,1,10,qrcodegen_Mask_AUTO,true)){
-        paragraph(p,1260,500,L("QR indisponible. Utilisez le code à gauche.","QR unavailable. Use the code on the left."),32,WHITE,470,3);return;
+        paragraph(p,1324,490,L("QR indisponible. Utilisez le code affiché.","QR unavailable. Use the displayed code."),26,WHITE,455,3);return;
     }
-    int n=qrcodegen_getSize(qr),scale=500/(n+8),w=scale*(n+8),x=1266+(500-w)/2,y=320+(500-w)/2;
+    int n=qrcodegen_getSize(qr),scale=440/(n+8),w=scale*(n+8),x=1336+(440-w)/2,y=368+(440-w)/2;
     box(p,x,y,w,w,0xffffffff);
     for(int j=0;j<n;j++)for(int i=0;i<n;i++)if(qrcodegen_getModule(qr,i,j))box(p,x+(i+4)*scale,y+(j+4)*scale,scale,scale,0xff000000);
 }
+static void step(uint32_t *p,int y,const char *number,const char *title,const char *detail,int active,int done){
+    if(active)rounded(p,80,y-13,272,112,18,0xff193c68);
+    rounded(p,99,y+1,37,37,18,done?0xff204e45:0xff253b56);
+    label(p,108,y+3,number,22,done?GREEN:WHITE,25);
+    label(p,151,y,title,26,active?WHITE:MUTED,192);
+    label(p,151,y+43,detail,22,active?ACCENT:MUTED,190);
+}
 void ui_render_final(uint32_t *p,const UiModel *input,uint64_t now){
-    /* IPC validation is independent; bounded copies also protect direct callers. */
     UiModel model=*input;model.profile[sizeof(model.profile)-1]=0;model.public_origin[sizeof(model.public_origin)-1]=0;model.manual_code[sizeof(model.manual_code)-1]=0;
     model.error[sizeof(model.error)-1]=0;model.reader_status[sizeof(model.reader_status)-1]=0;model.sync_status[sizeof(model.sync_status)-1]=0;const UiModel *m=&model;
-    /* Static atmosphere; integer-only, no new graphics/runtime dependency. */
+    char link[256]={0},buffer[256];int pairing=ui_pairing_link(m,now,link,sizeof(link)),expired=m->phase==UI_PAIRING&&!pairing;
+    int finished=complete(m),attention=partial(m)||m->phase==UI_ERROR||expired;
+    const char *profile=!strncmp(m->profile,"Local profile ",14)?L("Profil PS5 actif","Active PS5 profile"):m->profile[0]?m->profile:L("Sélection du profil…","Selecting profile…");
     for(int y=0;y<SCREEN_HEIGHT;y+=4)for(int x=0;x<SCREEN_WIDTH;x+=4){
-        int dx=x-1490,dy=y-120;
-        unsigned glow=dx*dx+dy*dy<1700000?(unsigned)(1700000-dx*dx-dy*dy)/16000:0;
-        box(p,x,y,4,4,blend(BG,0xff1e5aa0,glow));
+        int dx=x-1620,dy=y-80;
+        unsigned glow=dx*dx+dy*dy<1500000?(unsigned)(1500000-dx*dx-dy*dy)/18000:0;
+        box(p,x,y,4,4,blend(BG,0xff245ea5,glow));
     }
-    line(p,1280,30,1860,610,1,0xff234261);
-    line(p,1370,0,1920,550,1,0xff1e3855);
-    rounded(p,96,64,72,72,18,0xff174c9b);sync_mark(p,100,68,1,WHITE);
-    label(p,190,72,"TrophySync",40,WHITE,500);
-    label(p,190,122,L("VOS TROPHÉES. VOTRE PROGRESSION.","YOUR TROPHIES. YOUR PROGRESS."),22,MUTED,900);
-    badge(p,1410,87,m->phase==UI_CONNECTED?L("Connecté","Connected"):m->phase==UI_PAIRING?L("Association","Pairing"):m->phase==UI_ERROR?L("À vérifier","Needs attention"):L("Connexion…","Connecting…"),m->phase==UI_CONNECTED?GREEN:m->phase==UI_ERROR?RED:ACCENT);
-    box(p,96,184,1728,1,BORDER);
-    const char *profile=!strncmp(m->profile,"Local profile ",14)?L("Profil PS5 actif","Active PS5 profile"):m->profile[0]?m->profile:L("Sélection en cours","Selecting profile");
-    char link[256]={0},buffer[256];int pairing=ui_pairing_link(input,now,link,sizeof(link)),expired=m->phase==UI_PAIRING&&!pairing;
-    panel(p,96,226,1080,636);panel(p,1204,226,620,636);
-    label(p,140,260,L("PROFIL SÉLECTIONNÉ","SELECTED PROFILE"),22,MUTED,950);
-    label(p,140,298,profile,32,WHITE,950);
+    /* The website's rail, luminous blue brand and panel hierarchy, at TV scale. */
+    panel(p,64,56,304,968);
+    rounded(p,100,91,80,80,22,0xff2166ce);sync_mark(p,108,99,1,WHITE);
+    label(p,100,193,"TrophySync",40,WHITE,248);
+    paragraph(p,100,253,L("Vos trophées. Votre progression.","Your trophies. Your progress."),22,MUTED,232,2);
+    box(p,100,336,232,1,BORDER);
+    label(p,100,366,L("VOTRE CONSOLE","YOUR CONSOLE"),22,ACCENT,232);
+    step(p,430,"1",L("Association","Pair account"),L("Votre compte","Your account"),pairing||expired,m->phase==UI_CONNECTED);
+    step(p,567,"2",L("Synchroniser","Sync library"),L("Trophées et jeu","Trophies & time"),m->phase==UI_CONNECTED&&!finished,finished);
+    step(p,704,"3",L("Collection","Collection"),L("Sur le site web","On the website"),finished&&!partial(m),finished&&!partial(m));
+    box(p,100,878,232,1,BORDER);
+    label(p,100,904,"PS5",32,WHITE,232);
+    label(p,100,955,L("Sync à l’ouverture","Sync on launch"),22,MUTED,232);
+
+    label(p,408,65,L("VOTRE BIBLIOTHÈQUE PERSONNELLE","YOUR PERSONAL TROPHY LIBRARY"),22,ACCENT,1080);
+    label(p,408,113,L("Synchronisation PS5","PS5 synchronization"),56,WHITE,1050);
+    badge(p,1560,117,m->phase==UI_CONNECTED?L("Connecté","Connected"):m->phase==UI_PAIRING?L("Association","Pairing"):m->phase==UI_ERROR?L("À vérifier","Needs attention"):L("Connexion…","Connecting…"),m->phase==UI_CONNECTED?GREEN:m->phase==UI_ERROR?RED:ACCENT);
+    label(p,408,199,L("Votre progression vous appartient.","Your progress belongs to you."),26,MUTED,1300);
+    label(p,408,250,L("PROFIL SÉLECTIONNÉ","SELECTED PROFILE"),22,MUTED,330);
+    label(p,760,243,profile,32,WHITE,1050);
+    box(p,408,295,1416,1,BORDER);
+    panel(p,408,320,852,540);panel(p,1288,320,536,540);
     if(pairing){
-        label(p,140,382,L("Associez votre compte","Link your account"),56,WHITE,975);
-        paragraph(p,140,468,L("Scannez le QR, connectez-vous et confirmez ce profil sur TrophySync.","Scan the QR, sign in and confirm this profile on TrophySync."),26,MUTED,890,2);
-        label(p,140,575,L("OU SAISISSEZ CE CODE","OR ENTER THIS CODE"),22,MUTED,850);
-        label(p,140,611,m->manual_code,88,WHITE,900);
-        snprintf(buffer,sizeof(buffer),"%.191s/pair",m->public_origin);label(p,140,731,buffer,26,ACCENT,950);
+        label(p,448,355,L("CONNECTER VOTRE COMPTE","CONNECT YOUR ACCOUNT"),22,ACCENT,770);
+        paragraph(p,448,401,L("Retrouvez votre collection.","Bring your collection together."),56,WHITE,758,2);
+        paragraph(p,448,550,L("Scannez le QR, connectez-vous et confirmez ce profil. Ou saisissez ce code sur le site :","Scan the QR, sign in and confirm this profile. Or enter this code on the website:"),26,MUTED,740,3);
+        label(p,448,665,m->manual_code,88,WHITE,770);
         unsigned long long ttl=(unsigned long long)((m->expires_at_ms-now+999)/1000);
-        snprintf(buffer,sizeof(buffer),L("Expire dans %llu:%02llu","Expires in %llu:%02llu"),ttl/60,ttl%60);badge(p,140,787,buffer,GOLD);
-        label(p,1248,263,L("SCANNEZ POUR CONTINUER","SCAN TO CONTINUE"),22,MUTED,535);qr_panel(p,link);
+        snprintf(buffer,sizeof(buffer),L("Expire dans %llu:%02llu","Expires in %llu:%02llu"),ttl/60,ttl%60);badge(p,448,789,buffer,GOLD);
+        label(p,1328,325,L("SCANNER POUR ASSOCIER","SCAN TO PAIR"),22,MUTED,456);qr_panel(p,link);
+        label(p,1328,811,L("Code temporaire · usage unique","Temporary code · single use"),22,MUTED,455);
     }else{
-        const char *heading=expired?L("Code expiré","Code expired"):m->phase==UI_ERROR?L("Synchronisation interrompue","Sync interrupted"):partial(m)?L("Synchronisation partielle","Partially synced"):complete(m)?L("Votre bibliothèque est à jour","Your library is up to date"):m->phase==UI_CONNECTED?L("Synchronisation en cours","Syncing your collection"):m->phase==UI_DIAGNOSTIC?L("Diagnostic du lecteur","Reader diagnostic"):L("Connexion à votre console","Connecting to your console");
-        paragraph(p,140,399,heading,56,WHITE,965,2);
-        const char *description=expired?L("Fermez puis rouvrez l’application pour obtenir un nouveau code.","Close and reopen the app to get a new code."):m->phase==UI_ERROR?L("Vérifiez la connexion ou le service indiqué ci-dessous, puis rouvrez l’application pour réessayer.","Check the connection or the service shown below, then reopen the app to retry."):partial(m)?L("Les données disponibles ont été envoyées. Certains jeux sont absents ou n’ont pas pu être lus.","Available data was uploaded. Some games are missing or could not be read."):complete(m)?L("Trophées, images et temps de jeu ont été envoyés. Retrouvez votre collection sur le site.","Trophies, artwork and playtime have been uploaded. Your collection is ready on the website."):m->phase==UI_CONNECTED?activity(m):L("L’application vérifie le profil actif et rejoint le service de synchronisation.","The app checks your active profile and connects to the sync service.");
-        paragraph(p,140,565,description,26,MUTED,950,3);
-        if(m->phase==UI_ERROR){paragraph(p,140,697,m->error,22,RED,950,3);}
-        else if(m->public_origin[0])label(p,140,768,m->public_origin,26,ACCENT,950);
-        rounded(p,1392,338,244,244,122,partial(m)?0xff342f22:complete(m)?0xff21352c:m->phase==UI_ERROR||expired?0xff36262a:0xff193c64);
-        if(complete(m)&&!partial(m)){line(p,1452,458,1498,504,10,GREEN);line(p,1498,504,1581,409,10,GREEN);}
-        else if(m->phase==UI_ERROR||expired||partial(m)){uint32_t color=partial(m)?GOLD:RED;line(p,1514,397,1514,476,10,color);rounded(p,1507,503,14,14,7,color);}
-        else {sync_mark(p,1366,320,4,ACCENT);}
-        const char *state=partial(m)?L("À vérifier","Needs attention"):complete(m)?L("À jour","Up to date"):m->phase==UI_ERROR?L("Action nécessaire","Action required"):expired?L("Nouveau code requis","New code required"):L("Veuillez patienter","Please wait");
-        label(p,1260,630,state,32,WHITE,525);
-        paragraph(p,1260,702,L("Mode actuel : synchronisation à l’ouverture de l’application.","Current mode: sync when the app opens."),26,MUTED,510,3);
+        const char *eyebrow=attention?L("VOTRE ATTENTION EST REQUISE","YOUR ATTENTION IS NEEDED"):finished?L("SYNCHRONISATION TERMINÉE","SYNCHRONIZATION COMPLETE"):L("VOTRE COLLECTION","YOUR COLLECTION");
+        label(p,448,355,eyebrow,22,attention?GOLD:ACCENT,770);
+        const char *heading=expired?L("Le code a expiré.","The code has expired."):m->phase==UI_ERROR?L("Synchronisation interrompue.","Synchronization interrupted."):partial(m)?L("Une partie reste à vérifier.","Some data needs attention."):finished?L("Votre collection est à jour.","Your collection is up to date."):m->phase==UI_CONNECTED?L("Votre progression, en route.","Your progress is on its way."):m->phase==UI_DIAGNOSTIC?L("Diagnostic du lecteur","Reader diagnostic"):L("Connexion à votre console.","Connecting to your console.");
+        paragraph(p,448,405,heading,56,WHITE,754,2);
+        const char *description=expired?L("Fermez puis rouvrez l’application pour obtenir un nouveau code.","Close and reopen the app to get a new code."):m->phase==UI_ERROR?L("Vérifiez l’action indiquée ci-dessous, puis rouvrez l’application pour réessayer.","Check the action below, then reopen the app to retry."):partial(m)?L("Les données disponibles ont été envoyées. Certains jeux n’ont pas pu être lus.","Available data was uploaded. Some games could not be read."):finished?L("Trophées et temps de jeu enregistrés sont disponibles sur le site.","Your trophies and recorded playtime are ready on the website."):m->phase==UI_CONNECTED?activity(m):L("Vérification du profil actif et connexion au service de synchronisation.","Checking the active profile and connecting to the synchronization service.");
+        paragraph(p,448,563,description,26,MUTED,750,3);
+        if(m->phase==UI_ERROR)paragraph(p,448,694,m->error,22,RED,746,3);
+        else label(p,448,777,finished?L("Ouvrez le site pour voir votre collection.","Open the website to explore your collection."):L("Gardez l’application ouverte pendant l’envoi.","Keep the app open while uploading."),22,MUTED,750);
+        rounded(p,1436,404,240,240,120,attention?0xff392d2b:finished?0xff1c3e38:0xff193c64);
+        if(finished&&!partial(m)){line(p,1490,526,1536,572,10,GREEN);line(p,1536,572,1624,475,10,GREEN);}
+        else if(attention){line(p,1556,459,1556,545,10,GOLD);rounded(p,1549,574,14,14,7,GOLD);}
+        else sync_mark(p,1428,396,4,ACCENT);
+        const char *state=partial(m)?L("À vérifier","Needs attention"):finished?L("Tout est prêt","All set"):m->phase==UI_ERROR?L("Action nécessaire","Action required"):expired?L("Nouveau code requis","New code required"):L("Veuillez patienter","Please wait");
+        label(p,1328,690,state,32,WHITE,450);
+        paragraph(p,1328,751,L("Trophées · images · temps de jeu","Trophies · artwork · playtime"),22,MUTED,448,2);
     }
-    if(m->mock||m->phase==UI_DIAGNOSTIC)label(p,100,190,m->mock?"APERÇU / PREVIEW — DONNÉES FICTIVES":"DIAGNOSTIC — NO TROPHY IMPORT",22,GOLD,1710);
-    panel(p,96,886,1728,96);
-    label(p,128,906,L("SYNCHRONISATION","SYNC STATUS"),22,MUTED,305);
-    if(m->phase==UI_ERROR)label(p,470,906,m->sync_status[0]?m->sync_status:L("Indisponible","Unavailable"),22,RED,1295);
-    else label(p,470,906,partial(m)?L("Certains jeux n’ont pas pu être lus","Some games could not be read"):complete(m)?L("Envoi terminé","Upload complete"):pairing?L("En attente de votre confirmation","Waiting for your confirmation"):expired?L("Aucun code actif","No active code"):m->phase==UI_CONNECTED?activity(m):L("Connexion en cours","Connecting"),22,partial(m)?GOLD:complete(m)?GREEN:MUTED,1295);
+    /* Independent connection and sync status remain visible in every phase. */
+    panel(p,408,884,1416,96);
+    label(p,440,900,L("SYNCHRONISATION","SYNC STATUS"),22,MUTED,290);
+    label(p,750,900,m->phase==UI_ERROR?(m->sync_status[0]?m->sync_status:L("Indisponible","Unavailable")):partial(m)?L("Certains jeux n’ont pas pu être lus","Some games could not be read"):finished?L("Envoi terminé","Upload complete"):pairing?L("En attente de votre confirmation","Waiting for your confirmation"):expired?L("Aucun code actif","No active code"):m->phase==UI_CONNECTED?activity(m):L("Connexion en cours","Connecting"),22,attention?GOLD:finished?GREEN:WHITE,1030);
     unsigned sets,sessions,incomplete,earned,locked,unknown;
     if(sscanf(m->reader_status,"Native: %u sets; playtime %u complete / %u incomplete",&sets,&sessions,&incomplete)==3)
-        snprintf(buffer,sizeof(buffer),L("%u jeux • %u sessions complètes • %u incomplètes","%u games • %u complete sessions • %u incomplete"),sets,sessions,incomplete);
+        snprintf(buffer,sizeof(buffer),L("%u jeux · %u sessions complètes · %u incomplètes","%u games · %u complete sessions · %u incomplete"),sets,sessions,incomplete);
     else if(sscanf(m->reader_status,"Native: %u sets, %u earned, %u locked, %u unknown",&sets,&earned,&locked,&unknown)==4)
-        snprintf(buffer,sizeof(buffer),L("%u jeux • %u trophées obtenus • %u verrouillés • %u inconnus","%u games • %u trophies earned • %u locked • %u unknown"),sets,earned,locked,unknown);
-    else snprintf(buffer,sizeof(buffer),"%.159s",m->reader_status[0]?m->reader_status:L("Trophées • images • temps de jeu","Trophies • artwork • playtime"));
-    label(p,470,943,buffer,22,MUTED,1295);
-    label(p,96,1009,L("PS  >  Fermer l’application","PS  >  Close App"),22,MUTED,900);
-    label(p,1390,1009,"TrophySync / PS5",22,MUTED,435);
+        snprintf(buffer,sizeof(buffer),L("%u jeux · %u obtenus · %u verrouillés · %u inconnus","%u games · %u earned · %u locked · %u unknown"),sets,earned,locked,unknown);
+    else snprintf(buffer,sizeof(buffer),"%.159s",m->reader_status[0]?m->reader_status:L("Trophées · images · temps de jeu","Trophies · artwork · playtime"));
+    label(p,750,938,buffer,22,MUTED,1030);
+    snprintf(buffer,sizeof(buffer),"%.191s%s",m->public_origin,pairing?"/pair":"");
+    label(p,408,998,buffer,22,ACCENT,965);
+    label(p,1410,998,L("PS  >  Fermer l’application","PS  >  Close App"),22,MUTED,414);
+    if(m->mock||m->phase==UI_DIAGNOSTIC)label(p,408,12,m->mock?"APERÇU / PREVIEW — DONNÉES FICTIVES":"DIAGNOSTIC — NO TROPHY IMPORT",22,GOLD,1416);
 }

@@ -21,11 +21,14 @@ from .models import Account, Login, Installation, Profile, Pairing, Import, Reco
 from .locales import choose_language
 from .ps4_collections import group_collections
 from .native_identity import native_activity_aliases
+from .observation_times import stamp_receipt, present_observation
 from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
 
 app = FastAPI(title='PS5 Trophy Sync', version='0.1.0')
 origin = os.environ.get('WEB_ORIGIN', 'http://localhost:3000').rstrip('/')
 secure_cookie = os.environ.get('COOKIE_SECURE', 'true') == 'true'
+# One bounded persistent login on both sides; logout still revokes it immediately.
+LOGIN_LIFETIME_SECONDS = 30 * 24 * 60 * 60
 development_tools = os.environ.get('ENABLE_DEVELOPMENT_TOOLS', 'false') == 'true'
 if os.environ.get('ENVIRONMENT')=='production':
     parsed_origin=urlsplit(origin)
@@ -122,10 +125,10 @@ def device(request: Request, db: DbSession = Depends(database)):
 
 def set_login(db, response, account):
     token = secrets.token_urlsafe(32)
-    db.add(Login(digest=digest(token), account=account, expires=now()+86400))
+    db.add(Login(digest=digest(token), account=account, expires=now()+LOGIN_LIFETIME_SECONDS))
     db.commit()
     response.set_cookie('session', token, httponly=True, secure=secure_cookie,
-                        samesite='strict', max_age=86400, path='/')
+                        samesite='strict', max_age=LOGIN_LIFETIME_SECONDS, path='/')
 
 @app.get('/health')
 def health(db: DbSession = Depends(database)):
@@ -296,6 +299,15 @@ def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot | Ps4Snapshot,
         if old.digest != checksum:
             fail(409, 'Batch ID reused with different contents')
         return {'status': 'duplicate', 'batch_id': str(body.batch_id)}
+    received = now()
+    if profile.last_sync:
+        # Seal legacy per-field receipt bounds before this profile's checkpoint
+        # advances. An unrelated later sync must not legitimize an old future date.
+        for legacy in db.scalars(select(Record).where(Record.profile == profile.id,
+                Record.mock == False, Record.data['timestamp_received_at'].as_string().is_(None))):
+            previous = dict(legacy.data)
+            stamp_receipt(previous, legacy.data, profile.last_sync)
+            legacy.data = previous
     for kind, rows in [('trophy', data['trophies']), ('activity', data['activities'])]:
         for row in rows:
             if isinstance(body, (NativeSnapshot,Ps4Snapshot)):
@@ -309,6 +321,7 @@ def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot | Ps4Snapshot,
             record = db.scalar(select(Record).where(Record.profile == profile.id, Record.source == body.source,
                                  Record.kind == kind, Record.key == key, Record.mock == body.mock))
             if not record:
+                if not body.mock:stamp_receipt(row, None, received)
                 db.add(Record(id=uid(), profile=profile.id, source=body.source, kind=kind, key=key, data=row, mock=body.mock))
             else:
                 previous = record.data
@@ -328,9 +341,10 @@ def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot | Ps4Snapshot,
                     # Replayed/cumulative native observations must never reduce totals.
                     if previous.get('duration_basis')=='native_foreground_seconds' and previous.get('duration_seconds') is not None and row.get('duration_seconds') is not None and previous['duration_seconds']>row['duration_seconds']:
                         continue
+                if not body.mock:stamp_receipt(row, previous, received, profile.last_sync)
                 record.data = row
-    db.add(Import(id=uid(), profile=profile.id, batch_id=str(body.batch_id), digest=checksum, received=now(), mock=body.mock))
-    profile.last_sync = now()
+    db.add(Import(id=uid(), profile=profile.id, batch_id=str(body.batch_id), digest=checksum, received=received, mock=body.mock))
+    profile.last_sync = received
     db.commit()
     return {'status': 'imported', 'batch_id': str(body.batch_id), 'mock': body.mock}
 
@@ -344,6 +358,8 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
     # Publisher bindings and unique translated titles resolve owned display IDs.
     titles={r.data['title_id'] for r,_ in rows if not r.mock}
     profiles={r.profile for r,_ in rows}
+    observed_limits={identity:min(last_sync or now(), now()) for identity,last_sync in
+                     db.execute(select(Profile.id,Profile.last_sync).where(Profile.id.in_(profiles)))}
     packages={(p.profile,p.title_id):p for p in db.scalars(select(DevicePackage).where(DevicePackage.profile.in_(profiles),DevicePackage.title_id.in_(titles)))} if titles else {}
     published_names={}
     for title,label in db.execute(select(TrophyText.title_id,TrophyText.name).where(TrophyText.source=='ps5_native',TrophyText.trophy_id=='',TrophyText.title_id.in_(titles))):
@@ -383,7 +399,7 @@ def library(owner: str = Depends(browser), db: DbSession = Depends(database), la
         source='ps4_bc' if r.id in ps4_aliases else r.source
         key = (source,title,r.data.get('trophy_id',''))
         metadata = None if r.mock else info.get(key)
-        data = dict(r.data)
+        data = dict(r.data) if r.mock else present_observation(r.data,r.kind,r.source,observed_limits[r.profile])
         if r.kind=='activity' and data['title']==data['title_id']:
             data['title_binding']='application_id_only'
         if r.id in aliases:

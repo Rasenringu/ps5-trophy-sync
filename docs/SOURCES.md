@@ -1,5 +1,40 @@
 # Source evidence and pinned inputs
 
+## Observation reliability and native presentation (2026-10-23)
+
+Read-only FTPSRV 0.21.1 captures and repeated complete native state reads establish
+eleven stable T2PD files with valid page digests. Wolverine NPWR57054_00 has four
+flags-16/absent-first/present-second states; the user subsequently independently
+confirmed those four are locked in the console trophy menu. The exact pattern
+now decodes and displays as locked, preserving raw fields; adjacent unobserved
+variants stay unknown. The public library initially exposed those four unknowns.
+Native earned flags and trophy timestamps are not guessed from publisher metadata.
+Raw captures, installation inventory and public snapshots remain ignored.
+
+The installed foreground hash differs from the current compiled UI; the installed
+worker matches the retained 4c99e2df... build, while the corrected local worker is
+3ee630ed... and has not been installed. Payload Manager's live /version
+returns 0.5.2. These read-only checks do not establish a new title launch/sync result.
+
+[SQLite date/time semantics](https://www.sqlite.org/lang_datefunc.html) were checked:
+explicit offsets are normalized, and a timezone-free input alone does not establish
+the source's timezone. Appending Z cannot verify the console's clock/date basis.
+Receipt bounds deliberately withhold inconsistent dates rather than subtracting
+an assumed present-day offset. One user-authorized exact-hash diagnostic returned
+native delete journaling, 847 explicitly zone-marked source rows, and a current
+console UTC clock approximately 20 seconds behind the PC. It did not establish a
+historical clock correction or counters for start-only native Uncharted/Fobia.
+All raw reports remain private/ignored, with diagnostic staging cleaned up.
+The pinned
+[PS5 Activity Log reference](https://github.com/hotshotz79/PS5-Activity-Log/tree/ef2714d23ea81a1e89bc7c8e3b955bfd8959fd39)
+was revisited as research only; its raw FTP database-copy approach is not used.
+
+Native rendering retains the existing pinned SDK v0.43, native template/runtime,
+Noto font, QR generator and VideoOut interfaces. All archive checksums and native
+compile checks pass; no dependency, API pin or license obligations changed.
+The icon renders the existing original website vector geometry with the already
+pinned Pillow host dependency. No downloaded/generated third-party artwork.
+
 ## Title matching, keyless rates and browser account connector (2026-10-21)
 
 - Live shipped HLTB adapter: raw publisher title `Demon Slayer -Kimetsu no

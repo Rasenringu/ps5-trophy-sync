@@ -21,6 +21,30 @@ The web shows recorded totals and chronological details; these are not PSN cloud
 lifetime totals. The presentation omits an uncertainty suffix without altering
 stored source-clock evidence.
 
+Dates are bounded by server receipt independently of the foreground counter.
+Each new import records per-field receipt times; repeated unchanged timestamps
+keep their earlier bounds. Legacy rows use the profile's last-sync boundary;
+before the next checkpoint advances, that boundary is saved on its older records.
+Candidate dates after the boundary (allowing the receipt's one-second precision)
+or malformed/unspecified-zone dates are withheld on reads, including shared
+last-played aggregation. Raw observations remain stored. A valid counter remains
+countable even when a date cannot be verified. This prevents impossible displayed
+future sessions; it does not guess a historical timezone or clock correction.
+Incomplete sessions distinguish absent ends, crashes and missing counters.
+Shared games with undated incomplete sessions remain visible with unknown totals.
+
+The single authorized 2026-10-23 clock/counter diagnostic completed with native
+read locks and delete journaling. At launch the console UTC clock was about
+20 seconds behind the PC; the user reports manually setting its displayed Paris
+time. All 847 selected logger rows examined have explicit timezone markers.
+Demon Slayer's stored end candidate remains 2026-10-20T19:26:05.740 after source
+offset normalization. A blanket Paris/DST subtraction is therefore unsupported.
+Its valid foreground counters remain usable independently of candidate dates.
+Native Uncharted PPSA05684 and Fobia PPSA05626 each have only a start event and no
+end or EndBi in that observed source; their missing duration cannot be recovered
+from a wall-clock gap. Collection CUSA02344 has two scalar End counters, while its
+EndBi rows have non-scalar fgTime. No duplicate analytics total is imported.
+
 Metadata uses bounded read-only `param.json` with exact title identity validation.
 Activity title IDs remain stored unchanged. For PPSA activity, reviewed native
 publisher application bindings take precedence. Otherwise, the library matches

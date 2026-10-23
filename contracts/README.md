@@ -9,6 +9,11 @@ explicit uncertain/unknown clock, both raw native time fields and raw flags,
 stable_read_not_atomic consistency and foreground_user_path_scoped binding.
 It accepts no activity records or PS4 source. V1 remains unchanged so previously
 stored batch checksums remain valid. Unsupported states never become locked.
+The console-menu-verified flags-0x10/zero-first/valid-second native shape is now
+supported as locked; the secondary timestamp is not an unlock date. Update the
+API before the worker, since older validators reject that new interpretation.
+Existing unknown records with that exact evidence correct on reads without
+rewriting their raw observations or resyncing. JSON schema shapes stay unchanged.
 Server merges retain previously known unlocks/times and record the latest
 observed state separately; absent rows do not delete records.
 

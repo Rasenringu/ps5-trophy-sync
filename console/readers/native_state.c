@@ -62,7 +62,12 @@ int native_state_decode(const unsigned char *bytes,size_t size,NativeState *resu
         if(out->id!=n||be32(definition)!=out->id){rc=NATIVE_STATE_SCHEMA;goto done;}
         out->raw_time_first=be64(record+16);out->raw_time_second=be64(record+32);
         out->time_known=time_value(out->raw_time_first,&out->time_first_us)|time_value(out->raw_time_second,&out->time_second_us)<<1;
-        if(!out->raw_flags&&!out->raw_time_first&&!out->raw_time_second)out->status=NATIVE_STATE_LOCKED;
+        /* Wolverine's four flags-0x10/absent-first/valid-second records were
+         * independently confirmed locked in the console trophy menu. The
+         * secondary timestamp alone is not an unlock date. Other shapes stay
+         * unknown; never override an earlier earned observation on the server. */
+        if((!out->raw_flags&&!out->raw_time_first&&!out->raw_time_second)||
+           (out->raw_flags==16&&!out->raw_time_first&&out->time_known==2))out->status=NATIVE_STATE_LOCKED;
         else if(out->raw_flags==17&&out->time_known==3)out->status=NATIVE_STATE_EARNED;
         else out->status=NATIVE_STATE_UNKNOWN;
     }

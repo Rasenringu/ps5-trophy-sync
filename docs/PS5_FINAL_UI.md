@@ -1,8 +1,9 @@
 # PS5 interface
 
 The current native UI renders at 1920×1080 using direct VideoOut and the verified
-tiled framebuffer path. It follows the web theme: charcoal panels, lavender
-accents, TV-readable typography, safe margins and a large pairing area.
+tiled framebuffer path. It follows the current web theme: dark blue panels,
+blue/white accents, a left progress rail, a selected-profile header,
+TV-readable typography, safe margins and a large pairing area.
 The icon uses TrophySync branding. No test title or sample sync appears in normal use.
 
 Screens cover connecting, server-issued pairing, expired authorization,

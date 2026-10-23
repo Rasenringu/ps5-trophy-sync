@@ -1,4 +1,26 @@
 import {test,expect} from '@playwright/test';
+
+test('unverified console dates explain the gap while known foreground time still counts',async({page})=>{
+ const base={profile_uuid:'MOCK_CLOCK',profile_label:'MOCK clock fixture',source:'ps5_native',mock:false,artwork_url:null,icon_url:null};
+ const game={title_id:'MOCK_CLOCK_GAME',title:'MOCK clock game'};
+ const rows=[{...base,kind:'trophy',data:{...game,trophy_id:'0',name:'MOCK unsupported trophy',grade:'bronze',unlocked:null,state_reason:'unsupported_native_flags'}},
+  {...base,kind:'activity',data:{...game,event_id:'MOCK_COMPLETE',complete:true,duration_seconds:1236,clock:'uncertain',duration_basis:'native_foreground_seconds',consistency:'sqlite_read_transaction',profile_binding:'activity_header_single_local_user',started_at:null,ended_at:null,timestamp_status:'after_observation'}},
+  {...base,kind:'activity',data:{...game,event_id:'MOCK_START_ONLY',complete:false,duration_seconds:null,clock:'unknown',duration_reason:'missing_session_end'}}];
+ await page.route('**/api/account/me',r=>r.fulfill({json:{email:'mock-clock@example.test'}}));
+ await page.route('**/api/account/devices',r=>r.fulfill({json:[]}));
+ await page.route('**/api/account/library**',r=>r.fulfill({json:rows}));
+ await page.goto('/');
+ await expect(page.locator('.game-card').getByText('0h 20m recorded across 1 sessions',{exact:true})).toBeVisible();
+ await expect(page.locator('.game-card .last-played')).toHaveCount(0);
+ await page.getByRole('button',{name:'View trophies for '+game.title,exact:true}).click();
+ await expect(page.getByText('Console dates could not be verified. Recorded playtime is preserved.',{exact:true})).toBeVisible();
+ await expect(page.getByText('The console has not provided a confirmed unlock state.',{exact:true})).toBeVisible();
+ await page.getByText('Recorded play sessions',{exact:true}).click();
+ await expect(page.getByRole('cell',{name:'20m 36s',exact:true})).toBeVisible();
+ await expect(page.getByText('No session end was recorded.',{exact:true})).toBeVisible();
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
 test('PS4 imported trophy set and its exact activity binding share one card',async({page})=>{
  const base={profile_uuid:'MOCK_PS4',profile_label:'MOCK profile',source:'ps4_bc',mock:false,artwork_url:null,icon_url:null};
  const game={title_id:'NPWR00001_00',title:'MOCK PS4 imported game'};

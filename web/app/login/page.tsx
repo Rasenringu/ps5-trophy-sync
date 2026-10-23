@@ -16,6 +16,6 @@ export default function Login() {const {t,locale,preferences,browserLocale,ready
     {error && <p role="alert" className="error">{error}</p>}<form onSubmit={submit}>
       <label>{t("Email")}<input type="email" name="email" autoComplete="email" maxLength={254} required/></label>
       <label>{t("Password")}<input type="password" name="password" minLength={12} maxLength={128} autoComplete={register?'new-password':'current-password'} required/></label>
-      <p className="muted">{t("Use at least 12 characters.")}</p><button disabled={busy}>{busy?t("Please wait…"):register?t("Register"):t("Sign in")}</button>
+      <p className="muted">{t("Use at least 12 characters.")}</p><p className="muted">{t("Stay signed in for 30 days on this browser.")}</p><button disabled={busy}>{busy?t("Please wait…"):register?t("Register"):t("Sign in")}</button>
     </form><button className="quiet auth-switch" onClick={()=>setRegister(!register)}>{register?t("Already have an account? Sign in"):t("Create an account")}</button></section>;
 }

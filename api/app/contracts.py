@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, AwareDatetime, model_validator
+from .observation_times import native_locked_observation
 
 class Strict(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -98,7 +99,7 @@ class NativeTrophy(Trophy):
             if o.raw_flags != 17 or not int(o.first_raw) or not int(o.second_raw):
                 raise ValueError('Unsupported native earned evidence')
         elif self.unlocked is False:
-            if o.raw_flags != 0 or int(o.first_raw) or int(o.second_raw):
+            if not native_locked_observation(o.raw_flags, o.first_raw, o.second_raw):
                 raise ValueError('Unsupported native locked evidence')
         if self.unlocked_at is not None and self.clock != 'uncertain':
             raise ValueError('Native candidate timestamps require uncertain clock')

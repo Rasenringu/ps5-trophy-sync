@@ -17,8 +17,15 @@ flags 0x11 with nonzero big-endian timestamps; independent names/grades matched
 six earned bronze trophies. The remaining 39 had zero flags/times. Microseconds
 since year 1 matched one console-displayed unlock minute after timezone conversion.
 The distinction between the two timestamp fields and source-clock accuracy is
-not fully established. Unsupported flags/incomplete times stay UNKNOWN; raw
-observations are retained rather than guessed.
+not fully established. On 2026-10-23 the user independently confirmed Wolverine's
+four previously unknown trophies are locked in the console menu. Their stable
+records have flags 0x10, zero first timestamp and a valid second timestamp. This
+exact shape now decodes as LOCKED; its second timestamp is never an unlock date.
+Zero flags/times also remain LOCKED. Other unsupported flags/time combinations
+stay UNKNOWN, including flags 0x10 with a first timestamp or absent/invalid second
+timestamp. Raw observations are retained. Existing API imports with this exact
+unknown shape are corrected on reads without changing raw records or resyncing;
+previously observed earned state still takes precedence.
 
 `console/readers/native_state.c` validates bounds, versions, reserved fields,
 SHA256, directory continuity, record headers and exact IDs. `native_join.c`

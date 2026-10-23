@@ -232,16 +232,19 @@ def shared_library(handle: str,request: Request,language: str='en',db: Session=D
             'data':{k:row['data'][k] for k in ('title_id','title','collection_title_id','collection_title','collection_component_title_id') if k in row['data']}})
         total=totals.setdefault(key,{'seconds':0,'sessions':0})
         total['seconds']+=row['data']['duration_seconds'];total['sessions']+=1
-    latest={}
+    latest={};activity_games=set()
     for row in rows:
         if row['mock'] or row['kind']!='activity':continue
         key=(row['source'],row['data']['title_id'],row['data'].get('collection_component_title_id'))
+        activity_games.add(key)
+        # Incomplete sessions without a usable date still establish a game,
+        # never a zero-duration total. Keep them visible after session redaction.
+        games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,'source':key[0],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'component_artwork_url':image_url(row.get('component_artwork_url')),'data':{k:row['data'][k] for k in ('title','collection_title_id','collection_title','collection_component_title_id') if k in row['data']}})
         stamp=row['data'].get('ended_at') or row['data'].get('started_at')
         if stamp:
             from datetime import datetime
             if key not in latest or datetime.fromisoformat(stamp)>datetime.fromisoformat(latest[key]):latest[key]=stamp
-            games.setdefault(key,{'profile_uuid':'shared','profile_label':peer.display_name,'source':key[0],'mock':False,'artwork_url':image_url(row.get('artwork_url')),'component_artwork_url':image_url(row.get('component_artwork_url')),'data':{k:row['data'][k] for k in ('title','collection_title_id','collection_title','collection_component_title_id') if k in row['data']}})
-    for key in totals.keys()|latest.keys():
+    for key in totals.keys()|latest.keys()|activity_games:
         total=totals.get(key,{'seconds':None,'sessions':0})
         game=games[key]
         result.append({**game,'kind':'activity','icon_url':None,'data':{

@@ -1,4 +1,5 @@
 /* Original TrophySync design: luminous blues, generous spacing, console focus. */
+.observation-note{padding:12px 16px;border-left:3px solid #d8c094;background:#223047;color:#e1d4b3;border-radius:6px;font-size:13px;line-height:1.6}.session-reason{display:block;max-width:240px;white-space:normal;color:#a8b8cf;line-height:1.5;margin-top:4px}
 :root{--bg:#080e1b;--panel:#101a2b;--border:#26364e;--text:#f4f8ff;--muted:#a8b8cf;--accent:#82b9ff;--gold:#f2d28d;--line:var(--border)}
 body{background:radial-gradient(ellipse at 80% 0,#12396b66,transparent 50%),radial-gradient(ellipse at 30% 80%,#13285344,transparent 55%),var(--bg);min-height:100dvh}
 button,.button{border-radius:999px;min-height:44px;background:#e9f3ff;color:#092550;box-shadow:0 4px 18px #0002;transition:background .18s,box-shadow .18s}

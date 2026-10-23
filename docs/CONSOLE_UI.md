@@ -50,8 +50,11 @@ verifies the public short-code URL and absence of a code after expiry/connection
 These are local checks, not hardware evidence. Real extraction/pairing/repeat-sync
 results and remaining hardware gates are in [STATUS](STATUS.md).
 
-The 2026-10-14 blue/white foreground redesign and original sync/trophy title icon
-are built and packaged locally. The worker is unchanged. Installation of this
-new foreground build and its screen/Close App require a console observation;
-earlier installed-title evidence does not validate its new bytes. Tests do not
-claim compatibility with other firmware/loader combinations.
+The 2026-10-23 foreground redesign uses the website's blue/white sidebar, profile
+header and pairing/sync panels. Its generated title icon uses the same original
+trophy/sync mark. The worker now also recognizes the exact console-verified
+Wolverine locked-state pattern. Update the API first: its older validator rejects
+that interpretation. The native title is compiled and packaged locally;
+its screen/Close App require installation and a console
+observation. Earlier installed-title evidence does not validate its new bytes.
+Tests do not claim other firmware/loader compatibility. See STATUS for exact hashes.
