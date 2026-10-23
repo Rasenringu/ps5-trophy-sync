@@ -1,5 +1,14 @@
 # Remaining work
 
+Sync failure follow-up (2026-10-23): user reports rebuilding on the serving host,
+copying the foreground/ELF and receiving 422. Four stable pending batches pass
+current validation and isolated local import/replay; the prior locked-state rule
+rejects three. Bounded/redacted version-specific diagnostics, an API fingerprint
+check and accurate worker HTTP rejection display are implemented locally. Copy
+the latest API to the serving checkout, rebuild its existing stack and run
+scripts/Check-SyncApi.ps1 before retrying. Exact hosted validator/transport error
+framing and a successful hardware retry remain unverified. Preserve queue/pairing.
+
 Reliability/native UI (2026-10-23): receipt-bounded date presentation, recovery of
 supported missing PS5 unlock dates, explicit missing-counter/state reasons,
 30-day browser logins and the website-matched native screen/icon are implemented
@@ -10,7 +19,8 @@ read correction and one authorized read-only diagnostic are complete. Current
 clock is close to PC UTC and inspected source dates have explicit zones, so no
 blanket timezone shift is applied. Start-only Uncharted/Fobia durations have no
 end counter. Update hosted API before the new worker; existing trophy correction
-needs no resync. New worker/title installation and launch remain unverified. See
+needs no resync. User now reports installation and a failed sync; successful
+launch/sync/Close App/reopen validation remains outstanding. See
 RELIABILITY_AND_CONSOLE_UI_PLAN.md and STATUS for evidence and exact hashes.
 
 Provider follow-up (2026-10-21): normalized human-title searches repair Demon

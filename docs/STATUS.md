@@ -1,5 +1,113 @@
 # Current status
 
+## Reported sync HTTP 422 and bounded diagnostics - 2026-10-23
+
+User reports running `scripts/Start-Local.ps1 -Build` on the computer serving
+trophy-sync.party, copying PPSA99889 plus TrophySync.elf to PS5, and receiving
+`POST /device/sync` 422 (reported log time 12:18:46). The console displayed
+`HTTPS import unavailable (-1)`. This establishes a failed sync attempt, not a
+successful sync or complete foreground lifecycle validation.
+
+Read-only evidence and scope:
+
+- Read only application queue filenames under /data/trophy-sync-party over
+  existing FTPSRV. Every selected file matched a second complete read, known
+  structure/size and SHA256 seal. Four pending slots contain 26 native trophy
+  rows (8/8/8/2); 24 surviving slots are acknowledged. Queue/credential state,
+  console databases, installed title/worker and DNS were not changed. No
+  credential file was read and no payload was sent/run. Private JSON and
+  analysis helpers stay ignored in captures/sync-422 and .local. Collection:
+  `python .local/inspect-sync-422.py`; validation helper:
+  .local/validate-sync-422.py mounted read-only into deployment-test.
+- All four pending batches pass the current NativeSnapshot validator. Applying
+  the previous native locked-state rule locally rejects the first three with
+  `Unsupported native locked evidence` on Wolverine's verified flags-16 states.
+  This is a strong compatibility lead, not proof of the code running remotely.
+  User explicitly says the rebuild was on the serving computer; a stale source
+  checkout, wrong Compose project/container or tunnel target remains possible.
+- Read-only hosted OpenAPI has all four existing snapshot models and the older
+  undiscriminated union. Hosted health lacks the newly added fingerprint. This
+  does not identify its custom Python validator implementation. No hosted
+  account write, import, credential use or deployment was performed.
+- Simulated old default FastAPI responses for those real batches are
+  14,407-14,912 bytes, below the worker's 16,384-byte response capacity. An
+  oversized reply is therefore not established for this failure. The exact
+  hosted response framing was not captured; unsupported chunked framing can
+  also cause rc=-1 after a verified HTTP status has already been parsed.
+
+Implemented:
+
+- /device/sync selects its existing adapter by schema_version. Rejections
+  contain at most six bounded errors with sanitized paths/fixed validator
+  messages and no submitted values, unknown field names or exception context.
+  API logs `Sync validation rejected` with the same safe fields/reasons.
+  Existing snapshot schemas, import normalization/digests, validation rules,
+  authentication, ownership and database schema remain unchanged. OpenAPI now
+  describes the existing versions with oneOf/discriminator.
+- Worker preserves an authenticated HTTP 4xx rejection even when its error
+  body cannot be read. 422 displays `Import rejected by server (422)` with
+  serving-API/log guidance, stops retrying that rejection, and retains the
+  exact pending batch. Unverified responses and 429 keep bounded retry behavior.
+- /health reports sync_validator_sha256 over normalized main/contracts/
+  observation_times/sync_validation source. scripts/Check-SyncApi.ps1 compares
+  that fingerprint through the actual service URL (default public origin).
+  It reports missing/mismatched code without reading environment or credentials.
+
+Validation:
+
+- New synthetic rejection suite first reproduced six failures, including a
+  26,349-byte default error and echoed source values/extra-field names. Fixed
+  suite covers bounded diagnostics, version selection, malformed JSON/tags,
+  private primitive values, authentication and empty library on rejected import.
+- `scripts/Test-Local.ps1`: final full run **187 passed**, existing Starlette/httpx
+  deprecation warning. Initial 185-test run and focused seven-test rerun also
+  passed before the final two redaction regressions were added.
+- `docker compose --env-file .local/app.env -f deployment/compose.yaml run --rm
+  --volume C:\git\ps5-trophy-sync-windows\captures\sync-422:/captures:ro
+  --volume C:\git\ps5-trophy-sync-windows\.local\test_pending_sync.py:/app/tests/test_pending_capture.py:ro
+  test pytest -q tests/test_pending_capture.py`: **1 passed**. All four captured
+  batches import with HTTP 200 and replay as duplicate in isolated sync_test;
+  26 rows are present. This is offline/local replay, not a console-to-host sync.
+- `scripts/Build-Console.ps1 -HostTest`: SDK worker/no-write startup compile and
+  complete reader/queue/ownership/SQLite/verified-HTTPS suites pass. Added real
+  local TLS fixtures preserve status 422 across oversized/chunked error bodies;
+  worker sanitizer tests reject it once, retain the batch, and keep unverified
+  responses/429 bounded to five attempts. Optional older native fixtures absent.
+- `scripts/Start-Local.ps1 -Build`: API/web local build and health pass, existing
+  env/volumes preserved. `scripts/Check-SyncApi.ps1 -ServiceUrl
+  http://127.0.0.1:3000`: matching final source/service fingerprint
+  **05de8d4feb36d29c205c4254b106c00b8318f04d290ccd9340bf65cd35123387**. Default public
+  check currently reports missing fingerprint, as expected before applying this
+  update on the separate host. No automatic remote update is attempted.
+- `docker run --rm --mount
+  type=bind,source=C:\git\ps5-trophy-sync-windows\contracts,target=/contracts
+  deployment-api python -m tools.export_contracts /contracts`: pass. Only OpenAPI
+  union description changes; individual snapshot schemas are unchanged.
+- `docker run --rm --mount
+  type=bind,source=C:\git\ps5-trophy-sync-windows,target=/workspace
+  ps5-trophy-build:starter python3 /workspace/scripts/package-final-ui.py`:
+  rebuilt package with worker
+  **84c5615516635c963ae80723283446c3884b8a796cba749ec0cf930ae77af68b**.
+  Foreground remains
+  **64c5f1815113fb35f42753dffe328dab43476965974f495186c3288c8f9632ac**.
+  This error-reporting worker/package has not been installed or tested on PS5;
+  manifest console_verified=false.
+- `python .local/verify-ui-package.py`: ZIP CRC, packaged binary/file hashes,
+  retained notices, manifest and private-data exclusion pass. Source manifest
+  checks, LF shell scripts and Python syntax pass via
+  `python .local/verify-sync-fix.py`; `git diff --check` passes. An initial inline
+  Python verification command lost quotes through Windows native argument
+  handling; the file-based verification corrects that invocation.
+
+Next: copy the current api/ sources and Check-SyncApi.ps1 to the serving checkout,
+rebuild its existing Compose project/env, and run the public check. After a
+matching fingerprint, Close App/reopen to retry the preserved queue. The captured
+batches need only the current API; another console binary replacement or pairing
+reset is unnecessary. If 422 persists, collect the new bounded validation reason
+from the serving API log. Keep all pending data. Hosted validator identity, exact
+error framing and a successful hardware retry remain outstanding. No Git
+commit/push, external deployment, new migration, SDK or dependency change.
+
 ## Wolverine locked-state correction and authorized clock diagnostic — 2026-10-23
 
 User independently confirms Wolverine's four unknown trophies are **locked** in

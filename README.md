@@ -124,8 +124,9 @@ The SDK is pinned; Ubuntu/apt build-image packages are not a frozen OS snapshot.
 
 The 2026-10-23 native screen uses the website's blue/white sidebar, profile header
 and pairing/sync panels; its title icon uses the same trophy/sync mark. The
-current package and synthetic previews are local build outputs. This update has
-not been installed or observed on a console; see [validation evidence](docs/STATUS.md).
+user reports copying that title and worker to PS5; the subsequent sync returned
+HTTP 422. The newer error-reporting worker is locally built; a successful sync
+with it remains unverified. See [validation evidence](docs/STATUS.md).
 
 ## Use on PS5
 
@@ -145,6 +146,36 @@ have console evidence. The redesigned foreground title is installed and its
 bytes/registration are verified; its new screen and Close App still need a console
 observation. PS4 private-copy reading and integrated foreground sync are verified for the documented build. Passive resident synchronization is pending.
 See [current status and limits](docs/STATUS.md) and [passive sync](docs/PASSIVE_SYNC.md).
+
+## Sync returns HTTP 422
+
+HTTP 422 means the API rejected the snapshot. An older API rejects the new
+worker's verified Wolverine locked states. All four pending batches captured
+from the reported failure import and replay successfully against the current
+local API. The exact validator running on the separate host still needs checking.
+
+Copy the current `api/` directory and `scripts/Check-SyncApi.ps1` to the serving
+checkout. On the computer serving the website, use its existing stack/env file;
+for the user's `Start-Local.ps1` stack:
+
+```powershell
+.\scripts\Start-Local.ps1 -Build
+.\scripts\Check-SyncApi.ps1
+```
+
+The check compares this checkout's validator fingerprint with the API reached
+through `https://trophy-sync.party`. A missing/different fingerprint means the
+reachable API is older, built from different sources, or routed to another stack.
+For a loopback development check, add `-ServiceUrl http://127.0.0.1:3000`.
+Production Compose users should rebuild their existing production project instead;
+see [hosting](docs/SELF_HOSTING.md).
+
+After the public check passes, Close App and reopen TrophySync to retry the saved
+batches with the existing pairing. Keep the private queue/state. The updated API
+logs bounded `Sync validation rejected` field/reason diagnostics on a further 422;
+submitted values and credentials are omitted. The optional newer worker displays
+`Import rejected by server (422)` even if it cannot read the error body. Updating
+the API is sufficient for the captured batches; they need no console rebuild.
 
 ## Your collection and profile
 

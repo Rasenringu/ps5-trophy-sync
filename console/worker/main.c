@@ -97,7 +97,13 @@ static int flush_queue(PairClient *client,UiModel *model){
             JsonResponse response=https_json(PROBE_IP,PROBE_PORT,PROBE_IP,PROBE_CA,"/api/device/sync",client->device_token,item.json,reply,sizeof(reply));
             if(!response.tls.rc&&response.status==200&&acknowledged(item.json,reply)){success=1;break;}
             if(!response.tls.rc&&response.status==200)return fail(model,"Import acknowledgement invalid",200);
-            if(!response.tls.rc&&response.status>=400&&response.status<500&&response.status!=429)return fail(model,response.status==401?"Device credential revoked":"Import rejected",response.status);
+            /* A verified server's HTTP rejection is actionable even if its
+             * error body exceeds our bounded buffer or uses unsupported framing.
+             * Retain the exact pending batch; never accept an unverified status. */
+            if(response.tls.verified_handshake&&!response.tls.verify_flags&&response.status>=400&&response.status<500&&response.status!=429){
+                if(response.status==422)snprintf(model->reader_status,sizeof(model->reader_status),"Update the serving API; check its Sync validation rejected log. Saved batches will retry after reopening.");
+                return fail(model,response.status==401?"Device credential revoked":"Import rejected by server",response.status);
+            }
             if(attempt==4)return fail(model,"HTTPS import unavailable; queued",response.tls.rc?response.tls.rc:response.status);
             unsigned seconds=1u<<attempt;for(unsigned n=0;n<seconds*10&&same_user();n++)sceKernelUsleep(100000);
         }

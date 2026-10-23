@@ -362,7 +362,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
+                "oneOf": [
                   {
                     "$ref": "#/components/schemas/Snapshot"
                   },
@@ -376,7 +376,16 @@
                     "$ref": "#/components/schemas/Ps4Snapshot"
                   }
                 ],
-                "title": "Body"
+                "title": "Body",
+                "discriminator": {
+                  "propertyName": "schema_version",
+                  "mapping": {
+                    "1": "#/components/schemas/Snapshot",
+                    "2": "#/components/schemas/NativeSnapshot",
+                    "3": "#/components/schemas/NativeActivitySnapshot",
+                    "4": "#/components/schemas/Ps4Snapshot"
+                  }
+                }
               }
             }
           },

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, AwareDatetime, model_validator
 from .observation_times import native_locked_observation
@@ -190,3 +190,9 @@ class Ps4Snapshot(Snapshot):
     activities: list[Activity]=Field(default_factory=list,max_length=0)
     consistency: Literal['stable_encrypted_image_copy']
     profile_binding: Literal['inner_local_user_and_foreground_path']
+
+
+# Select the declared version instead of reporting failures for every adapter.
+# Individual snapshot models and normalized import digests remain unchanged.
+SyncSnapshot = Annotated[Snapshot | NativeSnapshot | NativeActivitySnapshot | Ps4Snapshot,
+                         Field(discriminator='schema_version')]

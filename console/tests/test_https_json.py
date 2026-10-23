@@ -45,4 +45,12 @@ for invalid in [
 result=attempt(good,'wrong-host.invalid');assert result[0]!=0 and not result[2]
 redirect=b'HTTP/1.1 302 Found\r\nContent-Length: 2\r\nLocation: http://example.invalid\r\n\r\n{}'
 assert attempt(redirect)==[0,0,1,302,2]
+# Authenticated HTTP status must survive a rejected error-body representation.
+# The worker can report 422 and retain the batch instead of retrying TLS (-1).
+for response in [
+    b'HTTP/1.1 422 Unprocessable Entity\r\nContent-Length: 65536\r\n\r\n',
+    b'HTTP/1.1 422 Unprocessable Entity\r\nTransfer-Encoding: chunked\r\n\r\n2\r\n{}\r\n0\r\n\r\n',
+]:
+    result=attempt(response)
+    assert result[0]!=0 and result[1:]==[0,1,422,0],result
 print('PASS LOCAL JSON TLS: certificate/name, bounded body, truncation, duplicate/invalid/missing length, chunked refusal, no redirects.')

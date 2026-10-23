@@ -42,9 +42,15 @@ JsonResponse https_json(const char *ip,unsigned short port,const char *name,cons
         return (JsonResponse){.status=200,.tls={.verified_handshake=1}};
     }
     assert(!strcmp(json,payload));
-    requests++;JsonResponse r={.status=200,.tls={.rc=0}};
+    requests++;JsonResponse r={.status=200,.tls={.rc=0,.verified_handshake=1}};
     if(failure_mode==1||(!failure_mode&&requests<3)){r.tls.rc=-123;return r;}
     if(failure_mode==2){r.status=401;return r;}
+    if(failure_mode>=4){
+        r.status=failure_mode==7?429:422;r.tls.rc=-1;
+        if(failure_mode==5)r.tls.verified_handshake=0;
+        if(failure_mode==6)r.tls.verify_flags=1;
+        return r;
+    }
     snprintf(body,capacity,"{\"status\":\"duplicate\",\"batch_id\":\"%s\"}",failure_mode==3?"WRONG_BATCH":batch);return r;
 }
 JsonResponse https_binary(const char *ip,unsigned short port,const char *name,const char *ca,const char *path,const char *token,const unsigned char *payload,size_t size,char *body,size_t capacity){
@@ -67,11 +73,15 @@ int main(void){
     char reply[200];snprintf(reply,sizeof(reply),"{\"status\":\"imported\",\"batch_id\":\"%s\"}",batch);assert(acknowledged(payload,reply));
     assert(!acknowledged(payload,"{\"status\":\"imported\",\"status\":\"duplicate\",\"batch_id\":\"00000000-0000-4000-8000-000000000003\"}"));
     assert(!acknowledged(payload,"{\"status\":\"imported\",\"batch_id\":\"OTHER\"}"));
-    for(failure_mode=0;failure_mode<4;failure_mode++){
+    for(failure_mode=0;failure_mode<8;failure_mode++){
         requests=0;unsigned slot;SyncQueueItem item;UiModel model={.phase=UI_CONNECTED};
         assert(!sync_queue_put(directory,9,client.installation_id,client.profile_uuid,client.origin,payload,&slot)&&slot==0);
         int rc=flush_queue(&client,&model);assert(failure_mode?rc==-1:rc==0);
-        assert(requests==(failure_mode==0?3:failure_mode==1?5:1));
+        assert(requests==(failure_mode==0?3:failure_mode==1||failure_mode>=5?5:1));
+        if(failure_mode==4){
+            assert(strstr(model.error,"Import rejected by server (422)"));
+            assert(strstr(model.reader_status,"Update the serving API"));
+        }
         assert(!sync_queue_load(directory,9,0,client.installation_id,client.profile_uuid,client.origin,&item));
         assert(item.acknowledged==(unsigned)(failure_mode==0)&&!strcmp(item.json,payload));
         assert(!unlinkat(directory,"queue-00000009-00.bin",0));

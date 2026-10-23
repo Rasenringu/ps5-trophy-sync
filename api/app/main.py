@@ -12,6 +12,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, InvalidHashError
 from fastapi import FastAPI, Depends, HTTPException, Request, Response, Path as ApiPath
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from starlette.requests import ClientDisconnect
 from sqlalchemy import select, delete, tuple_
 from sqlalchemy.exc import IntegrityError
@@ -22,9 +23,11 @@ from .locales import choose_language
 from .ps4_collections import group_collections
 from .native_identity import native_activity_aliases
 from .observation_times import stamp_receipt, present_observation
-from .contracts import Credentials, PairRequest, Code, Approval, Poll, Snapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
+from .contracts import Credentials, PairRequest, Code, Approval, Poll, SyncSnapshot, NativeSnapshot, NativeActivitySnapshot, Ps4Snapshot
+from .sync_validation import SYNC_VALIDATOR_SHA256, validation_error
 
 app = FastAPI(title='PS5 Trophy Sync', version='0.1.0')
+app.add_exception_handler(RequestValidationError, validation_error)
 origin = os.environ.get('WEB_ORIGIN', 'http://localhost:3000').rstrip('/')
 secure_cookie = os.environ.get('COOKIE_SECURE', 'true') == 'true'
 # One bounded persistent login on both sides; logout still revokes it immediately.
@@ -133,7 +136,7 @@ def set_login(db, response, account):
 @app.get('/health')
 def health(db: DbSession = Depends(database)):
     db.execute(select(Account.id).limit(1))
-    return {'status': 'ok', 'console_verified': False}
+    return {'status': 'ok', 'console_verified': False, 'sync_validator_sha256': SYNC_VALIDATOR_SHA256}
 
 @app.post('/auth/register', status_code=201)
 def register(body: Credentials, request: Request, response: Response, db: DbSession = Depends(database)):
@@ -290,7 +293,7 @@ def revoke(profile_id: str, owner: str = Depends(browser), db: DbSession = Depen
     return {'status': 'revoked'}
 
 @app.post('/device/sync')
-def sync(body: Snapshot | NativeSnapshot | NativeActivitySnapshot | Ps4Snapshot, profile: Profile = Depends(device), db: DbSession = Depends(database)):
+def sync(body: SyncSnapshot, profile: Profile = Depends(device), db: DbSession = Depends(database)):
     if body.mock and not development_tools:fail(422, 'Demo imports are disabled')
     data = body.model_dump(mode='json')
     checksum = digest(json.dumps(data, sort_keys=True, separators=(',', ':')))

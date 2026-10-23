@@ -1,5 +1,25 @@
 # Source evidence and pinned inputs
 
+## Sync validation diagnostics (2026-10-23)
+
+Four stable, digest-checked application queue files were read twice over the
+existing FTPSRV connection without reading credential files or changing state.
+All four pass the current API models and isolated import/replay. Simulating the
+previous native locked-state rule rejects three on flags-16 evidence; this does
+not establish the actual validator loaded on the separately hosted service.
+The old default FastAPI replies for these files measure 14,407-14,912 bytes,
+below the console's 16,384-byte buffer. Therefore oversized error responses are
+not established for this hardware failure; chunked/other framing remains unknown.
+Synthetic tests independently reproduce an oversized validation response and
+verified HTTP 422 being masked by unsupported/oversized error-body framing.
+
+Official [Pydantic discriminated unions](https://docs.pydantic.dev/latest/concepts/unions/)
+and [FastAPI validation handlers](https://fastapi.tiangolo.com/tutorial/handling-errors/)
+were checked. Existing pinned Pydantic 2.12.5/FastAPI 0.135.1 support the version
+discriminator and route-specific bounded handler; no dependency/API pin or
+license changes. The health fingerprint covers normalized API validator source,
+not environment, account state or hardware authenticity.
+
 ## Observation reliability and native presentation (2026-10-23)
 
 Read-only FTPSRV 0.21.1 captures and repeated complete native state reads establish
